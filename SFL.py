@@ -52,4 +52,5 @@ def build_SFL_matrix(features, shap_values, prediction, labels, data_set_name):
 
 def get_diagnosis():
     ei = readPlanningFile(r"matrix_for_SFL")
-    return ei.diagnose()
+    ei.diagnose()
+    return ei.diagnoses

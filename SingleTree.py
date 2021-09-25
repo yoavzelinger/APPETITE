@@ -2,7 +2,7 @@ from DataSet import DataSet
 from SHAP import applySHAP
 from buildModel import build_model
 from sklearn import metrics
-from SFL import build_SFL_matrix
+from SFL import build_SFL_matrix, run_diagnosis
 
 dataset = DataSet("data/mixed_0101_abrupto.csv", "abrupt", ["X1", "X2", "X3", "X4"], "class")
 SIZE = 10000
@@ -20,6 +20,7 @@ if __name__ == '__main__':
     # update model
     shap_values = applySHAP(dataset.features, new_data, model)
     build_SFL_matrix(dataset.features, shap_values, y_pred, new_data_y)
+    run_diagnosis()
 
 
 

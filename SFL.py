@@ -1,3 +1,5 @@
+from sfl.Diagnoser.diagnoserUtils import write_json_planning_file, readPlanningFile
+
 THRESHOLD = 0.15
 
 def build_SFL_matrix(features, shap_values, prediction, labels):
@@ -47,3 +49,9 @@ def build_SFL_matrix(features, shap_values, prediction, labels):
                     component_id = 2*j if value > 0 else 2*j+1
                     components.append(component_id)
             f.write('T{};{};{}\n'.format(i, components, result))
+
+def run_diagnosis():
+    ei = readPlanningFile(r"matrix_for_SFL")
+    ei.diagnose()
+    print(ei.diagnoses)
+    print(type(ei.diagnoses))

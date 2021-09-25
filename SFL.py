@@ -2,10 +2,10 @@ from sfl.Diagnoser.diagnoserUtils import write_json_planning_file, readPlanningF
 
 THRESHOLD = 0.15
 
-def build_SFL_matrix(features, shap_values, prediction, labels):
+def build_SFL_matrix(features, shap_values, prediction, labels, data_set_name):
     with open('matrix_for_SFL', 'w') as f:
         f.write('[Description]\n')
-        f.write('default description\n')
+        f.write('{}\n'.format(data_set_name))
 
         f.write('[Components names]\n')
         f.write('[')
@@ -50,8 +50,6 @@ def build_SFL_matrix(features, shap_values, prediction, labels):
                     components.append(component_id)
             f.write('T{};{};{}\n'.format(i, components, result))
 
-def run_diagnosis():
+def get_diagnosis():
     ei = readPlanningFile(r"matrix_for_SFL")
-    ei.diagnose()
-    print(ei.diagnoses)
-    print(type(ei.diagnoses))
+    return ei.diagnose()

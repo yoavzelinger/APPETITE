@@ -1,1 +1,1 @@
-# AI-diagnosys
+# AI-diagnosis

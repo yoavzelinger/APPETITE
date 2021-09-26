@@ -1,6 +1,6 @@
 from sfl.Diagnoser.diagnoserUtils import write_json_planning_file, readPlanningFile
 
-THRESHOLD = 0.15
+THRESHOLD = 0.1
 
 def build_SFL_matrix(features, shap_values, prediction, labels, data_set_name):
     with open('matrix_for_SFL', 'w') as f:
@@ -38,17 +38,20 @@ def build_SFL_matrix(features, shap_values, prediction, labels, data_set_name):
             f.write('\'T{}\''.format(i))
         f.write(']\n')
 
+        conflicts = set()
         f.write('[TestDetails]\n')
         for i in range(len(prediction)):
             result = 0 if prediction[i] == labels.values[i] else 1  # 1 if there is an error in prediction
             components = list()
-            shap = shap_values[int(labels.values[i])][i]  # takes shap value for the correct label
+            shap = shap_values[int(prediction[i])][i]  # takes shap value for the predicted
             for j in range(len(shap)):
                 value = shap[j]
                 if abs(value) >= THRESHOLD:  # feature appears as a component
                     component_id = 2*j if value > 0 else 2*j+1
                     components.append(component_id)
             f.write('T{};{};{}\n'.format(i, components, result))
+            conflicts.add(tuple(components))
+        print("list of conflicts: {}".format(conflicts))
 
 def get_diagnosis():
     ei = readPlanningFile(r"matrix_for_SFL")

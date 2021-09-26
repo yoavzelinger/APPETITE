@@ -5,7 +5,7 @@ from sklearn import metrics
 from SFL import build_SFL_matrix, get_diagnosis
 from updateModel import tree_to_code, print_tree_rules
 
-dataset = DataSet("data/stagger_2102_abrupto.csv", "abrupt", ["X1", "X2", "X3"], "class")
+dataset = DataSet("data/mixed_1010_abrupto.csv", "abrupt", ["X1", "X2", "X3", "X4"], "class")
 SIZE = 10000
 
 if __name__ == '__main__':
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     shap_values = applySHAP(dataset.features, new_data, model)
     build_SFL_matrix(dataset.features, shap_values, prediction, new_data_y, dataset.name)
     diagnosis = get_diagnosis()
-    print(diagnosis)
+    print("diagnosis: {}".format(diagnosis))
     # TODO: rate diagnosis
     # TODO: fix model
 

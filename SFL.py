@@ -1,6 +1,7 @@
 from sfl.Diagnoser.diagnoserUtils import write_json_planning_file, readPlanningFile
 
 THRESHOLD = 0.1
+ONLY_POSITIVE = True
 
 def build_SFL_matrix(features, shap_values, prediction, labels, data_set_name):
     with open('matrix_for_SFL', 'w') as f:
@@ -46,7 +47,11 @@ def build_SFL_matrix(features, shap_values, prediction, labels, data_set_name):
             shap = shap_values[int(prediction[i])][i]  # takes shap value for the predicted
             for j in range(len(shap)):
                 value = shap[j]
-                if abs(value) >= THRESHOLD:  # feature appears as a component
+                if ONLY_POSITIVE:
+                    if value >= THRESHOLD:
+                        component_id = 2 * j
+                        components.append(component_id)
+                elif abs(value) >= THRESHOLD:  # feature appears as a component
                     component_id = 2*j if value > 0 else 2*j+1
                     components.append(component_id)
             f.write('T{};{};{}\n'.format(i, components, result))

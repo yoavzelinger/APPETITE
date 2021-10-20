@@ -5,8 +5,9 @@ from sklearn import metrics
 from SFL import build_SFL_matrix, get_diagnosis
 from updateModel import tree_to_code, print_tree_rules
 
-dataset = DataSet("data/mixed_1010_abrupto.csv", "abrupt", ["X1", "X2", "X3", "X4"], "class")
-SIZE = 10000
+dataset = DataSet("data/hyperplane3.arff", "abrupt", "output", 1000)
+#dataset = DataSet("data/stagger_2102_abrupto.csv", "abrupt", "class", 10000)
+SIZE = dataset.batch_size
 
 if __name__ == '__main__':
     model = build_model(dataset.data.iloc[0:SIZE], dataset.features, dataset.target)

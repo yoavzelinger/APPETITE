@@ -55,7 +55,8 @@ def build_SFL_matrix(features, shap_values, prediction, labels, data_set_name):
                     component_id = 2*j if value > 0 else 2*j+1
                     components.append(component_id)
             f.write('T{};{};{}\n'.format(i, components, result))
-            conflicts.add(tuple(components))
+            if result == 1:
+                conflicts.add(tuple(components))
         print("list of conflicts: {}".format(conflicts))
 
 def get_diagnosis():

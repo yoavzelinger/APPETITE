@@ -45,16 +45,14 @@ def fix_SHAP(model, diagnosis, dataset):
     return fixed_model
 
 def diagnose_Nodes(model, dataset, new_data):
-    nodes = model._tree.node_count
+    nodes = model.tree_.node_count
     print("number of nodes: {}".format(nodes))
-
+    build_SFL_matrix_Nodes(model, new_data, dataset.name)
     diagnosis = get_diagnosis()
     print("diagnosis: {}".format(diagnosis))
     # TODO: rate diagnosis
     first_diagnosis = diagnosis[0].diagnosis
     return first_diagnosis
-
-
 
 if __name__ == '__main__':
     model = build_model(dataset.data.iloc[0:SIZE], dataset.features, dataset.target)
@@ -68,7 +66,9 @@ if __name__ == '__main__':
     print("Accuracy of original model on data after concept drift:", accuracy)
 
     samples = (new_data_x, prediction, new_data_y)
-    build_SFL_matrix_Nodes(model, samples, dataset.name)
+    # build_SFL_matrix_Nodes(model, samples, dataset.name)
+    diagnosis = diagnose_Nodes(model, dataset, samples)
+    print(diagnosis)
 
     """
     # run algorithm

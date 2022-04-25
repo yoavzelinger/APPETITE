@@ -82,35 +82,39 @@ def build_SFL_matrix_SHAP(features, shap_values, prediction, labels, data_set_na
         print("list of conflicts: {}".format(conflicts))
 
 def get_diagnosis():
-    ei = readPlanningFile(r"matrix_for_SFL")
+    #ei = readPlanningFile(r"matrix_for_SFL")
+    ei = readPlanningFile(MATRIX_FILE_PATH)
     ei.diagnose()
     return ei.diagnoses
 
-def get_matrix_entrance(sample_id, samples, node_indicator):
+def get_matrix_entrance(sample_id, samples, node_indicator, conflicts):
     data_x, prediction, labels = samples
     node_index = node_indicator.indices[            # extract the relevant path for sample_id
                  node_indicator.indptr[sample_id]: node_indicator.indptr[sample_id + 1]
                  ].tolist()
     result = 0 if prediction[sample_id] == labels.values[sample_id] else 1  # 1 if there is an error in prediction
-    test_detail = "T{};{};{}".format(sample_id, node_index, result)  # test number;[components];test result
-    return test_detail
+    test_detail = f"T{sample_id};{node_index};{result}"
+
+    if result == 1: # classification is wrong
+        conflicts.add(tuple(node_index))
+
+    return test_detail, conflicts
 
 def build_SFL_matrix_Nodes(model, samples, data_set_name):
     data_x, prediction, labels = samples
     number_of_samples = len(data_x)
+    initial_tests = list(map(lambda x: f'T{x}', range(number_of_samples))) # test for each sample
 
     number_of_nodes = model.tree_.node_count
-    components = list(range(number_of_nodes))
-
-    # TODO: priors + initial tests
-    priors = list()
-    initial_tests = list()
+    components = list(map(lambda x: (x, f'node{x}'), range(number_of_nodes)))
+    priors = [1/number_of_nodes]*number_of_nodes # equal prior probability to all nodes
 
     node_indicator = model.decision_path(data_x)  # all paths
     all_test_details = list()
+    conflicts = set()
     for sample_id in range(number_of_samples):
-        test_detail = get_matrix_entrance(sample_id, samples, node_indicator)
+        test_detail, conflicts = get_matrix_entrance(sample_id, samples, node_indicator, conflicts)
         all_test_details.append(test_detail)
 
     build_SFL_matrix(data_set_name, components, priors, initial_tests, all_test_details)
-    return
+    print("list of conflicts: {}".format(conflicts))

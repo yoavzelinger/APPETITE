@@ -26,63 +26,40 @@ def build_SFL_matrix(description, components_names, priors, initial_tests, test_
             f.write('{}\n'.format(test))
 
 def build_SFL_matrix_SHAP(features, shap_values, prediction, labels, data_set_name):
-    with open('matrix_for_SFL', 'w') as f:
-        f.write('[Description]\n')
-        f.write('{}\n'.format(data_set_name))
+    number_of_samples = len(prediction)
+    initial_tests = list(map(lambda x: f'T{x}', range(number_of_samples)))  # test for each sample
 
-        f.write('[Components names]\n')
-        f.write('[')
-        i = 0
-        for i in range(len(features)):
-            if i > 0:
-                f.write(', ')
-            f.write('({}, \'{} positive\')'.format(2*i, features[i]))
-            f.write(', ')
-            f.write('({}, \'{} negative\')'.format(2*i+1, features[i]))
-        f.write(']\n')
+    positive_components = list(map(lambda x: (2*x, f'{features[x]} positive'), range(len(features))))
+    negative_components = list(map(lambda x: (2*x+1, f'{features[x]} negative'), range(len(features))))
+    components_names = [*positive_components, *negative_components]
+    priors = [1/(len(components_names))]*(len(components_names))  # equal prior probability to all components
 
-        f.write('[Priors]\n')
-        f.write('[')
-        i = 0
-        for i in range(len(features)*2):
-            if i > 0:
-                f.write(', ')
-            f.write('0.1')
-        f.write(']\n')
-
-        f.write('[Bugs]\n')
-        f.write('[]\n')
-
-        f.write('[InitialTests]\n')
-        f.write('[')
-        for i in range(len(prediction)):
-            if i > 0:
-                f.write(', ')
-            f.write('\'T{}\''.format(i))
-        f.write(']\n')
-
-        conflicts = set()
-        f.write('[TestDetails]\n')
-        for i in range(len(prediction)):
-            result = 0 if prediction[i] == labels.values[i] else 1  # 1 if there is an error in prediction
-            components = list()
-            shap = shap_values[int(prediction[i])][i]  # takes shap value for the predicted
-            for j in range(len(shap)):
-                value = shap[j]
-                if ONLY_POSITIVE:
-                    if value >= THRESHOLD:
-                        component_id = 2 * j
-                        components.append(component_id)
-                elif abs(value) >= THRESHOLD:  # feature appears as a component
-                    component_id = 2*j if value > 0 else 2*j+1
+    conflicts = set()
+    all_test_details = list()
+    for i in range(number_of_samples):  # i is sample index
+        result = 0 if prediction[i] == labels.values[i] else 1  # 1 if there is an error in prediction
+        components = list()
+        shap = shap_values[int(prediction[i])][i]  # takes shap value for the predicted
+        # TODO: calculate components using filters instead of for
+        for j in range(len(shap)): # j is feature index
+            value = shap[j]
+            if ONLY_POSITIVE:
+                if value >= THRESHOLD:
+                    component_id = 2 * j
                     components.append(component_id)
-            f.write('T{};{};{}\n'.format(i, components, result))
-            if result == 1:
-                conflicts.add(tuple(components))
-        print("list of conflicts: {}".format(conflicts))
+            elif abs(value) >= THRESHOLD:  # feature appears as a component
+                component_id = 2 * j if value > 0 else 2 * j + 1
+                components.append(component_id)
+
+        test_detail = f'T{i};{components};{result}'
+        all_test_details.append(test_detail)
+        if result == 1:  # classification is wrong
+            conflicts.add(tuple(components))
+
+    build_SFL_matrix(data_set_name, components_names, priors, initial_tests, all_test_details)
+    print("list of conflicts: {}".format(conflicts))
 
 def get_diagnosis():
-    #ei = readPlanningFile(r"matrix_for_SFL")
     ei = readPlanningFile(MATRIX_FILE_PATH)
     ei.diagnose()
     return ei.diagnoses

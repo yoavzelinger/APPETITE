@@ -99,10 +99,3 @@ if __name__ == '__main__':
     accuracy = metrics.accuracy_score(test_set_y, prediction3)
     print("Accuracy of FIXED model:", accuracy)
     """
-
-
-
-
-
-
-

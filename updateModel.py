@@ -6,6 +6,17 @@ def change_tree_threshold(tree, nodes, thresholds):
         tree.tree_.threshold[nodes[i]] = thresholds[i]
     return tree
 
+def change_tree_selection(tree, nodes):
+    for node in nodes:
+        left_child = tree.tree_.children_left[node]
+        right_child = tree.tree_.children_right[node]
+        tree.tree_.children_left[node] = right_child
+        tree.tree_.children_right[node] = left_child
+        print("node id: {}".format(node))
+        print("left child: {}".format(left_child))
+        print("right child: {}".format(right_child))
+    return tree
+
 def find_nodes_threshold_from_diagnosis(model, diagnosis, features_diff):
     diagnosis = list(int(x/2) for x in diagnosis)
 

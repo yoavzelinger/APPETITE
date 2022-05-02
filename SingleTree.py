@@ -4,12 +4,12 @@ from DataSet import DataSet
 from SHAP import applySHAP
 from buildModel import build_model
 from sklearn import metrics
-from SFL import build_SFL_matrix_SHAP, get_diagnosis, build_SFL_matrix_Nodes
-from updateModel import tree_to_code, print_tree_rules, change_tree_threshold, find_nodes_threshold_from_diagnosis
+from SFL import build_SFL_matrix_SHAP, get_diagnosis, build_SFL_matrix_Nodes, get_diagnosis_nodes
+from updateModel import tree_to_code, print_tree_rules, change_tree_threshold, find_nodes_threshold_from_diagnosis, change_tree_selection
 from statistics import mean
 
-dataset = DataSet("data/hyperplane1.arff", "abrupt", "output", 1000)
-#dataset = DataSet("data/stagger_2102_abrupto.csv", "abrupt", "class", 10000)
+dataset = DataSet("data/sea_0123_abrupto_noise_0.2.csv", "abrupt", "class", 1000)
+# dataset = DataSet("data/stagger_2102_abrupto.csv", "abrupt", "class", 10000)
 
 SIZE = dataset.batch_size
 
@@ -47,12 +47,25 @@ def fix_SHAP(model, diagnosis, dataset):
 def diagnose_Nodes(model, dataset, new_data):
     nodes = model.tree_.node_count
     print("number of nodes: {}".format(nodes))
-    build_SFL_matrix_Nodes(model, new_data, dataset.name)
-    diagnosis = get_diagnosis()
-    print("diagnosis: {}".format(diagnosis))
-    # TODO: rate diagnosis
-    first_diagnosis = diagnosis[0].diagnosis
+
+    # get diagnosis - amir's code
+    ## build_SFL_matrix_Nodes(model, new_data, dataset.name)
+    ## diagnosis = get_diagnosis()
+    ## first_diagnosis = diagnosis[0].diagnosis
+
+    # get diagnosis - avi's code
+    diagnoses, probabilities = get_diagnosis_nodes(model, samples)
+    print("diagnoses: {}".format(diagnoses))
+    print("probabilities: {}".format(probabilities))
+    first_diagnosis = diagnoses[0]
+
     return first_diagnosis
+
+def fix_nodes(model, diagnosis):
+    # fix model - Nodes, change selection (right <--> left)
+    model_to_fix = copy.deepcopy(model)
+    fixed_model = change_tree_selection(model_to_fix, diagnosis)
+    return fixed_model
 
 if __name__ == '__main__':
     model = build_model(dataset.data.iloc[0:SIZE], dataset.features, dataset.target)
@@ -65,10 +78,17 @@ if __name__ == '__main__':
     accuracy = metrics.accuracy_score(new_data_y, prediction)
     print("Accuracy of original model on data after concept drift:", accuracy)
 
+    print("TREE:")
+    print_tree_rules(model, dataset.features)
+
     samples = (new_data_x, prediction, new_data_y)
     # build_SFL_matrix_Nodes(model, samples, dataset.name)
     diagnosis = diagnose_Nodes(model, dataset, samples)
     print(diagnosis)
+    fixed_model = fix_nodes(model, diagnosis)
+
+    print("FIXED TREE:")
+    print_tree_rules(fixed_model, dataset.features)
 
     """
     # run algorithm
@@ -77,6 +97,7 @@ if __name__ == '__main__':
 
     # tree_to_code(model, dataset.features)
     # print_tree_rules(model, dataset.features)
+    """
 
     # TEST performances
     test_set = dataset.data.iloc[int(1.1 * SIZE): int(1.2 * SIZE)]
@@ -98,4 +119,3 @@ if __name__ == '__main__':
     prediction3 = fixed_model.predict(test_set_x)
     accuracy = metrics.accuracy_score(test_set_y, prediction3)
     print("Accuracy of FIXED model:", accuracy)
-    """

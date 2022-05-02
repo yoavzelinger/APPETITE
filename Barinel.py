@@ -1,6 +1,8 @@
 import math
 from scipy.optimize import minimize
 import numpy as np
+from functools import reduce
+import operator
 
 def calculate_diagnoses_and_probabilities_barinel_avi(spectra,  # list(list) (number of tests, number of components)
                                                       error_vector,  # list() number of tests
@@ -22,7 +24,8 @@ def calculate_diagnoses_and_probabilities_barinel_avi(spectra,  # list(list) (nu
     for i, dk in enumerate(diagnoses):
         e_dk = calculate_e_dk(dk, spectra, error_vector)
         e_dks.append(e_dk)
-        prior = math.prod([priors[c] for c in dk])
+        # prior = math.prod([priors[c] for c in dk])
+        prior = reduce(operator.mul, [priors[c] for c in dk], 1)
         probabilities[i] = prior * e_dk
 
     # normalize probabilities and order them
@@ -35,9 +38,12 @@ def calculate_diagnoses_and_probabilities_barinel_avi(spectra,  # list(list) (nu
     lz_diagnoses.reverse()
     lz_probabilities.reverse()
 
+    # print diagnoses and probabilities
+    """
     print(f'diagnoses and probabilities:')
     for i, _ in enumerate(lz_diagnoses):
         print(f'{lz_diagnoses[i]}: {lz_probabilities[i]}')
+    """
 
     # return ordered and normalized diagnoses and probabilities
     return lz_diagnoses, lz_probabilities

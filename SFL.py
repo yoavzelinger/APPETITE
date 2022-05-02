@@ -1,4 +1,6 @@
 from sfl.Diagnoser.diagnoserUtils import write_json_planning_file, readPlanningFile
+import numpy as np
+from Barinel import calculate_diagnoses_and_probabilities_barinel_avi
 
 THRESHOLD = 0.1
 ONLY_POSITIVE = True
@@ -95,3 +97,29 @@ def build_SFL_matrix_Nodes(model, samples, data_set_name):
 
     build_SFL_matrix(data_set_name, components, priors, initial_tests, all_test_details)
     print("list of conflicts: {}".format(conflicts))
+
+def get_diagnosis_nodes(model, samples):
+    data_x, prediction, labels = samples
+    number_of_samples = len(data_x)
+    error_vector = np.zeros(number_of_samples).tolist()
+
+    number_of_nodes = model.tree_.node_count
+    # priors = [1 / number_of_nodes] * number_of_nodes  # equal prior probability to all nodes
+    priors = [1.] * number_of_nodes  # equal prior probability to all nodes
+    spectra = np.zeros((number_of_samples, number_of_nodes)).tolist()
+
+    node_indicator = model.decision_path(data_x)  # get paths for all samples
+    conflicts = set()
+    for sample_id in range(number_of_samples):
+        node_index = node_indicator.indices[  # extract the relevant path for sample_id
+                     node_indicator.indptr[sample_id]: node_indicator.indptr[sample_id + 1]
+                     ].tolist()
+        for node_id in node_index:  # set as a component in test
+            spectra[sample_id][node_id] = 1
+        if prediction[sample_id] != labels.values[sample_id]:  # test result is "fail"
+            error_vector[sample_id] = 1
+            conflicts.add(tuple(node_index))
+
+    print(conflicts)
+    diagnoses = calculate_diagnoses_and_probabilities_barinel_avi(spectra, error_vector, priors)
+    return diagnoses

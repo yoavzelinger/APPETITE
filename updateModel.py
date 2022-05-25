@@ -1,5 +1,6 @@
 from sklearn.tree import _tree, export_text
 #from sklearn.tree.export import export_text
+from SFL import PARENTS
 
 def change_tree_threshold(tree, nodes, thresholds):
     for i in range(len(nodes)):
@@ -17,8 +18,8 @@ def change_tree_selection(tree, nodes):
         print("right child: {}".format(right_child))
     return tree
 
-def find_nodes_threshold_from_diagnosis(model, diagnosis, features_diff):
-    diagnosis = list(int(x/2) for x in diagnosis)
+def find_nodes_threshold_from_diagnosis(model, diagnosis_features, features_diff):
+    diagnosis_features = list(int(x / 2) for x in diagnosis_features)
 
     nodes = list()
     thresholds = list()
@@ -26,7 +27,7 @@ def find_nodes_threshold_from_diagnosis(model, diagnosis, features_diff):
     node_count = model.tree_.node_count
     for i in range(node_count):
         feature = model.tree_.feature[i]
-        if feature in diagnosis:
+        if feature in diagnosis_features:
             nodes.append(i)
             new_threshold = model.tree_.threshold[i] + features_diff[feature]
             thresholds.append(new_threshold)
@@ -59,3 +60,20 @@ def tree_to_code(tree, feature_names):
             print( "{}return {}".format(indent, tree_.value[node]))
 
     recurse(0, 1)
+
+def change_nodes_threshold(model, nodes, features_diff):
+    for node in nodes:
+        feature = model.tree_.feature[node]
+        if feature == -2: # node is a leaf - no threshold
+            continue
+        print(f"node {node} feature is: {feature}")
+        new_threshold = model.tree_.threshold[node] + features_diff[feature]
+        model.tree_.threshold[node] = new_threshold
+    return model
+
+def get_parents(nodes):
+    parents = set()
+    for node in nodes:
+        parent = PARENTS[node]
+        parents.add(parent)
+    return parents

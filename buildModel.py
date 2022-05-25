@@ -10,5 +10,6 @@ def build_model(data, features, target, model_type="tree"):
                                                         random_state=1)  # 70% training and 30% test
     max_leaf_nodes = len(features) ** 2
     clf = DecisionTreeClassifier(min_samples_split=0.1, max_leaf_nodes=max_leaf_nodes)
+    #clf = DecisionTreeClassifier()
     clf = clf.fit(x_train, y_train)
     return clf

@@ -101,7 +101,7 @@ def build_SFL_matrix_Nodes(model, samples, data_set_name):
     print("list of conflicts: {}".format(conflicts))
 
 def get_diagnosis_nodes(model, samples):
-    BAD_SAMPLES = set()
+    BAD_SAMPLES = list()
     data_x, prediction, labels = samples
     number_of_samples = len(data_x)
     error_vector = np.zeros(number_of_samples).tolist()
@@ -130,7 +130,7 @@ def get_diagnosis_nodes(model, samples):
             error_vector[sample_id] = 1
             errors += 1
             conflicts.add(tuple(node_index))
-            BAD_SAMPLES.add(node_id + 10000) #TODO: change
+            BAD_SAMPLES.append(node_id)
 
     print(f"Conflicts: {conflicts}")
     print(f"Number of misclassified samples: {errors}")

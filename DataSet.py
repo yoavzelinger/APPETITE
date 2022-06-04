@@ -3,12 +3,11 @@ from scipy.io import arff
 
 class DataSet:
 
-    def __init__(self, source_path, dataset_type, target_class, batch_size):
+    def __init__(self, source_path, dataset_type, target_class, batch_size, feature_types):
         self.name = source_path
 
         # check data format
         source_format = source_path.split(".")[-1]
-        print(source_format)
         if source_format == "csv":
             self.data = pd.read_csv(source_path)
         elif source_format == "arff":
@@ -21,6 +20,7 @@ class DataSet:
         self.features.remove(target_class)
         self.target = target_class
         self.batch_size = batch_size
+        self.feature_types = feature_types
 
 if __name__ == '__main__':
     d = DataSet("data/sea.arff", None, "cl")

@@ -66,9 +66,25 @@ def change_nodes_threshold(model, nodes, features_diff):
         feature = model.tree_.feature[node]
         if feature == -2: # node is a leaf - no threshold
             continue
-        print(f"node {node} feature is: {feature}")
+        # print(f"node {node} feature is: {feature}")
         new_threshold = model.tree_.threshold[node] + features_diff[feature]
         model.tree_.threshold[node] = new_threshold
+    return model
+
+def change_nodes_by_type(model, nodes,feature_types, features_diff):
+    binary_categorical = list()
+    numeric = list()
+    for node in nodes:
+        feature = model.tree_.feature[node]
+        if feature == -2:  # node is a leaf
+            continue
+        f_type = feature_types[feature]
+        if f_type == "numeric":
+            numeric.append(node)
+        elif f_type == "binary" or f_type == "categorical":
+            binary_categorical.append(node)
+    model = change_nodes_threshold(model, numeric, features_diff)
+    model = change_tree_selection(model, binary_categorical)
     return model
 
 def get_parents(nodes):

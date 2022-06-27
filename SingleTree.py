@@ -104,7 +104,8 @@ def fix_nodes_by_type(model, diagnosis, dataset):
 def run_single_tree_experiment(dataset):
     global SIZE, NEW_DATA_SIZE
     SIZE = int(dataset.batch_size * 1)
-    NEW_DATA_SIZE = int(0.1 * SIZE)
+    #NEW_DATA_SIZE = int(0.1 * SIZE)
+    NEW_DATA_SIZE = 100
     model = build_model(dataset.data.iloc[0:int(0.9*SIZE)], dataset.features, dataset.target)
 
     # check model accuracy on data before the drift
@@ -126,6 +127,7 @@ def run_single_tree_experiment(dataset):
     #print("TREE:")
     #print_tree_rules(model, dataset.features)
 
+    # RUN ALGORITHM
     samples = (new_data_x, prediction, new_data_y)
     # build_SFL_matrix_Nodes(model, samples, dataset.name)
     diagnosis, BAD_SAMPLES = diagnose_Nodes(model, dataset, samples)
@@ -163,11 +165,17 @@ def run_single_tree_experiment(dataset):
     accuracy = metrics.accuracy_score(test_set_y, prediction1)
     print("Accuracy of the Original model on test data:", accuracy)
 
-    # train a new model
+    # train a new model with data before and after drift
     model_all = build_model(dataset.data.iloc[0:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target)
     prediction2 = model_all.predict(test_set_x)
     accuracy = metrics.accuracy_score(test_set_y, prediction2)
-    print("Accuracy of a New model on test data:", accuracy)
+    print("Accuracy of a New model (before & after) on test data:", accuracy)
+
+    # train a new model on data after drift
+    model_after = build_model(dataset.data.iloc[SIZE:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target)
+    prediction4 = model_after.predict(test_set_x)
+    accuracy = metrics.accuracy_score(test_set_y, prediction4)
+    print("Accuracy of a New model (only after) on test data:", accuracy)
 
     # check the fixed model
     prediction3 = fixed_model.predict(test_set_x)
@@ -192,7 +200,7 @@ def run_single_tree_experiment(dataset):
     """
 
 if __name__ == '__main__':
-    for data in all_datasets:
+    for data in all_datasets[9:]:
         print(f"#### Experiment of dataset: {data.name} ####")
         run_single_tree_experiment(data)
         print("-----------------------------------------------------------------------------------------")

@@ -108,7 +108,7 @@ def get_diagnosis_nodes(model, samples):
 
     number_of_nodes = model.tree_.node_count
     priors = [0.99] * number_of_nodes  # equal prior probability to all nodes
-    # priors = [1.] * number_of_nodes  # equal prior probability to all nodes
+    # priors = [1] * number_of_nodes  # equal prior probability to all nodes
     spectra = np.zeros((number_of_samples, number_of_nodes)).tolist()
 
     node_indicator = model.decision_path(data_x)  # get paths for all samples
@@ -119,7 +119,7 @@ def get_diagnosis_nodes(model, samples):
                      node_indicator.indptr[sample_id]: node_indicator.indptr[sample_id + 1]
                      ].tolist()
         parent = -1
-        for node_id in node_index:
+        for node_id in node_index[:-1]: # TODO: non-leaf only
             # set as a component in test
             spectra[sample_id][node_id] = 1
             # save parent's dictionary

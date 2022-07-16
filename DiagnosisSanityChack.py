@@ -9,25 +9,17 @@ from updateModel import print_tree_rules
 from SingleTree import run_single_tree_experiment
 from HiddenPrints import HiddenPrints
 import xlsxwriter
+import random
 
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-source_path = "data/real/winequality-white.csv"
-data = pd.read_csv(source_path)
-print(list(data.columns[:-1]))
-print(type(data.columns[-1]))
-
-target = data.columns[-1]
-features = list(data.columns[:-1])
-feature_types = ["numeric"]*len(features)
-concept_size = 2000
-dataset = DataSet(source_path, "diagnosis_check", target, concept_size, feature_types)
-
-model = build_model(dataset.data.iloc[0:concept_size], dataset.features, dataset.target, to_split=False)
-
-print("TREE:")
-print_tree_rules(model, dataset.features)
-
+all_datasets = [
+    DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", 2000, ["numeric"]*11, name="winequality-white"),
+    DataSet("data/real/abalone.data", "diagnosis_check", "rings", 2000, ["categorical"] + ["numeric"]*7, name="abalone"),
+    DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", 1000, ["numeric"]*4, name="data_banknote_authentication"),
+    DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris"),
+    DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", 600, ["numeric"]*8, name="pima-indians-diabetes")
+]
 
 def map_tree(tree):
     tree_representation = {0: {"depth": 0,
@@ -64,13 +56,10 @@ def map_tree(tree):
 
     return tree_representation
 
-
-node_list = list(range(model.tree_.node_count))
-tree_rep = map_tree(model)
-non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
-print(non_leaf_nodes)
-leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))
-print(leaf_nodes)
+def softmax(x):
+    y = np.exp(x - np.max(x))
+    f_x = y / np.sum(np.exp(x))
+    return f_x
 
 def manipulate_node(node, dataset, save_to_csv=False):
     feature_to_change = tree_rep[node]["feature"]
@@ -79,7 +68,7 @@ def manipulate_node(node, dataset, save_to_csv=False):
     print(f"changing feature: {feature_to_change} in node {node}")
 
     conditions = tree_rep[node]["condition"]
-    verification_data = dataset.data.iloc[0:concept_size].copy()
+    verification_data = dataset.data.iloc[0:int(0.9*concept_size)].copy()
     filtered_data = dataset.data.iloc[concept_size:].copy()
 
     # filtering only node data
@@ -92,33 +81,66 @@ def manipulate_node(node, dataset, save_to_csv=False):
         if sign == ">":
             indexes_filtered = filtered_data[feature_name] > thresh
             indexes_verification = verification_data[feature_name] > thresh
-            # filtered_data = filtered_data[filtered_data[feature_name] > thresh]
-            # verification_data = verification_data[verification_data[feature_name] > thresh]
         else:  # <=
             indexes_filtered = filtered_data[feature_name] <= thresh
             indexes_verification = verification_data[feature_name] <= thresh
-            # filtered_data = filtered_data[filtered_data[feature_name] <= thresh]
-            # verification_data = verification_data[verification_data[feature_name] <= thresh]
         indexes_filtered_data = indexes_filtered & indexes_filtered_data
         indexes_verification_data = indexes_verification & indexes_verification_data
-    # assert len(verification_data) == model.tree_.n_node_samples[node], f"bad condition - node: {node}, cond: {conditions}"
+
     assert indexes_verification_data.sum() == model.tree_.n_node_samples[node], f"bad condition - node: {node}, cond: {conditions}" \
-                                                                                f"\nnumber of samples should be {model.tree_.n_node_samples[node]} but it is {indexes_verification_data.sum()}"
+                                                                                f"\nnumber of samples should be {model.tree_.n_node_samples[node]} " \
+                                                                                f"but it is {indexes_verification_data.sum()}"
 
-    # calculating statistics
     all_data = dataset.data
-    mean = float(all_data.mean()[feature_to_change])
-    std = float(all_data.std()[feature_to_change])
-
     # creating changes
-    half_std_up = filtered_data.loc[indexes_filtered_data,feature_to_change] + 0.5*std
-    half_std_down = filtered_data.loc[indexes_filtered_data,feature_to_change] - 0.5 * std
-    one_std_up = filtered_data.loc[indexes_filtered_data,feature_to_change] + 1 * std
-    one_std_down = filtered_data.loc[indexes_filtered_data,feature_to_change] - 1 * std
-    feature_changes = [half_std_up, half_std_down, one_std_up, one_std_down]
-    feature_changes_names = ["half_std_up", "half_std_down", "one_std_up", "one_std_down"]
+    if type_of_feature == "numeric":
+        # calculating statistics
+        mean = float(all_data.mean()[feature_to_change])
+        std = float(all_data.std()[feature_to_change])
 
-    # saving changes to csv
+        half_std_up = filtered_data.loc[indexes_filtered_data,feature_to_change] + 0.5*std
+        half_std_down = filtered_data.loc[indexes_filtered_data,feature_to_change] - 0.5 * std
+        one_std_up = filtered_data.loc[indexes_filtered_data,feature_to_change] + 1 * std
+        one_std_down = filtered_data.loc[indexes_filtered_data,feature_to_change] - 1 * std
+        feature_changes = [half_std_up, half_std_down, one_std_up, one_std_down]
+        feature_changes_names = ["half_std_up", "half_std_down", "one_std_up", "one_std_down"]
+
+    else:  # binary \ categorical
+        values = all_data[feature_to_change].unique()
+        value_counts = all_data[feature_to_change].value_counts()
+        rows_to_change = indexes_filtered_data.sum()
+        random.seed(17)
+        uniform_dist = random.choices(values, weights=None, k=rows_to_change)
+
+        distribution = np.zeros(len(values))
+        for i in len(values):
+            val = values[i]
+            distribution[i] = value_counts[val]
+        distribution /= len(all_data)
+        random.seed(5)
+        orig_dist = random.choices(values, weights=distribution, k=rows_to_change)
+
+        distribution3 = softmax(distribution)
+        random.seed(31)
+        softmax_orig_dist = random.choices(values, weights=distribution3, k=rows_to_change)
+
+        value_counts2 = filtered_data.loc[indexes_filtered_data,feature_to_change].value_counts()
+        distribution2 = np.zeros(len(values))
+        for i in len(values):
+            val = values[i]
+            distribution2[i] = value_counts2[val]
+        distribution2 /= rows_to_change
+        random.seed(13)
+        filtered_dist = random.choices(values, weights=distribution2, k=rows_to_change)
+
+        distribution4 = softmax(distribution2)
+        random.seed(7)
+        softmax_filtered_dist = random.choices(values, weights=distribution4, k=rows_to_change)
+
+        feature_changes = [uniform_dist, orig_dist, filtered_dist, softmax_orig_dist, softmax_filtered_dist]
+        feature_changes_names = ["uniform dist", "original dist", "filtered dist", "softmax orig dist", "softmax filtered dist"]
+
+    # saving changes to csv \ yield
     for i in range(len(feature_changes)):
         change = feature_changes[i]
         change_name = feature_changes_names[i]
@@ -140,42 +162,61 @@ all_results = []
 time_stamp = datetime.now()
 date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
 
+for dataset in all_datasets:
+    print(f"-------------{dataset.name.upper()}-------------")
+    concept_size = dataset.batch_size
+    target = dataset.target
+    feature_types = dataset.feature_types
 
-for node in non_leaf_nodes:
-    print(f"node: {node}, depth: {tree_rep[node]['depth']}")
-    manipulated_data = manipulate_node(node, dataset)
+    model = build_model(dataset.data.iloc[0:int(0.9 * concept_size)], dataset.features, dataset.target, to_split=False)
+    # print("TREE:")
+    # print_tree_rules(model, dataset.features)
 
-    for data, change, type_of_feature in manipulated_data:
-        dataset = DataSet(data, "diagnosis_check", target, concept_size, feature_types)
-        with HiddenPrints():
-            result = run_single_tree_experiment(dataset, model=model, check_diagnosis=True, faulty_nodes=[node])
-        result["depth"] = tree_rep[node]['depth']
-        result["samples in node"] = model.tree_.n_node_samples[node]
-        result["change type"] = change_types[change]
-        result["feature type"] = type_of_feature
-        result["number of faulty nodes"] = 1
-        all_results.append(result)
+    node_list = list(range(model.tree_.node_count))
+    tree_rep = map_tree(model)
+    non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
+    print(non_leaf_nodes)
+    leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))
+    print(leaf_nodes)
 
-file_name = f"results/result_run_{date_time}.xlsx"
-workbook = xlsxwriter.Workbook(file_name)
-worksheet = workbook.add_worksheet()
-# write headers
-dict_example = all_results[0]
-index_col = {}
-col_num = 0
-for key in dict_example.keys():
-    worksheet.write(0, col_num, key)
-    index_col[key] = col_num
-    col_num += 1
-# write values
-row_num = 1
-for dict_res in all_results:
-    for key, value in dict_res.items():
-        if type(value) == list:
-            value = str(value)
-        col_num = index_col[key]
-        worksheet.write(row_num, col_num, value)
-    row_num += 1
-workbook.close()
+    # manipulate data & run experiment
+    for node in non_leaf_nodes:
+        print(f"node: {node}, depth: {tree_rep[node]['depth']}")
+        manipulated_data = manipulate_node(node, dataset)
 
-print("DONE")
+        for data, change, type_of_feature in manipulated_data:
+            dataset = DataSet(data, "diagnosis_check", target, concept_size, feature_types)
+            with HiddenPrints():
+                result = run_single_tree_experiment(dataset, model=model, check_diagnosis=True, faulty_nodes=[node])
+            result["dataset"] = dataset.name
+            result["depth"] = tree_rep[node]['depth']
+            result["samples in node"] = model.tree_.n_node_samples[node]
+            result["change type"] = change_types[change]
+            result["feature type"] = type_of_feature
+            result["number of faulty nodes"] = 1
+            all_results.append(result)
+
+    # write results to excel
+    file_name = f"results/result_run_{date_time}.xlsx"
+    workbook = xlsxwriter.Workbook(file_name)
+    worksheet = workbook.add_worksheet()
+    # write headers
+    dict_example = all_results[0]
+    index_col = {}
+    col_num = 0
+    for key in dict_example.keys():
+        worksheet.write(0, col_num, key)
+        index_col[key] = col_num
+        col_num += 1
+    # write values
+    row_num = 1
+    for dict_res in all_results:
+        for key, value in dict_res.items():
+            if type(value) == list:
+                value = str(value)
+            col_num = index_col[key]
+            worksheet.write(row_num, col_num, value)
+        row_num += 1
+    workbook.close()
+
+    print("DONE")

@@ -3,13 +3,12 @@ from scipy.io import arff
 
 class DataSet:
 
-    def __init__(self, source_path, dataset_type, target_class, batch_size, feature_types):
-        self.name = source_path
-
+    def __init__(self, source_path, dataset_type, target_class, batch_size, feature_types, name=None):
         # check data format
         if type(source_path) == str:
+            self.name = source_path
             source_format = source_path.split(".")[-1]
-            if source_format == "csv":
+            if source_format in ("csv", "data"):
                 self.data = pd.read_csv(source_path)
             elif source_format == "arff":
                 data, meta = arff.loadarff(source_path)
@@ -18,6 +17,10 @@ class DataSet:
                 self.data = pd_df
         else:  # already dataframe
             self.data = source_path
+            self.name = name
+
+        if dataset_type == "diagnosis_check":  # shuffle data, same shuffle everytime
+            self.data = self.data.sample(frac=1, random_state=42).reset_index(drop=True)
 
         self.dataset_type = dataset_type
         self.features = list(self.data.columns)

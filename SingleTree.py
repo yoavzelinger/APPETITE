@@ -202,6 +202,40 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     if check_diagnosis:
         result["faulty nodes"] = faulty_nodes
+        result["# faulty nodes "] = len(faulty_nodes)
+        # check how many features fixed
+        diagnosis_features = {}
+        good_fixed = 0
+        for node in diagnosis:
+            feature = model.tree_.feature[node]
+            feature_name = dataset.features[feature]
+            diagnosis_features[feature_name] = diagnosis_features.get(feature_name, 0) +1
+            if node in faulty_nodes:
+                good_fixed += 1
+        result["# total features fixed"] = len(diagnosis_features)
+        result["# faulty nodes fixed"] = good_fixed
+
+        # check how many faulty features
+        faulty_features = set()
+        for node in faulty_nodes:
+            feature = model.tree_.feature[node]
+            feature_name = dataset.features[feature]
+            faulty_features.add(feature_name)
+        result["# faulty features"] = len(faulty_features)
+
+        # check how many features fixed out of the faulty features
+        fixed = 0
+        faulty_feature_nodes_fixed = 0
+        for feature in faulty_features:
+            if feature in diagnosis_features:
+                fixed += 1
+                faulty_feature_nodes_fixed += diagnosis_features[feature]
+        result["# faulty features fixed"] = fixed
+        result["unnecessary features fixed"] = len(diagnosis_features) - fixed
+        result["faulty features nodes fixed"] = faulty_feature_nodes_fixed
+        result["unnecessary nodes fixed"] = len(diagnosis) - faulty_feature_nodes_fixed
+
+        # check diagnosis quality - WE and #diagnosis until nodes are fixed
         real_diagnosis = set(faulty_nodes)
         already_fixed = set()
         i = 0
@@ -219,9 +253,9 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
         print(f"wasted effort = {wasted_effort}")
         result["wasted effort - nodes"] = wasted_effort
-        result["#diagnosis fixed until faulty node"] = i
-        if i == len(diagnoses) and len(real_diagnosis) > 0: # node was not detected
-            result["#diagnosis fixed until faulty node"] = -1
+        result["#diagnosis until faulty node"] = i
+        if len(real_diagnosis) > 0: # node was not detected
+            result["#diagnosis until faulty node"] = -1
         result["probability difference"] = probabilities[0] - probabilities[i-1]
 
     return result

@@ -10,7 +10,6 @@ from SingleTree import run_single_tree_experiment
 from HiddenPrints import HiddenPrints
 import xlsxwriter
 
-
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 source_path = "data/real/winequality-white.csv"
@@ -73,7 +72,7 @@ print(non_leaf_nodes)
 leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))
 print(leaf_nodes)
 
-def manipulate_node(node, dataset):
+def manipulate_node(node, dataset, save_to_csv=False):
     feature_to_change = tree_rep[node]["feature"]
     type_of_feature = dataset.feature_types[feature_to_change]
     feature_to_change = dataset.features[int(feature_to_change)]
@@ -119,7 +118,6 @@ def manipulate_node(node, dataset):
     feature_changes = [half_std_up, half_std_down, one_std_up, one_std_down]
     feature_changes_names = ["half_std_up", "half_std_down", "one_std_up", "one_std_down"]
 
-
     # saving changes to csv
     for i in range(len(feature_changes)):
         change = feature_changes[i]
@@ -128,10 +126,9 @@ def manipulate_node(node, dataset):
         to_save.loc[indexes_filtered_data,feature_to_change] = change
         to_save = verification_data.append(to_save, ignore_index=True)
         yield to_save, change_name, type_of_feature
-        # file_name = f'{dataset.name.split(".")[0]}_node_{node}_depth_{tree_rep[node]["depth"]}_{change_name}.csv'
-        # to_save.to_csv(file_name)
-
-    #return filtered_data
+        if save_to_csv:
+            file_name = f'{dataset.name.split(".")[0]}_node_{node}_depth_{tree_rep[node]["depth"]}_{change_name}.csv'
+            to_save.to_csv(file_name)
 
 change_types = {
     "half_std_up": 0.5,
@@ -158,11 +155,6 @@ for node in non_leaf_nodes:
         result["feature type"] = type_of_feature
         result["number of faulty nodes"] = 1
         all_results.append(result)
-        
-print(date_time)
-# results_df = pd.DataFrame(all_results)
-# file_name = f"results/result_run_{date_time}.csv"
-# results_df.to_csv(file_name)
 
 file_name = f"results/result_run_{date_time}.xlsx"
 workbook = xlsxwriter.Workbook(file_name)

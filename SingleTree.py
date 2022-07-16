@@ -13,7 +13,7 @@ from statistics import mean
 #dataset = DataSet("data/mixed_1010_abrupto.csv", "abrupt", "class", 10000)
 #print(type(dataset.data))
 
-all_datasets = [
+all_datasets_single_tree = [
     DataSet("data/hyperplane1.arff", "abrupt", "output", 1000, ["numeric"]*10),
     DataSet("data/hyperplane2.arff", "abrupt", "output", 1000, ["numeric"]*10),
     DataSet("data/hyperplane3.arff", "abrupt", "output", 1000, ["numeric"]*10),
@@ -28,6 +28,10 @@ all_datasets = [
     DataSet("data/mixed_0101_abrupto.csv", "abrupt", "class", 10000, ["binary"]*2+["numeric"]*2),
     DataSet("data/mixed_1010_abrupto.csv", "abrupt", "class", 10000, ["binary"]*2+["numeric"]*2),
     DataSet("data/stagger_2102_abrupto.csv", "abrupt", "class", 10000, ["categorical"]*4)
+]
+
+all_datasets_single_tree = [
+    DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True)
 ]
 
 SIZE = -1
@@ -102,19 +106,20 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     SIZE = int(dataset.batch_size * 1)
     result["drift size"] = SIZE
     NEW_DATA_SIZE = int(0.1 * SIZE)
+    # NEW_DATA_SIZE = 100
     result["#samples used"] = NEW_DATA_SIZE
     result["feature types"] = dataset.feature_types
-    # NEW_DATA_SIZE = 100
-    if not model:
+
+    if not model: # create a model
         model = build_model(dataset.data.iloc[0:int(0.9*SIZE)], dataset.features, dataset.target)
-        # check model accuracy on data before the drift
-        test_data = dataset.data.iloc[int(0.9*SIZE): SIZE]
-        test_data_x = test_data[dataset.features]
-        prediction = model.predict(test_data_x)
-        test_data_y = test_data[dataset.target]
-        accuracy = metrics.accuracy_score(test_data_y, prediction)
-        print("Accuracy of original model on data BEFORE concept drift:", accuracy)
-        result["accuracy original model BEFORE drift"] = accuracy
+    # check model accuracy on data before the drift
+    test_data = dataset.data.iloc[int(0.9*SIZE): SIZE]
+    test_data_x = test_data[dataset.features]
+    prediction = model.predict(test_data_x)
+    test_data_y = test_data[dataset.target]
+    accuracy = metrics.accuracy_score(test_data_y, prediction)
+    print("Accuracy of original model on data BEFORE concept drift:", accuracy)
+    result["accuracy original model BEFORE drift"] = accuracy
 
     result["tree size"] = model.tree_.node_count
     # check model accuracy on data after concept drift
@@ -261,7 +266,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     return result
 
 if __name__ == '__main__':
-    for data in all_datasets[9:]:
+    for data in all_datasets_single_tree:
         print(f"#### Experiment of dataset: {data.name} ####")
         run_single_tree_experiment(data)
         print("-----------------------------------------------------------------------------------------")

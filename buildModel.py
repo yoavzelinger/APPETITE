@@ -3,7 +3,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 
 
-def build_model(data, features, target, model_type="tree", to_split = False):
+def build_model(data, features, target, model_type="tree", to_split=False):
     x_train = data[features]
     y_train = data[target]
     if to_split:

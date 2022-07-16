@@ -3,24 +3,33 @@ from scipy.io import arff
 
 class DataSet:
 
-    def __init__(self, source_path, dataset_type, target_class, batch_size, feature_types, name=None):
+    def __init__(self, source_path, dataset_type, target_class, batch_size, feature_types, name=None, to_shuffle=False):
         # check data format
         if type(source_path) == str:
             self.name = source_path
             source_format = source_path.split(".")[-1]
-            if source_format in ("csv", "data"):
-                self.data = pd.read_csv(source_path)
+            if source_format in ("csv", "data", "txt"):
+                data_df = pd.read_csv(source_path)
             elif source_format == "arff":
                 data, meta = arff.loadarff(source_path)
                 pd_df = pd.DataFrame(data)
                 pd_df[target_class] = pd_df[target_class].astype('int')
-                self.data = pd_df
+                data_df = pd_df
         else:  # already dataframe
-            self.data = source_path
+            data_df = source_path
             self.name = name
 
-        if dataset_type == "diagnosis_check":  # shuffle data, same shuffle everytime
-            self.data = self.data.sample(frac=1, random_state=42).reset_index(drop=True)
+        # convert categorical to nums
+        for col in data_df:
+            if data_df[col].dtype == object:
+                print(data_df[col].unique())
+                data_df[col] = pd.Categorical(data_df[col])
+                data_df[col] = data_df[col].cat.codes
+                print(data_df[col].unique())
+
+        if to_shuffle:  # shuffle data, same shuffle always
+            data_df = data_df.sample(frac=1, random_state=42).reset_index(drop=True)
+        self.data = data_df
 
         self.dataset_type = dataset_type
         self.features = list(self.data.columns)

@@ -14,11 +14,11 @@ import random
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 all_datasets = [
-    DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", 2000, ["numeric"]*11, name="winequality-white"),
-    DataSet("data/real/abalone.data", "diagnosis_check", "rings", 2000, ["categorical"] + ["numeric"]*7, name="abalone"),
-    DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", 1000, ["numeric"]*4, name="data_banknote_authentication"),
-    DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris"),
-    DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", 600, ["numeric"]*8, name="pima-indians-diabetes")
+    DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", 2000, ["numeric"]*11, name="winequality-white", to_shuffle=True),
+    DataSet("data/real/abalone.data", "diagnosis_check", "rings", 2000, ["categorical"] + ["numeric"]*7, name="abalone", to_shuffle=True),
+    DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", 1000, ["numeric"]*4, name="data_banknote_authentication", to_shuffle=True),
+    #DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True),
+    DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", 600, ["numeric"]*8, name="pima-indians-diabetes", to_shuffle=True)
 ]
 
 def map_tree(tree):
@@ -49,7 +49,12 @@ def map_tree(tree):
             tree_representation[node]["depth"] = tree_representation[parent]["depth"] + 1
             parent_cond = tree_representation[parent]["condition"]
             sign = "<=" if tree_representation[node]["type"] == "left" else ">"
-            cond = f"{model.tree_.feature[parent]} {sign} {model.tree_.threshold[parent]}"
+            #cond = f"{model.tree_.feature[parent]} {sign} {model.tree_.threshold[parent]}"
+            cond = {
+                "feature": model.tree_.feature[parent],
+                "sign": sign,
+                "thresh": model.tree_.threshold[parent]
+            }
             tree_representation[node]["condition"] = parent_cond + [cond]
         else: #root
             tree_representation[node]["condition"] = []
@@ -68,15 +73,18 @@ def manipulate_node(node, dataset, save_to_csv=False):
     print(f"changing feature: {feature_to_change} in node {node}")
 
     conditions = tree_rep[node]["condition"]
-    verification_data = dataset.data.iloc[0:int(0.9*concept_size)].copy()
+    verification_data = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
+    not_changed_data = dataset.data.iloc[0:concept_size].copy()
     filtered_data = dataset.data.iloc[concept_size:].copy()
 
     # filtering only node data
     indexes_filtered_data = (filtered_data[feature_to_change] > 0) | (filtered_data[feature_to_change] <= 0)
     indexes_verification_data = (verification_data[feature_to_change] > 0) | (verification_data[feature_to_change] <= 0)
+
     for cond in conditions:
-        feature, sign, thresh = cond.split()
-        thresh = np.float32(thresh)
+        feature = cond["feature"]
+        sign = cond["sign"]
+        thresh = cond["thresh"]
         feature_name = dataset.features[int(feature)]
         if sign == ">":
             indexes_filtered = filtered_data[feature_name] > thresh
@@ -102,8 +110,10 @@ def manipulate_node(node, dataset, save_to_csv=False):
         half_std_down = filtered_data.loc[indexes_filtered_data,feature_to_change] - 0.5 * std
         one_std_up = filtered_data.loc[indexes_filtered_data,feature_to_change] + 1 * std
         one_std_down = filtered_data.loc[indexes_filtered_data,feature_to_change] - 1 * std
-        feature_changes = [half_std_up, half_std_down, one_std_up, one_std_down]
-        feature_changes_names = ["half_std_up", "half_std_down", "one_std_up", "one_std_down"]
+        two_std_up = filtered_data.loc[indexes_filtered_data, feature_to_change] + 2 * std
+        two_std_down = filtered_data.loc[indexes_filtered_data, feature_to_change] - 2 * std
+        feature_changes = [half_std_up, half_std_down, one_std_up, one_std_down, two_std_up, two_std_down]
+        feature_changes_names = ["half_std_up", "half_std_down", "one_std_up", "one_std_down", "two_std_up", "two_std_down"]
 
     else:  # binary \ categorical
         values = all_data[feature_to_change].unique()
@@ -113,7 +123,7 @@ def manipulate_node(node, dataset, save_to_csv=False):
         uniform_dist = random.choices(values, weights=None, k=rows_to_change)
 
         distribution = np.zeros(len(values))
-        for i in len(values):
+        for i in range(len(values)):
             val = values[i]
             distribution[i] = value_counts[val]
         distribution /= len(all_data)
@@ -124,18 +134,19 @@ def manipulate_node(node, dataset, save_to_csv=False):
         random.seed(31)
         softmax_orig_dist = random.choices(values, weights=distribution3, k=rows_to_change)
 
+        values2 = filtered_data.loc[indexes_filtered_data,feature_to_change].unique()
         value_counts2 = filtered_data.loc[indexes_filtered_data,feature_to_change].value_counts()
-        distribution2 = np.zeros(len(values))
-        for i in len(values):
-            val = values[i]
+        distribution2 = np.zeros(len(values2))
+        for i in range(len(values2)):
+            val = values2[i]
             distribution2[i] = value_counts2[val]
         distribution2 /= rows_to_change
         random.seed(13)
-        filtered_dist = random.choices(values, weights=distribution2, k=rows_to_change)
+        filtered_dist = random.choices(values2, weights=distribution2, k=rows_to_change)
 
         distribution4 = softmax(distribution2)
         random.seed(7)
-        softmax_filtered_dist = random.choices(values, weights=distribution4, k=rows_to_change)
+        softmax_filtered_dist = random.choices(values2, weights=distribution4, k=rows_to_change)
 
         feature_changes = [uniform_dist, orig_dist, filtered_dist, softmax_orig_dist, softmax_filtered_dist]
         feature_changes_names = ["uniform dist", "original dist", "filtered dist", "softmax orig dist", "softmax filtered dist"]
@@ -146,7 +157,7 @@ def manipulate_node(node, dataset, save_to_csv=False):
         change_name = feature_changes_names[i]
         to_save = filtered_data.copy()
         to_save.loc[indexes_filtered_data,feature_to_change] = change
-        to_save = verification_data.append(to_save, ignore_index=True)
+        to_save = not_changed_data.append(to_save, ignore_index=True)
         yield to_save, change_name, type_of_feature
         if save_to_csv:
             file_name = f'{dataset.name.split(".")[0]}_node_{node}_depth_{tree_rep[node]["depth"]}_{change_name}.csv'
@@ -156,7 +167,9 @@ change_types = {
     "half_std_up": 0.5,
     "half_std_down": -0.5,
     "one_std_up": 1,
-    "one_std_down": -1
+    "one_std_down": -1,
+    "two_std_up": 2,
+    "two_std_down": -2
 }
 all_results = []
 time_stamp = datetime.now()
@@ -168,9 +181,9 @@ for dataset in all_datasets:
     target = dataset.target
     feature_types = dataset.feature_types
 
-    model = build_model(dataset.data.iloc[0:int(0.9 * concept_size)], dataset.features, dataset.target, to_split=False)
-    # print("TREE:")
-    # print_tree_rules(model, dataset.features)
+    model = build_model(dataset.data.iloc[0:int(0.9 * concept_size)], dataset.features, dataset.target)
+    print("TREE:")
+    print_tree_rules(model, dataset.features)
 
     node_list = list(range(model.tree_.node_count))
     tree_rep = map_tree(model)
@@ -185,13 +198,15 @@ for dataset in all_datasets:
         manipulated_data = manipulate_node(node, dataset)
 
         for data, change, type_of_feature in manipulated_data:
-            dataset = DataSet(data, "diagnosis_check", target, concept_size, feature_types)
+            dataset_for_exp = DataSet(data, "diagnosis_check", target, concept_size, feature_types)
             with HiddenPrints():
-                result = run_single_tree_experiment(dataset, model=model, check_diagnosis=True, faulty_nodes=[node])
+                result = run_single_tree_experiment(dataset_for_exp, model=model, check_diagnosis=True, faulty_nodes=[node])
             result["dataset"] = dataset.name
             result["depth"] = tree_rep[node]['depth']
             result["samples in node"] = model.tree_.n_node_samples[node]
-            result["change type"] = change_types[change]
+            if change in change_types:
+                change = change_types[change]
+            result["change type"] = change
             result["feature type"] = type_of_feature
             result["number of faulty nodes"] = 1
             all_results.append(result)

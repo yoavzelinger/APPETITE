@@ -174,6 +174,21 @@ change_types = {
     "two_std_up": 2,
     "two_std_down": -2
 }
+
+severity = {
+    "half_std_up": 1,
+    "half_std_down": 1,
+    "one_std_up": 2,
+    "one_std_down": 2,
+    "two_std_up": 3,
+    "two_std_down": 3,
+    "uniform dist": 2,
+    "original dist": 2,
+    "filtered dist": 1,
+    "softmax orig dist": 2,
+    "softmax filtered dist": 1
+}
+
 all_results = []
 time_stamp = datetime.now()
 date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
@@ -207,6 +222,7 @@ for dataset in all_datasets:
             result["dataset"] = dataset.name
             result["depth"] = tree_rep[node]['depth']
             result["samples in node"] = model.tree_.n_node_samples[node]
+            result["change severity"] = severity[change]
             if change in change_types:
                 change = change_types[change]
             result["change type"] = change

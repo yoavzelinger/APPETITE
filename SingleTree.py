@@ -1,4 +1,6 @@
 import copy
+from datetime import datetime
+
 import numpy as np
 from DataSet import DataSet
 from SHAP import applySHAP
@@ -137,15 +139,21 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # RUN ALGORITHM
     samples = (new_data_x, prediction, new_data_y)
+    time1 = datetime.now()
     (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector = diagnose_Nodes(model, dataset, samples)
+    diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
+    time2 = datetime.now()
+    result["diagnosis time"] = time2 - time1
     result["diagnoses list"] = diagnoses
     result["probabilities"] = probabilities
     result["# of diagnoses"] = len(diagnoses)
-    diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
     result["chosen diagnosis"] = diagnosis
     result["diagnosis cardinality"] = len(diagnosis)
     print(f"best diagnosis: {diagnosis}")
+    time1 = datetime.now()
     fixed_model = fix_nodes_by_type(model, diagnosis, dataset)
+    time2 = datetime.now()
+    result["fixing time"] = time2 - time1
 
     # print("FIXED TREE:")
     # print_tree_rules(fixed_model, dataset.features)
@@ -175,14 +183,20 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     result["accuracy original model - test data"] = accuracy
 
     # train a new model with data before and after drift
+    time1 = datetime.now()
     model_all = build_model(dataset.data.iloc[0:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target)
+    time2 = datetime.now()
+    result["new model all time"] = time2 - time1
     prediction2 = model_all.predict(test_set_x)
     accuracy = metrics.accuracy_score(test_set_y, prediction2)
     print("Accuracy of a New model (before & after) on test data:", accuracy)
     result["accuracy New model (before & after) model - test data"] = accuracy
 
     # train a new model on data after drift
+    time1 = datetime.now()
     model_after = build_model(dataset.data.iloc[SIZE:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target)
+    time2 = datetime.now()
+    result["new model after time"] = time2 - time1
     prediction4 = model_after.predict(test_set_x)
     accuracy = metrics.accuracy_score(test_set_y, prediction4)
     print("Accuracy of a New model (only after) on test data:", accuracy)
@@ -260,8 +274,10 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         print(f"wasted effort = {wasted_effort}")
         result["wasted effort - nodes"] = wasted_effort
         result["#diagnosis until faulty node"] = i
+        result["diagnosis found?"] = 1
         if len(real_diagnosis) > 0: # node was not detected
             result["#diagnosis until faulty node"] = -1
+            result["diagnosis found?"] = 0
         result["probability difference"] = probabilities[0] - probabilities[i-1]
 
         faulty_node = faulty_nodes[0]

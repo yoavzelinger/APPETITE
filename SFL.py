@@ -135,4 +135,4 @@ def get_diagnosis_nodes(model, samples):
     print(f"Conflicts: {conflicts}")
     print(f"Number of misclassified samples: {errors}")
     diagnoses = calculate_diagnoses_and_probabilities_barinel_avi(spectra, error_vector, priors)
-    return diagnoses, BAD_SAMPLES
+    return diagnoses, BAD_SAMPLES, spectra, error_vector

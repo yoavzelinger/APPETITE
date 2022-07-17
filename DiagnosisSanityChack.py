@@ -67,10 +67,11 @@ def softmax(x):
     return f_x
 
 def manipulate_node(node, dataset, save_to_csv=False):
-    feature_to_change = tree_rep[node]["feature"]
-    type_of_feature = dataset.feature_types[feature_to_change]
-    feature_to_change = dataset.features[int(feature_to_change)]
+    feature_to_change_num = tree_rep[node]["feature"]
+    type_of_feature = dataset.feature_types[feature_to_change_num]
+    feature_to_change = dataset.features[int(feature_to_change_num)]
     print(f"changing feature: {feature_to_change} in node {node}")
+    feature_in_path = False
 
     conditions = tree_rep[node]["condition"]
     verification_data = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
@@ -85,6 +86,8 @@ def manipulate_node(node, dataset, save_to_csv=False):
         feature = cond["feature"]
         sign = cond["sign"]
         thresh = cond["thresh"]
+        if feature == feature_to_change_num:
+            feature_in_path = True
         feature_name = dataset.features[int(feature)]
         if sign == ">":
             indexes_filtered = filtered_data[feature_name] > thresh
@@ -158,7 +161,7 @@ def manipulate_node(node, dataset, save_to_csv=False):
         to_save = filtered_data.copy()
         to_save.loc[indexes_filtered_data,feature_to_change] = change
         to_save = not_changed_data.append(to_save, ignore_index=True)
-        yield to_save, change_name, type_of_feature
+        yield to_save, change_name, type_of_feature, feature_in_path
         if save_to_csv:
             file_name = f'{dataset.name.split(".")[0]}_node_{node}_depth_{tree_rep[node]["depth"]}_{change_name}.csv'
             to_save.to_csv(file_name)
@@ -197,7 +200,7 @@ for dataset in all_datasets:
         print(f"node: {node}, depth: {tree_rep[node]['depth']}")
         manipulated_data = manipulate_node(node, dataset)
 
-        for data, change, type_of_feature in manipulated_data:
+        for data, change, type_of_feature, feature_in_path in manipulated_data:
             dataset_for_exp = DataSet(data, "diagnosis_check", target, concept_size, feature_types)
             with HiddenPrints():
                 result = run_single_tree_experiment(dataset_for_exp, model=model, check_diagnosis=True, faulty_nodes=[node])
@@ -209,6 +212,7 @@ for dataset in all_datasets:
             result["change type"] = change
             result["feature type"] = type_of_feature
             result["number of faulty nodes"] = 1
+            result["feature in path"] = feature_in_path
             all_results.append(result)
 
     # write results to excel

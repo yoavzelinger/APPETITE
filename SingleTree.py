@@ -60,10 +60,11 @@ def diagnose_SHAP(model, dataset, new_data, prediction):
     first_diagnosis = diagnosis[0].diagnosis
     return first_diagnosis
 
-def best_diagnosis(diagnoses, probabilities):
+def best_diagnosis(diagnoses, probabilities, spectra, error_vector, best="first"):
     print("diagnoses: {}".format(diagnoses))
     print("probabilities: {}".format(probabilities))
-    first_diagnosis = diagnoses[0]
+    if best == "first":
+        first_diagnosis = diagnoses[0]
     return first_diagnosis
 
 def fix_SHAP(model, diagnosis, dataset):
@@ -77,8 +78,8 @@ def fix_SHAP(model, diagnosis, dataset):
 def diagnose_Nodes(model, dataset, new_data):
     nodes = model.tree_.node_count
     print("number of nodes: {}".format(nodes))
-    (diagnoses, probabilities), BAD_SAMPLES = get_diagnosis_nodes(model, new_data) # get diagnosis - avi's code
-    return (diagnoses, probabilities), BAD_SAMPLES
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector = get_diagnosis_nodes(model, new_data) # get diagnosis - avi's code
+    return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector
 
 def fix_nodes_binary(model, diagnosis):
     # fix model - Nodes, change selection (right <--> left)
@@ -136,11 +137,11 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # RUN ALGORITHM
     samples = (new_data_x, prediction, new_data_y)
-    (diagnoses, probabilities), BAD_SAMPLES = diagnose_Nodes(model, dataset, samples)
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector = diagnose_Nodes(model, dataset, samples)
     result["diagnoses list"] = diagnoses
     result["probabilities"] = probabilities
     result["# of diagnoses"] = len(diagnoses)
-    diagnosis = best_diagnosis(diagnoses, probabilities)
+    diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
     result["chosen diagnosis"] = diagnosis
     result["diagnosis cardinality"] = len(diagnosis)
     print(f"best diagnosis: {diagnosis}")
@@ -262,6 +263,18 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         if len(real_diagnosis) > 0: # node was not detected
             result["#diagnosis until faulty node"] = -1
         result["probability difference"] = probabilities[0] - probabilities[i-1]
+
+        faulty_node = faulty_nodes[0]
+        spectra = np.array(spectra)
+        error_vector = np.array(error_vector)
+        samples_in_node_mask = spectra[:,faulty_node] == 1
+        samples_in_node_after_drift = samples_in_node_mask.sum()
+        errors_in_node = error_vector[samples_in_node_mask].sum()
+        assert samples_in_node_after_drift >= errors_in_node
+        result["samples in node after drift"] = samples_in_node_after_drift
+        result["# errors in node after drift"] = errors_in_node
+        errors_p = errors_in_node / samples_in_node_after_drift if samples_in_node_after_drift > 0 else -1
+        result["% errors in node after drift"] = errors_p
 
     return result
 

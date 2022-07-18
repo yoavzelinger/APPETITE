@@ -32,9 +32,11 @@ all_datasets_single_tree = [
     DataSet("data/stagger_2102_abrupto.csv", "abrupt", "class", 10000, ["categorical"]*4)
 ]
 
+"""
 all_datasets_single_tree = [
     DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True)
 ]
+"""
 
 SIZE = -1
 NEW_DATA_SIZE = -1
@@ -80,8 +82,8 @@ def fix_SHAP(model, diagnosis, dataset):
 def diagnose_Nodes(model, dataset, new_data):
     nodes = model.tree_.node_count
     print("number of nodes: {}".format(nodes))
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector = get_diagnosis_nodes(model, new_data) # get diagnosis - avi's code
-    return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = get_diagnosis_nodes(model, new_data) # get diagnosis - avi's code
+    return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def fix_nodes_binary(model, diagnosis):
     # fix model - Nodes, change selection (right <--> left)
@@ -140,15 +142,16 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     # RUN ALGORITHM
     samples = (new_data_x, prediction, new_data_y)
     time1 = datetime.now()
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector = diagnose_Nodes(model, dataset, samples)
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, dataset, samples)
     diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
     time2 = datetime.now()
     result["diagnosis time"] = time2 - time1
     result["diagnoses list"] = diagnoses
-    result["probabilities"] = probabilities
+    result["probabilities"] = probabilities.tolist()
     result["# of diagnoses"] = len(diagnoses)
     result["chosen diagnosis"] = diagnosis
     result["diagnosis cardinality"] = len(diagnosis)
+    result["conflicts"] = conflicts
     print(f"best diagnosis: {diagnosis}")
     time1 = datetime.now()
     fixed_model = fix_nodes_by_type(model, diagnosis, dataset)
@@ -295,7 +298,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     return result
 
 if __name__ == '__main__':
-    for data in all_datasets_single_tree:
+    for data in all_datasets_single_tree[0:1]:
         print(f"#### Experiment of dataset: {data.name} ####")
         run_single_tree_experiment(data)
         print("-----------------------------------------------------------------------------------------")

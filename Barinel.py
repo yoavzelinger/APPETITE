@@ -4,6 +4,104 @@ import numpy as np
 from functools import reduce
 import operator
 
+from pysat.examples.hitman import Hitman
+
+def calculate_diagnoses_and_probabilities_barinel_shaked(spectra,  # np array [number of tests, number of components] - binary
+                                                      error_vector,  # np array [number of tests] - binary
+                                                      priors):  # np array [number of components] - float
+    # get all conflicts
+    errors_mask = error_vector[:] == 1
+    failed_tests = spectra[errors_mask,:]
+    components = np.arange(spectra.shape[1]) +1
+    comps_in_tests = spectra*components
+    comps_in_failed_tests = comps_in_tests[errors_mask,:]
+    conflicts = set()
+    for comps in comps_in_failed_tests:
+        conf = comps[comps > 0] -1
+        conflicts.add(tuple(conf))
+    print(f"conflicts = {conflicts}")
+
+    # get all diagnoses by minimal hitting set on conflicts
+    diagnoses = []
+    with Hitman(bootstrap_with=conflicts, htype='sorted') as hitman:
+        for hs in hitman.enumerate():
+            dk = list(map(int,hs))
+            diagnoses.append(dk)
+
+    # calculate probabilities
+    probabilities = np.zeros(len(diagnoses))
+    e_dks = []
+    for i, dk in enumerate(diagnoses):
+        e_dk = calculate_e_dk(dk, spectra, error_vector)
+        # print(f"pr(d = {dk}|e) = {e_dk}")
+        e_dks.append(e_dk)
+        prior = np.prod(priors[dk])  # multiply all diagnosis prior probabilities
+        probabilities[i] = prior * e_dk
+
+    # normalize probabilities
+    probabilities_sum = probabilities.sum()
+    probabilities /= probabilities_sum
+
+    # order diagnoses by probability
+    d_order = np.argsort(-probabilities)  # highest prob first
+    o_probabilities = probabilities[d_order]
+    o_diagnoses = []
+    for i in d_order:
+        o_diagnoses.append(diagnoses[i])
+
+    # return ordered and normalized diagnoses and probabilities
+    return o_diagnoses, o_probabilities
+
+def calculate_e_dk(dk, spectra, error_vector):
+    funcArr = ['(-1)']  # we want to maximize func, so we minimize -func
+    n_tests = spectra.shape[0]
+    n_components = spectra.shape[1]
+
+    # get the active vars in this diagnosis
+    active_vars = np.zeros(n_components)  # var for each component
+    spectra_dk = spectra[:,dk]
+    dk_active_mask = np.sum(spectra_dk, axis=0) > 0  # true if component form dk was in any test
+    active_vars[dk] = np.ones(len(dk))*dk_active_mask
+    n_active_vars = int(active_vars.sum())
+
+    # re-labeling variables to conform to scipy's requirements
+    renamed_vars = -np.ones(n_components)
+    var_names = np.arange(n_active_vars)
+    renamed_vars[active_vars > 0] = var_names
+
+    # building the target function as a string
+    for i in range(n_tests): # iterate tests
+        fa = "1*"
+        for j in dk:  # iterate components in diagnosis
+            if spectra[i][j] == 1:  # comp in test
+                fa = fa + f"x[{int(renamed_vars[j])}]*"  # add healthy var to function
+        fa = fa[:-1]  # remove last *
+        if error_vector[i] == 1:
+            fa = "*(1-" + fa + ")"
+        else:
+            fa = "*(" + fa + ")"
+        funcArr.append(fa)
+
+    # using dynamic programming to initialize the target function
+    func = ""
+    for fa in funcArr:
+        func = func + fa
+    objective = eval(f'lambda x: {func}')
+    # print(func)
+
+    # building bounds over the variables
+    # and the initial health vector
+    b = (0.0, 1.0)  # probabilities
+    initial_h = 0.5
+    bnds = [b]*n_active_vars
+    h0 = np.ones(n_active_vars)*initial_h
+
+    # solving the minimization problem
+    sol = minimize(objective, h0, method="L-BFGS-B", bounds=bnds, tol=1e-3, options={'maxiter': 100})
+
+    # print(sol.x)
+    return -sol.fun
+
 def calculate_diagnoses_and_probabilities_barinel_avi(spectra,  # list(list) (number of tests, number of components)
                                                       error_vector,  # list() number of tests
                                                       priors):  # list in the length of components [float]
@@ -22,7 +120,7 @@ def calculate_diagnoses_and_probabilities_barinel_avi(spectra,  # list(list) (nu
     probabilities = [0.0 for _ in diagnoses]
     e_dks = []
     for i, dk in enumerate(diagnoses):
-        e_dk = calculate_e_dk(dk, spectra, error_vector)
+        e_dk = calculate_e_dk_avi(dk, spectra, error_vector)
         e_dks.append(e_dk)
         # prior = math.prod([priors[c] for c in dk])
         prior = reduce(operator.mul, [priors[c] for c in dk], 1)
@@ -73,7 +171,7 @@ def conflict_directed_search(conflicts):
     diagnoses = new_diagnoses
     return diagnoses
 
-def calculate_e_dk(dk, spectra, error_vector):
+def calculate_e_dk_avi(dk, spectra, error_vector):
     funcArr = ['(-1)']
     objective = None
     active_vars = [False] * len(spectra[0])
@@ -81,7 +179,7 @@ def calculate_e_dk(dk, spectra, error_vector):
     # get the active vars in this diagnosis
     for i, e in enumerate(error_vector):
         for j, c in enumerate(spectra[i]):
-            if spectra[i][j] == 1 and j in dk:
+            if spectra[i][j] == 1 and j in dk: # j in diagnosis & participated in test
                 active_vars[j] = True
 
     # re-labeling variables to conform to scipy's requirements
@@ -128,129 +226,35 @@ def calculate_e_dk(dk, spectra, error_vector):
 
     return -sol.fun
 
-"""
-def available(wanted_resource, occupied_resources):
-    for ocr in occupied_resources:
-        if wanted_resource == ocr:
-            return False
-    return True
+if __name__ == '__main__':
+    priors = np.ones(3)
+    """
+    spectra1 = np.array([[1, 0, 1],
+                        [0, 1, 1],
+                        [1, 0, 0],
+                        [0, 1, 0],
+                        [1, 1, 0]])
+    error_vector1 = np.array([1, 1, 1, 1, 0])
 
-#############################################################
-# Methods for calculating diagnoses and their probabilities #
-#############################################################
-def calculate_dichotomy_matrix(spectra, error_vector):
-    dichotomy_matrix = [[],  # n11
-                        [],  # n10
-                        [],  # n01
-                        []]  # n00
-    for cj in range(len(spectra[0])):
-        n11, n10, n01, n00 = 0, 0, 0, 0
-        cj_vector = [spectra[i][cj] for i in range(len(spectra))]
-        for i in range(len(cj_vector)):
-            if cj_vector[i] == 1 and error_vector[i] == 1:
-                n11 += 1
-            elif cj_vector[i] == 1 and error_vector[i] == 0:
-                n10 += 1
-            elif cj_vector[i] == 0 and error_vector[i] == 1:
-                n01 += 1
-            else:
-                n00 += 1
-        dichotomy_matrix[0].append(n11)
-        dichotomy_matrix[1].append(n10)
-        dichotomy_matrix[2].append(n01)
-        dichotomy_matrix[3].append(n00)
-    return dichotomy_matrix
+    d,p = calculate_diagnoses_and_probabilities_barinel_shaked(spectra1,error_vector1,priors)
+    print(f"diagnoses = {d}")
+    print(f"probabilities = {p}")
+    """
 
-def calculate_diagnoses_and_probabilities_barinel_amir(spectra, error_vector, kwargs, simulations):
-    # Calculate prior probabilities
-    priors = methods[kwargs['mfcp']](spectra,
-                                                              error_vector,
-                                                              kwargs,
-                                                              simulations)
+    spectra2 = np.array([[1, 1, 0],
+                        [0, 1, 1],
+                        [1, 0, 0],
+                        [1, 0, 1]])
+    error_vector2 = np.array([1, 1, 1, 0])
 
-    # calculate optimized probabilities
-    failed_tests = list(
-        map(lambda test: list(enumerate(test[0])), filter(lambda test: test[1] == 1, zip(spectra, error_vector))))
-    used_components = dict(enumerate(sorted(reduce(set.__or__, map(
-        lambda test: set(map(lambda comp: comp[0], filter(lambda comp: comp[1] == 1, test))), failed_tests), set()))))
-    optimizedMatrix = FullMatrix()
-    optimizedMatrix.set_probabilities([x[1] for x in enumerate(priors) if x[0] in used_components])
-    newErr = []
-    newMatrix = []
-    used_tests = []
-    for i, (test, err) in enumerate(zip(spectra, error_vector)):
-        newTest = list(map(lambda i: test[i], sorted(used_components.values())))
-        if 1 in newTest:  ## optimization could remove all comps of a test
-            newMatrix.append(newTest)
-            newErr.append(err)
-            used_tests.append(i)
-    optimizedMatrix.set_matrix(newMatrix)
-    optimizedMatrix.set_error(newErr)
-    used_tests = sorted(used_tests)
+    d, p = calculate_diagnoses_and_probabilities_barinel_shaked(spectra2, error_vector2, priors)
+    #d, p = calculate_diagnoses_and_probabilities_barinel_avi(spectra2.tolist(), error_vector2.tolist(), priors.tolist())
+    print(f"diagnoses = {d}")
+    assert len(d) == 2, "wrong number of diagnoses"
+    assert sorted(d[0]) == [0, 1], "wrong diagnosis order"
+    assert sorted(d[1]) == [0, 2], "wrong diagnosis order"
+    print(f"probabilities = {p}")
+    assert len(p) == 2
+    assert abs(p[0] - 0.839) < 0.01, f"prob should be 0.839, but it is {p[0]}"
+    assert abs(p[1] - 0.161) < 0.01, f"prob should be 0.161, but it is {p[1]}"
 
-    # rename back the components of the diagnoses
-    Opt_diagnoses = optimizedMatrix.diagnose()
-    diagnoses = []
-    for diag in Opt_diagnoses:
-        diag = diag.clone()
-        diag_comps = [used_components[x] for x in diag.diagnosis]
-        diag.diagnosis = list(diag_comps)
-        diagnoses.append(diag)
-
-    # transform diagnoses to 2 lists like the default barinel
-    t_diagnoses, t_probabilities = [], []
-    for d in diagnoses:
-        t_diagnoses.append(d.diagnosis)
-        t_probabilities.append(d.probability)
-
-    # normalize probabilities and order them
-    probabilities_sum = sum(t_probabilities)
-    for i, probability in enumerate(t_probabilities):
-        t_probabilities[i] = t_probabilities[i] / probabilities_sum
-    z_probabilities, z_diagnoses = zip(*[(d, p) for d, p in sorted(zip(t_probabilities, t_diagnoses))])
-    lz_diagnoses = list(z_diagnoses)
-    lz_probabilities = list(z_probabilities)
-    lz_diagnoses.reverse()
-    lz_probabilities.reverse()
-
-    print(f'oracle: {[a.num for a in simulations[0].agents if a.is_faulty]}')
-
-    print(f'diagnoses and probabilities:')
-    for i, _ in enumerate(lz_diagnoses):
-        print(f'{lz_diagnoses[i]}: {lz_probabilities[i]}')
-
-    return lz_diagnoses, lz_probabilities
-
-
-#############################################################
-#              Methods for calculating priors               #
-#############################################################
-def populate_intersections_table(num_agents, simulations):
-    # initialize intersections table
-    intersections_table = np.zeros((num_agents, num_agents), dtype=int)
-
-    # populate intersections table across the different simulations
-    for i, simulation in enumerate(simulations):
-        current_plans = simulation.plans
-        for a in range(num_agents):
-            for t in range(len(current_plans[a]) - 1):
-                for a2 in range(num_agents):
-                    if a2 != a:
-                        for t2 in range(t + 1, len(current_plans[a2])):
-                            avi = current_plans[a][t]
-                            bruno = current_plans[a2][t2]
-                            if current_plans[a][t] == current_plans[a2][t2]:
-                                intersections_table[a][a2] += 1
-    return intersections_table
-
-
-def calculate_priors_one(spectra, error_vector, kwargs, simulations):
-    p = 1
-    priors = [p for _ in range(len(spectra[0]))]  # priors
-    return priors
-
-def calculate_priors_static(spectra, error_vector, kwargs, simulations):
-    p = 0.1
-    priors = [p for _ in range(len(spectra[0]))]  # priors
-    return priors
-"""

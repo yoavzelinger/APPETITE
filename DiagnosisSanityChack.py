@@ -247,10 +247,13 @@ for dataset in all_datasets:
     row_num = 1
     for dict_res in all_results:
         for key, value in dict_res.items():
-            if type(value) == list:
+            if type(value) in (list, set, dict):
                 value = str(value)
             col_num = index_col[key]
-            worksheet.write(row_num, col_num, value)
+            try:
+                worksheet.write(row_num, col_num, value)
+            except TypeError:
+                print(f"problem with key: '{key}', value: {value}")
         row_num += 1
     workbook.close()
 

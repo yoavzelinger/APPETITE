@@ -22,10 +22,8 @@ class DataSet:
         # convert categorical to nums
         for col in data_df:
             if data_df[col].dtype == object:
-                print(data_df[col].unique())
                 data_df[col] = pd.Categorical(data_df[col])
                 data_df[col] = data_df[col].cat.codes
-                print(data_df[col].unique())
 
         if to_shuffle:  # shuffle data, same shuffle always
             data_df = data_df.sample(frac=1, random_state=42).reset_index(drop=True)

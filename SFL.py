@@ -110,7 +110,7 @@ def get_diagnosis_nodes(model, samples):
     number_of_nodes = model.tree_.node_count
     # priors = [0.99] * number_of_nodes  # equal prior probability to all nodes
     # priors = [1] * number_of_nodes  # equal prior probability to all nodes
-    priors = np.ones(number_of_nodes) #*0.99
+    priors = np.ones(number_of_nodes) * 0.99
     # spectra = np.zeros((number_of_samples, number_of_nodes)).tolist()
     spectra = np.zeros((number_of_samples, number_of_nodes))
 

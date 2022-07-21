@@ -187,7 +187,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # train a new model with data before and after drift
     time1 = datetime.now()
-    model_all = build_model(dataset.data.iloc[0:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target)
+    model_all = build_model(dataset.data.iloc[0:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target, to_split=True)
     time2 = datetime.now()
     result["new model all time"] = time2 - time1
     prediction2 = model_all.predict(test_set_x)
@@ -197,7 +197,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # train a new model on data after drift
     time1 = datetime.now()
-    model_after = build_model(dataset.data.iloc[SIZE:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target)
+    model_after = build_model(dataset.data.iloc[SIZE:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target, to_split=True)
     time2 = datetime.now()
     result["new model after time"] = time2 - time1
     prediction4 = model_after.predict(test_set_x)

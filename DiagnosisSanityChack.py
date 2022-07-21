@@ -4,7 +4,7 @@ from datetime import datetime
 from pandas.core.common import SettingWithCopyWarning
 import numpy as np
 from DataSet import DataSet
-from buildModel import build_model
+from buildModel import build_model, map_tree
 from updateModel import print_tree_rules
 from SingleTree import run_single_tree_experiment
 from HiddenPrints import HiddenPrints
@@ -20,46 +20,6 @@ all_datasets = [
     #DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True),
     DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", 600, ["numeric"]*8, name="pima-indians-diabetes", to_shuffle=True)
 ]
-
-def map_tree(tree):
-    tree_representation = {0: {"depth": 0,
-                "parent": -1}}
-    nodes_to_check = [0]
-    while len(nodes_to_check) > 0:
-        node = nodes_to_check.pop(0)
-
-        left_child = tree.tree_.children_left[node]
-        tree_representation[node]["left"] = left_child
-        if left_child != -1:
-            tree_representation[left_child] = {"parent":node,
-                                               "type": "left"}
-            nodes_to_check.append(left_child)
-        right_child = tree.tree_.children_right[node]
-        tree_representation[node]["right"] = right_child
-        if right_child != -1:
-            tree_representation[right_child] = {"parent":node,
-                                               "type": "right"}
-            nodes_to_check.append(right_child)
-
-        tree_representation[node]["feature"] = model.tree_.feature[node]
-        tree_representation[node]["threshold"] = model.tree_.threshold[node]
-
-        if node != 0:
-            parent = tree_representation[node]["parent"]
-            tree_representation[node]["depth"] = tree_representation[parent]["depth"] + 1
-            parent_cond = tree_representation[parent]["condition"]
-            sign = "<=" if tree_representation[node]["type"] == "left" else ">"
-            #cond = f"{model.tree_.feature[parent]} {sign} {model.tree_.threshold[parent]}"
-            cond = {
-                "feature": model.tree_.feature[parent],
-                "sign": sign,
-                "thresh": model.tree_.threshold[parent]
-            }
-            tree_representation[node]["condition"] = parent_cond + [cond]
-        else: #root
-            tree_representation[node]["condition"] = []
-
-    return tree_representation
 
 def softmax(x):
     y = np.exp(x - np.max(x))
@@ -198,12 +158,14 @@ for dataset in all_datasets:
     concept_size = dataset.batch_size
     target = dataset.target
     feature_types = dataset.feature_types
-
-    model = build_model(dataset.data.iloc[0:int(0.9 * concept_size)], dataset.features, dataset.target)
+    train = dataset.data.iloc[0:int(0.9 * concept_size)]
+    validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
+    model = build_model(train, dataset.features, dataset.target, val_data=validation)
     print("TREE:")
     print_tree_rules(model, dataset.features)
 
     node_list = list(range(model.tree_.node_count))
+    print(f"tree size: {len(node_list)}")
     tree_rep = map_tree(model)
     non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
     print(non_leaf_nodes)

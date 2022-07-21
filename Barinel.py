@@ -32,7 +32,7 @@ def calculate_diagnoses_and_probabilities_barinel_shaked(spectra,  # np array [n
     e_dks = []
     for i, dk in enumerate(diagnoses):
         e_dk = calculate_e_dk(dk, spectra, error_vector)
-        # print(f"pr(d = {dk}|e) = {e_dk}")
+        # print(f"pr(e | d = {dk}) = {e_dk}")
         e_dks.append(e_dk)
         prior = np.prod(priors[dk])  # multiply all diagnosis prior probabilities
         probabilities[i] = prior * e_dk

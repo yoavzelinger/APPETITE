@@ -88,7 +88,7 @@ def build_SFL_matrix_Nodes(model, samples, data_set_name):
 
     number_of_nodes = model.tree_.node_count
     components = list(map(lambda x: (x, f'node{x}'), range(number_of_nodes)))
-    priors = [1/number_of_nodes]*number_of_nodes # equal prior probability to all nodes
+    priors = [1/number_of_nodes]*number_of_nodes  # equal prior probability to all nodes
 
     node_indicator = model.decision_path(data_x)  # all paths
     all_test_details = list()
@@ -100,19 +100,34 @@ def build_SFL_matrix_Nodes(model, samples, data_set_name):
     build_SFL_matrix(data_set_name, components, priors, initial_tests, all_test_details)
     print("list of conflicts: {}".format(conflicts))
 
-def get_diagnosis_nodes(model, samples):
+def get_diagnosis_nodes(model, samples, model_rep):
     BAD_SAMPLES = list()
     data_x, prediction, labels = samples
     number_of_samples = len(data_x)
-    # error_vector = np.zeros(number_of_samples).tolist()
-    error_vector = np.zeros(number_of_samples)
-
     number_of_nodes = model.tree_.node_count
-    # priors = [0.99] * number_of_nodes  # equal prior probability to all nodes
-    # priors = [1] * number_of_nodes  # equal prior probability to all nodes
-    priors = np.ones(number_of_nodes) * 0.99
-    # spectra = np.zeros((number_of_samples, number_of_nodes)).tolist()
+
+    # initialize spectra and error vector
+    error_vector = np.zeros(number_of_samples)
     spectra = np.zeros((number_of_samples, number_of_nodes))
+
+    # define prior vector
+    priors = np.ones(number_of_nodes) * 0.99
+    depth = [model_rep[node]["depth"] for node in range(number_of_nodes)]
+    max_depth = max(depth)
+    # priors = [0.99 ** (max_depth - depth[node]) for node in range(number_of_nodes)]
+    # priors = [0.99**(max_depth - depth[node]) if model_rep[node]["left"] != -1 else 0.99**((max_depth - depth[node])*4) for node in range(number_of_nodes)]
+    # priors = [
+    #     0.01 * (depth[node]+1) if model_rep[node]["left"] != -1 else 0.01 * (depth[node]+1)/4
+    #     for node in range(number_of_nodes)]
+    # priors = [
+    #     0.1 / (max_depth - depth[node] + 1) # if model_rep[node]["left"] != -1 else 0.1 / (4*(max_depth - depth[node] + 1))
+    #     for node in range(number_of_nodes)]
+    # priors = [
+    #     1 - ((max_depth - depth[node] + 1) / (max_depth + 2))
+    #     if model_rep[node]["left"] != -1
+    #     else (1 - ((max_depth - depth[node] + 1) / (max_depth + 2))) / 4
+    #     for node in range(number_of_nodes)]
+    priors = np.array(priors)
 
     node_indicator = model.decision_path(data_x)  # get paths for all samples
     conflicts = set()
@@ -121,14 +136,9 @@ def get_diagnosis_nodes(model, samples):
         node_index = node_indicator.indices[  # extract the relevant path for sample_id
                      node_indicator.indptr[sample_id]: node_indicator.indptr[sample_id + 1]
                      ].tolist()
-        parent = -1
         for node_id in node_index:
             # set as a component in test
             spectra[sample_id][node_id] = 1
-            # save parent's dictionary
-            if node_id not in PARENTS:
-                PARENTS[node_id] = parent
-            parent = node_id
         if prediction[sample_id] != labels.values[sample_id]:  # test result is "fail"
             error_vector[sample_id] = 1
             errors += 1
@@ -137,6 +147,5 @@ def get_diagnosis_nodes(model, samples):
 
     print(f"Conflicts: {conflicts}")
     print(f"Number of misclassified samples: {errors}")
-    # diagnoses = calculate_diagnoses_and_probabilities_barinel_avi(spectra, error_vector, priors)
     diagnoses = calculate_diagnoses_and_probabilities_barinel_shaked(spectra, error_vector, priors)
     return diagnoses, BAD_SAMPLES, spectra, error_vector, conflicts

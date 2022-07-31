@@ -12,13 +12,13 @@ import xlsxwriter
 import random
 
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
-
+sizes = (0.7, 0.10, 0.2)
 all_datasets = [
-    DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", 2000, ["numeric"]*11, name="winequality-white", to_shuffle=True),
-    DataSet("data/real/abalone.data", "diagnosis_check", "rings", 2000, ["categorical"] + ["numeric"]*7, name="abalone", to_shuffle=True),
-    DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", 1000, ["numeric"]*4, name="data_banknote_authentication", to_shuffle=True),
+    DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="data_banknote_authentication", to_shuffle=True),
+    DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
+    DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
     #DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True),
-    DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", 600, ["numeric"]*8, name="pima-indians-diabetes", to_shuffle=True)
+    DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
 ]
 
 def softmax(x):
@@ -155,7 +155,7 @@ date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
 
 for dataset in all_datasets:
     print(f"-------------{dataset.name.upper()}-------------")
-    concept_size = dataset.batch_size
+    concept_size = dataset.before_size
     target = dataset.target
     feature_types = dataset.feature_types
     train = dataset.data.iloc[0:int(0.9 * concept_size)]
@@ -178,7 +178,7 @@ for dataset in all_datasets:
         manipulated_data = manipulate_node(node, dataset)
 
         for data, change, type_of_feature, feature_in_path in manipulated_data:
-            dataset_for_exp = DataSet(data, "diagnosis_check", target, concept_size, feature_types)
+            dataset_for_exp = DataSet(data, "diagnosis_check", target, feature_types, sizes)
             with HiddenPrints():
                 result = run_single_tree_experiment(dataset_for_exp, model=model, check_diagnosis=True, faulty_nodes=[node])
             result["dataset"] = dataset.name
@@ -193,30 +193,30 @@ for dataset in all_datasets:
             result["feature in path"] = feature_in_path
             all_results.append(result)
 
-    # write results to excel
-    file_name = f"results/result_run_{date_time}.xlsx"
-    workbook = xlsxwriter.Workbook(file_name)
-    worksheet = workbook.add_worksheet()
-    # write headers
-    dict_example = all_results[0]
-    index_col = {}
-    col_num = 0
-    for key in dict_example.keys():
-        worksheet.write(0, col_num, key)
-        index_col[key] = col_num
-        col_num += 1
-    # write values
-    row_num = 1
-    for dict_res in all_results:
-        for key, value in dict_res.items():
-            if type(value) in (list, set, dict):
-                value = str(value)
-            col_num = index_col[key]
-            try:
-                worksheet.write(row_num, col_num, value)
-            except TypeError:
-                print(f"problem with key: '{key}', value: {value}")
-        row_num += 1
-    workbook.close()
+# write results to excel
+file_name = f"results/result_run_{date_time}.xlsx"
+workbook = xlsxwriter.Workbook(file_name)
+worksheet = workbook.add_worksheet()
+# write headers
+dict_example = all_results[0]
+index_col = {}
+col_num = 0
+for key in dict_example.keys():
+    worksheet.write(0, col_num, key)
+    index_col[key] = col_num
+    col_num += 1
+# write values
+row_num = 1
+for dict_res in all_results:
+    for key, value in dict_res.items():
+        if type(value) in (list, set, dict):
+            value = str(value)
+        col_num = index_col[key]
+        try:
+            worksheet.write(row_num, col_num, value)
+        except TypeError:
+            print(f"problem with key: '{key}', value: {value}")
+    row_num += 1
+workbook.close()
 
-    print("DONE")
+print("DONE")

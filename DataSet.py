@@ -3,7 +3,7 @@ from scipy.io import arff
 
 class DataSet:
 
-    def __init__(self, source_path, dataset_type, target_class, batch_size, feature_types, name=None, to_shuffle=False):
+    def __init__(self, source_path, dataset_type, target_class, feature_types, size, name=None, to_shuffle=False):
         # check data format
         if type(source_path) == str:
             self.name = source_path
@@ -33,8 +33,23 @@ class DataSet:
         self.features = list(self.data.columns)
         self.features.remove(target_class)
         self.target = target_class
-        self.batch_size = batch_size
+        # self.batch_size = batch_size
         self.feature_types = feature_types
+
+        n_samples = len(data_df)
+
+        if type(size) == tuple:
+            before_size, after_size, test_size = size
+            self.before_size = int(before_size*n_samples)
+            self.after_size = int(after_size*n_samples)
+            self.test_size = int(test_size*n_samples)
+
+        elif type(size) == int:
+            self.before_size = size
+            self.after_size = int(size * 0.1)
+            self.test_size = int(size * 0.2)
+
+        assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
 if __name__ == '__main__':
     d = DataSet("data/sea.arff", None, "cl")

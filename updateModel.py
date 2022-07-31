@@ -1,6 +1,12 @@
+from sklearn import metrics
 from sklearn.tree import _tree, export_text
 #from sklearn.tree.export import export_text
+from DataSet import DataSet
+from DecisionTree import DecisionTree
 from SFL import PARENTS
+from buildModel import build_model, map_tree
+import numpy as np
+import copy
 
 def change_tree_threshold(tree, nodes, thresholds):
     for i in range(len(nodes)):
@@ -93,3 +99,81 @@ def get_parents(nodes):
         parent = PARENTS[node]
         parents.add(parent)
     return parents
+
+def train_subtree(model, node, dataset, tree_rep):
+    if node == 0:
+        data = dataset.data.iloc[dataset.before_size: dataset.before_size + dataset.after_size].copy()
+        new_model = build_model(data, dataset.features, dataset.target, to_split=True)
+        return new_model
+
+    filtered_data = filter_data_for_node(tree_rep, node, dataset, "after")
+    if len(filtered_data) == 0:
+        return -1
+    new_subtree = build_model(filtered_data, dataset.features, dataset.target, to_split=True)
+
+    print("TREE:")
+    print_tree_rules(new_subtree, dataset.features)
+    print(f"new tree size: {new_subtree.tree_.node_count}")
+
+    fixed_model = DecisionTree(model)
+    fixed_model.replace_subtree(node, new_subtree)
+    return fixed_model
+
+def filter_data_for_node(tree_rep, node, dataset, data_type):
+    if data_type == "before":
+        filtered_data = dataset.data.iloc[:dataset.before_size].copy()
+    elif data_type == "after":
+        filtered_data = dataset.data.iloc[dataset.before_size: dataset.before_size + dataset.after_size].copy()
+    else:
+        filtered_data = dataset.data.iloc[dataset.before_size + dataset.after_size:-1].copy()
+
+    filtered_data["true"] = 1
+    indexes_filtered_data = (filtered_data["true"] == 1) # all true
+    filtered_data.drop(columns=["true"])
+
+    conditions = tree_rep[node]["condition"]
+    for cond in conditions:
+        feature = cond["feature"]
+        sign = cond["sign"]
+        thresh = cond["thresh"]
+        feature_name = dataset.features[int(feature)]
+        if sign == ">":
+            indexes_filtered = filtered_data[feature_name] > thresh
+        else:  # <=
+            indexes_filtered = filtered_data[feature_name] <= thresh
+        indexes_filtered_data = indexes_filtered & indexes_filtered_data
+
+    return filtered_data[indexes_filtered_data]
+
+
+if __name__ == '__main__':
+    sizes = (0.75, 0.05, 0.2)
+    dataset = DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
+
+    concept_size = dataset.before_size
+    train = dataset.data.iloc[0:int(0.9 * concept_size)]
+    validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
+    model = build_model(train, dataset.features, dataset.target, val_data=validation)
+    tree_rep = map_tree(model)
+    print(tree_rep)
+    print("TREE:")
+    print_tree_rules(model, dataset.features)
+    print(f"number of nodes: {model.tree_.node_count}")
+
+    model_to_fix = copy.deepcopy(model)
+    fixed_model = train_subtree(model_to_fix, 1, dataset, tree_rep)
+    print("TREE:")
+    print(fixed_model.tree_rep)
+
+    test = dataset.data.iloc[dataset.before_size + dataset.after_size:-1]
+    test_set_x = test[dataset.features]
+    test_set_y = test[dataset.target]
+    prediction = fixed_model.predict(test_set_x)
+    accuracy = metrics.accuracy_score(test_set_y, prediction)
+    print("Accuracy of the fixed model:", accuracy)
+
+    prediction = model.predict(test_set_x)
+    accuracy = metrics.accuracy_score(test_set_y, prediction)
+    print("Accuracy of the original model:", accuracy)
+
+

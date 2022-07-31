@@ -1,12 +1,11 @@
 import pandas as pd
 import numpy as np
 from sklearn import metrics
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 
 from DataSet import DataSet
-from updateModel import print_tree_rules
 
 param_grid_tree = {
     "criterion": ["gini", "entropy"],
@@ -22,20 +21,36 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
     y_train_all = data[target]
 
     if to_split:
-        x_train, x_val, y_train, y_val = train_test_split(x_train_all, y_train_all, test_size=0.2,
-                                                        random_state=7)  # 80% training and 20% test
+        if len(x_train_all) > 1:
+            x_train, x_val, y_train, y_val = train_test_split(x_train_all, y_train_all, test_size=0.2, random_state=7)  # 80% training and 20% test
+        else:
+            x_train, x_val = x_train_all, x_train_all
+            y_train, y_val = y_train_all, y_train_all
     else:
         x_val = val_data[features]
         y_val = val_data[target]
         x_train, y_train = x_train_all, y_train_all
 
-    dec_tree = DecisionTreeClassifier()
-    clf_GS = GridSearchCV(estimator=dec_tree, param_grid=param_grid_tree)
-    clf_GS.fit(x_train, y_train)
-    best_params = clf_GS.best_params_
-    # print(f'best_params_: {clf_GS.best_params_}')
-    # print(f'best_score_: {clf_GS.best_score_}')
+    x_train1 = x_train
+    y_train1 = y_train
+    all_y = y_train.unique()
+    y_count = y_train.value_counts()
+    min_y_count = y_count.min()
+    if min_y_count == 1:
+        only_1 = np.where(y_count == 1)
+        for y_loc in only_1:  # add another sample to each class
+            sample_filter = y_train == all_y[y_loc[0]]
+            x_train1 = x_train1.append(x_train.loc[sample_filter,features], ignore_index=True)
+            y_train1 = y_train1.append(y_train[sample_filter], ignore_index=True)
+        min_y_count = 2
+    n_split = min(5, min_y_count)
 
+    dec_tree = DecisionTreeClassifier()
+    clf_GS = GridSearchCV(estimator=dec_tree, param_grid=param_grid_tree, cv=n_split)
+    clf_GS.fit(x_train1, y_train1)
+    best_params = clf_GS.best_params_
+
+    # train tree on best params and then prune
     clf = DecisionTreeClassifier(criterion=best_params["criterion"], max_depth=best_params["max_depth"],
                                      max_leaf_nodes=best_params["max_leaf_nodes"])
     path = clf.cost_complexity_pruning_path(x_train, y_train)
@@ -50,10 +65,9 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
         pred = clf.predict(x_val)
         accuracy = metrics.accuracy_score(y_val, pred)
         accuracy_val.append(accuracy)
-    best = np.argmax(np.array(accuracy_val))
-    # print(f"best accuracy: {accuracy_val[best]}")
-    best_clf = clfs[best]
 
+    best = np.argmax(np.array(accuracy_val))
+    best_clf = clfs[best]
     return best_clf
 
 def map_tree(tree):
@@ -122,16 +136,21 @@ def prune_tree(tree, tree_rep):
 
     pass
 
+def print_tree_rules(tree, feature_names):
+    tree_rules = export_text(tree, feature_names=feature_names)
+    print(tree_rules)
+
 
 if __name__ == '__main__':
+    sizes = (0.75, 0.05, 0.2)
     all_datasets_build = [
-        DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", 2000, ["numeric"]*11, name="winequality-white", to_shuffle=True),
-        DataSet("data/real/abalone.data", "diagnosis_check", "rings", 2000, ["categorical"] + ["numeric"]*7, name="abalone", to_shuffle=True),
-        DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", 1000, ["numeric"]*4, name="data_banknote_authentication", to_shuffle=True),
-        DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", 600, ["numeric"]*8, name="pima-indians-diabetes", to_shuffle=True)
-    ]
+        DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
+        DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
+        DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"]*4, sizes, name="data_banknote_authentication", to_shuffle=True),
+        DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
+]
     for dataset in all_datasets_build:
-        concept_size = dataset.batch_size
+        concept_size = dataset.before_size
         train = dataset.data.iloc[0:int(0.9 * concept_size)]
         validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
         model = build_model(train, dataset.features, dataset.target, val_data=validation)

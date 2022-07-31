@@ -4,39 +4,31 @@ from datetime import datetime
 import numpy as np
 from DataSet import DataSet
 from SHAP import applySHAP
-from buildModel import build_model
+from buildModel import build_model, map_tree
 from sklearn import metrics
 from SFL import build_SFL_matrix_SHAP, get_diagnosis, build_SFL_matrix_Nodes, get_diagnosis_nodes
 from updateModel import *
-#from updateModel import tree_to_code, print_tree_rules, change_tree_threshold, find_nodes_threshold_from_diagnosis, change_tree_selection, change_nodes_threshold, get_parents
-from statistics import mean
 
-#dataset = DataSet("data/hyperplane8.arff", "abrupt", "output", 1000)
-#dataset = DataSet("data/mixed_1010_abrupto.csv", "abrupt", "class", 10000)
-#print(type(dataset.data))
+# all_datasets_single_tree = [
+#     DataSet("data/hyperplane1.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/hyperplane2.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/hyperplane3.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/hyperplane4.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/hyperplane5.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/hyperplane6.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/hyperplane7.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/hyperplane8.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/hyperplane9.arff", "abrupt", "output", 1000, ["numeric"]*10),
+#     DataSet("data/rt_2563789698568873_abrupto.csv", "abrupt", "class", 10000, ["numeric"]*2),
+#     DataSet("data/sea_0123_abrupto_noise_0.2.csv", "abrupt", "class", 10000, ["numeric"]*3),
+#     DataSet("data/mixed_0101_abrupto.csv", "abrupt", "class", 10000, ["binary"]*2+["numeric"]*2),
+#     DataSet("data/mixed_1010_abrupto.csv", "abrupt", "class", 10000, ["binary"]*2+["numeric"]*2),
+#     DataSet("data/stagger_2102_abrupto.csv", "abrupt", "class", 10000, ["categorical"]*4)
+# ]
 
-all_datasets_single_tree = [
-    DataSet("data/hyperplane1.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/hyperplane2.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/hyperplane3.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/hyperplane4.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/hyperplane5.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/hyperplane6.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/hyperplane7.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/hyperplane8.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/hyperplane9.arff", "abrupt", "output", 1000, ["numeric"]*10),
-    DataSet("data/rt_2563789698568873_abrupto.csv", "abrupt", "class", 10000, ["numeric"]*2),
-    DataSet("data/sea_0123_abrupto_noise_0.2.csv", "abrupt", "class", 10000, ["numeric"]*3),
-    DataSet("data/mixed_0101_abrupto.csv", "abrupt", "class", 10000, ["binary"]*2+["numeric"]*2),
-    DataSet("data/mixed_1010_abrupto.csv", "abrupt", "class", 10000, ["binary"]*2+["numeric"]*2),
-    DataSet("data/stagger_2102_abrupto.csv", "abrupt", "class", 10000, ["categorical"]*4)
-]
-
-"""
-all_datasets_single_tree = [
-    DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True)
-]
-"""
+# all_datasets_single_tree = [
+#     DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True)
+# ]
 
 SIZE = -1
 NEW_DATA_SIZE = -1
@@ -79,10 +71,10 @@ def fix_SHAP(model, diagnosis, dataset):
     fixed_model = change_tree_threshold(model_to_fix, nodes, thresholds)
     return fixed_model
 
-def diagnose_Nodes(model, dataset, new_data):
+def diagnose_Nodes(model, dataset, new_data, model_rep):
     nodes = model.tree_.node_count
     print("number of nodes: {}".format(nodes))
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = get_diagnosis_nodes(model, new_data) # get diagnosis - avi's code
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = get_diagnosis_nodes(model, new_data, model_rep)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def fix_nodes_binary(model, diagnosis):
@@ -108,15 +100,17 @@ def fix_nodes_by_type(model, diagnosis, dataset):
 def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, faulty_nodes=[]):
     result = {}
     global SIZE, NEW_DATA_SIZE
-    SIZE = int(dataset.batch_size * 1)
+    SIZE = dataset.before_size
     result["drift size"] = SIZE
-    NEW_DATA_SIZE = int(0.1 * SIZE)
+    NEW_DATA_SIZE = dataset.after_size
     # NEW_DATA_SIZE = 100
     result["#samples used"] = NEW_DATA_SIZE
     result["feature types"] = dataset.feature_types
 
     if not model: # create a model
         model = build_model(dataset.data.iloc[0:int(0.9*SIZE)], dataset.features, dataset.target)
+    model_rep = map_tree(model)
+
     # check model accuracy on data before the drift
     test_data = dataset.data.iloc[int(0.9*SIZE): SIZE]
     test_data_x = test_data[dataset.features]
@@ -142,7 +136,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     # RUN ALGORITHM
     samples = (new_data_x, prediction, new_data_y)
     time1 = datetime.now()
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, dataset, samples)
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, dataset, samples, model_rep)
     diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
     time2 = datetime.now()
     result["diagnosis time"] = time2 - time1
@@ -175,9 +169,10 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # TEST performances
     print("--- test data accuracy ---")
-    test_set = dataset.data.iloc[SIZE + NEW_DATA_SIZE: SIZE + 2 * NEW_DATA_SIZE]
+    test_set = dataset.data.iloc[SIZE + NEW_DATA_SIZE: -1]
     test_set_x = test_set[dataset.features]
     test_set_y = test_set[dataset.target]
+    result["test set size"] = len(test_set)
 
     # check original model on the new data
     prediction1 = model.predict(test_set_x)
@@ -197,7 +192,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # train a new model on data after drift
     time1 = datetime.now()
-    model_after = build_model(dataset.data.iloc[SIZE:SIZE + NEW_DATA_SIZE], dataset.features, dataset.target, to_split=True)
+    model_after = build_model(new_data, dataset.features, dataset.target, to_split=True)
     time2 = datetime.now()
     result["new model after time"] = time2 - time1
     prediction4 = model_after.predict(test_set_x)
@@ -214,7 +209,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     print("--- misclassified (new) data accuracy ---")
     bad_samples_indexes = np.array(BAD_SAMPLES) + SIZE
     bad_samples = dataset.data.iloc[bad_samples_indexes]
-    print(f"number of bad somples: {len(bad_samples)}")
+    print(f"number of bad samples: {len(bad_samples)}")
     result["number of bad samples"] = len(bad_samples)
     bad_samples_x = bad_samples[dataset.features]
     prediction_bad = model.predict(bad_samples_x)
@@ -294,6 +289,24 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         result["# errors in node after drift"] = errors_in_node
         errors_p = errors_in_node / samples_in_node_after_drift if samples_in_node_after_drift > 0 else -1
         result["% errors in node after drift"] = errors_p
+
+    # if len(faulty_nodes) > 0:
+    #     correct_fixed_model = fix_nodes_by_type(model, faulty_nodes, dataset)
+    #     prediction4 = correct_fixed_model.predict(test_set_x)
+    #     accuracy = metrics.accuracy_score(test_set_y, prediction4)
+    #     print("Accuracy of the Fixed model (based on faulty nodes) on test data:", accuracy)
+    #     result["accuracy fixed model (faulty nodes) - test data"] = accuracy
+
+    if len(faulty_nodes) > 0:  # fix the tree, diagnosis = faulty node
+        model_to_fix = copy.deepcopy(model)
+        correct_fixed_model = train_subtree(model_to_fix, faulty_nodes[0], dataset, model_rep)
+        if correct_fixed_model == -1:  # no samples in node
+            result["accuracy fixed model (faulty nodes) - test data"] = -1
+        else:
+            prediction4 = correct_fixed_model.predict(test_set_x)
+            accuracy = metrics.accuracy_score(test_set_y, prediction4)
+            print("Accuracy of the Fixed model (based on faulty nodes) on test data:", accuracy)
+            result["accuracy fixed model (faulty nodes) - test data"] = accuracy
 
     return result
 

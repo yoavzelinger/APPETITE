@@ -6,7 +6,7 @@ from DataSet import DataSet
 from SHAP import applySHAP
 from buildModel import build_model, map_tree
 from sklearn import metrics
-from SFL import build_SFL_matrix_SHAP, get_diagnosis, build_SFL_matrix_Nodes, get_diagnosis_nodes
+from SFL import *
 from updateModel import *
 
 # all_datasets_single_tree = [
@@ -61,6 +61,8 @@ def best_diagnosis(diagnoses, probabilities, spectra, error_vector, best="first"
     print("probabilities: {}".format(probabilities))
     if best == "first":
         first_diagnosis = diagnoses[0]
+        if type(first_diagnosis == int):
+            first_diagnosis = [first_diagnosis]
     return first_diagnosis
 
 def fix_SHAP(model, diagnosis, dataset):
@@ -71,10 +73,20 @@ def fix_SHAP(model, diagnosis, dataset):
     fixed_model = change_tree_threshold(model_to_fix, nodes, thresholds)
     return fixed_model
 
-def diagnose_Nodes(model, dataset, new_data, model_rep):
+def diagnose_Nodes(model, new_data, model_rep):
     nodes = model.tree_.node_count
     print("number of nodes: {}".format(nodes))
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = get_diagnosis_nodes(model, new_data, model_rep)
+    assert nodes == len(model_rep)
+
+    BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(model, new_data, model_rep)
+    priors = get_prior_probs(model_rep)
+    diagnoses, probabilities = get_diagnosis_barinel(spectra, error_vector, priors)
+    return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
+
+def diagnose_single_node(model, new_data, model_rep):
+    BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(model, new_data, model_rep)
+    # priors = get_prior_probs(model_rep)
+    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "dice")
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def fix_nodes_binary(model, diagnosis):
@@ -136,7 +148,8 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     # RUN ALGORITHM
     samples = (new_data_x, prediction, new_data_y)
     time1 = datetime.now()
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, dataset, samples, model_rep)
+    # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, samples, model_rep)
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_single_node(model, samples, model_rep)
     diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
     time2 = datetime.now()
     result["diagnosis time"] = time2 - time1
@@ -260,6 +273,8 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         wasted_effort = 0
         while len(real_diagnosis) > 0 and i < len(diagnoses):
             d = diagnoses[i]
+            if type(d) == int:
+                d = [d]
             for node in d:
                 if node not in real_diagnosis:
                     if node not in already_fixed:

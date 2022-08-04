@@ -124,7 +124,7 @@ def get_SFL_for_diagnosis_nodes(model, samples, model_rep):
             error_vector[sample_id] = 1
             errors += 1
             conflicts.add(tuple(node_index))
-            BAD_SAMPLES.append(node_id)
+            BAD_SAMPLES.append(sample_id)
 
     print(f"Conflicts: {conflicts}")
     print(f"Number of misclassified samples: {errors}")
@@ -140,21 +140,21 @@ def get_prior_probs(model_rep, number_of_nodes):
     #     if node in model_rep and model_rep[node]["left"] != -1
     #     else 0.99**((max_depth - depth[node])*4)
     #     for node in range(number_of_nodes)]
-    # priors = [
-    #     0.01 * (depth[node]+1)
-    #     if node in model_rep and model_rep[node]["left"] != -1
-    #     else 0.01 * (depth[node]+1)/4
-    #     for node in range(number_of_nodes)]
+    priors = [
+        0.01 * (depth[node]+1)
+        if node in model_rep and model_rep[node]["left"] != -1
+        else 0.01 * (depth[node]+1)/4
+        for node in range(number_of_nodes)]
     # priors = [
     #     0.1 / (max_depth - depth[node] + 1)
     #     if node in model_rep and model_rep[node]["left"] != -1
     #     else 0.1 / (4*(max_depth - depth[node] + 1))
     #     for node in range(number_of_nodes)]
-    priors = [
-        1 - ((max_depth - depth[node] + 1) / (max_depth + 2))
-        if node in model_rep and model_rep[node]["left"] != -1
-        else (1 - ((max_depth - depth[node] + 1) / (max_depth + 2))) / 4
-        for node in range(number_of_nodes)]
+    # priors = [
+    #     1 - ((max_depth - depth[node] + 1) / (max_depth + 2))
+    #     if node in model_rep and model_rep[node]["left"] != -1
+    #     else (1 - ((max_depth - depth[node] + 1) / (max_depth + 2))) / 4
+    #     for node in range(number_of_nodes)]
     priors = np.array(priors)
     return priors
 

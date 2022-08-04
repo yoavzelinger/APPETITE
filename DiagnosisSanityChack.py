@@ -14,10 +14,10 @@ import random
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 sizes = (0.7, 0.10, 0.2)
 all_datasets = [
+    DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
     #DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"] * 11, sizes, name="winequality-white", to_shuffle=True),
     DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="data_banknote_authentication", to_shuffle=True),
     #DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
-    #DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True),
     DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
 ]
 

@@ -73,9 +73,10 @@ def barinel_single_node(diagnoses, probabilities, n_nodes):
         score[d] += prob
     d_order = np.argsort(-score)
     probabilities = score[d_order]
+    # normalize probabilities
+    probabilities = probabilities / probabilities.sum()
     diagnoses = list(map(int, d_order))
     return diagnoses, probabilities
-
 
 def fix_SHAP(model, diagnosis, dataset):
     # fix model - SHAP
@@ -139,9 +140,9 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     test_data_x = test_data[dataset.features]
     prediction = model.predict(test_data_x)
     test_data_y = test_data[dataset.target]
-    accuracy = metrics.accuracy_score(test_data_y, prediction)
-    print("Accuracy of original model on data BEFORE concept drift:", accuracy)
-    result["accuracy original model BEFORE drift"] = accuracy
+    accuracy_b = metrics.accuracy_score(test_data_y, prediction)
+    print("Accuracy of original model on data BEFORE concept drift:", accuracy_b)
+    result["accuracy original model BEFORE drift"] = accuracy_b
 
     result["number of nodes"] = model.tree_.node_count
     result["tree size"] = len(model_rep)
@@ -150,10 +151,11 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     new_data_x = new_data[dataset.features]
     prediction = model.predict(new_data_x)
     new_data_y = new_data[dataset.target]
-    accuracy = metrics.accuracy_score(new_data_y, prediction)
-    print("Accuracy of original model on data AFTER concept drift:", accuracy)
-    result["accuracy original model AFTER drift"] = accuracy
+    accuracy_a = metrics.accuracy_score(new_data_y, prediction)
+    print("Accuracy of original model on data AFTER concept drift:", accuracy_a)
+    result["accuracy original model AFTER drift"] = accuracy_a
 
+    result["diff due to drift (b-a)"] = accuracy_b - accuracy_a  # before - after
     #print("TREE:")
     #print_tree_rules(model, dataset.features)
 
@@ -161,6 +163,8 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     samples = (new_data_x, prediction, new_data_y)
     time1 = datetime.now()
     (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, samples, model_rep)
+    result["diagnoses list barinel"] = diagnoses
+    result["probabilities barinel"] = probabilities.tolist()
     diagnoses, probabilities = barinel_single_node(diagnoses,probabilities,model.tree_.node_count)
     #(diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_single_node(model, samples, model_rep)
     diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
@@ -172,6 +176,8 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     result["chosen diagnosis"] = diagnosis
     result["diagnosis cardinality"] = len(diagnosis)
     result["conflicts"] = conflicts
+    if check_diagnosis:
+        result["faulty nodes"] = faulty_nodes
     print(f"best diagnosis: {diagnosis}")
     time1 = datetime.now()
     fixed_model = fix_nodes_by_type(model, diagnosis, dataset)
@@ -186,12 +192,12 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     # fixed_model = fix_SHAP(model, diagnosis, dataset)
 
     print("--- new data accuracy ---")
-    print("Accuracy of original model on data after concept drift:", accuracy)
+    print("Accuracy of original model on data after concept drift:", accuracy_a)
 
     prediction = fixed_model.predict(new_data_x)
-    accuracy = metrics.accuracy_score(new_data_y, prediction)
-    print("Accuracy of Fixed model on data after concept drift:", accuracy)
-    result["accuracy FIXED model AFTER drift"] = accuracy
+    accuracy_fixed_after = metrics.accuracy_score(new_data_y, prediction)
+    print("Accuracy of Fixed model on data after concept drift:", accuracy_fixed_after)
+    result["accuracy FIXED model AFTER drift"] = accuracy_fixed_after
 
     # TEST performances
     print("--- test data accuracy ---")
@@ -202,9 +208,9 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # check original model on the new data
     prediction1 = model.predict(test_set_x)
-    accuracy = metrics.accuracy_score(test_set_y, prediction1)
-    print("Accuracy of the Original model on test data:", accuracy)
-    result["accuracy original model - test data"] = accuracy
+    accuracy_orig = metrics.accuracy_score(test_set_y, prediction1)
+    print("Accuracy of the Original model on test data:", accuracy_orig)
+    result["accuracy original model - test data"] = accuracy_orig
 
     # train a new model with data before and after drift
     time1 = datetime.now()
@@ -212,9 +218,10 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     time2 = datetime.now()
     result["new model all time"] = time2 - time1
     prediction2 = model_all.predict(test_set_x)
-    accuracy = metrics.accuracy_score(test_set_y, prediction2)
-    print("Accuracy of a New model (before & after) on test data:", accuracy)
-    result["accuracy New model (before & after) model - test data"] = accuracy
+    accuracy_new_ba = metrics.accuracy_score(test_set_y, prediction2)
+    print("Accuracy of a New model (before & after) on test data:", accuracy_new_ba)
+    result["accuracy New model (before & after) model - test data"] = accuracy_new_ba
+    result["diff new before & after"] = accuracy_new_ba - accuracy_orig
 
     # train a new model on data after drift
     time1 = datetime.now()
@@ -222,15 +229,17 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     time2 = datetime.now()
     result["new model after time"] = time2 - time1
     prediction4 = model_after.predict(test_set_x)
-    accuracy = metrics.accuracy_score(test_set_y, prediction4)
-    print("Accuracy of a New model (only after) on test data:", accuracy)
-    result["accuracy New model (only after) model - test data"] = accuracy
+    accuracy_new_a = metrics.accuracy_score(test_set_y, prediction4)
+    print("Accuracy of a New model (only after) on test data:", accuracy_new_a)
+    result["accuracy New model (only after) model - test data"] = accuracy_new_a
+    result["diff new only after"] = accuracy_new_a - accuracy_orig
 
     # check the fixed model
     prediction3 = fixed_model.predict(test_set_x)
-    accuracy = metrics.accuracy_score(test_set_y, prediction3)
-    print("Accuracy of Fixed model on test data:", accuracy)
-    result["accuracy FIXED model - test data"] = accuracy
+    accuracy_fixed = metrics.accuracy_score(test_set_y, prediction3)
+    print("Accuracy of Fixed model on test data:", accuracy_fixed)
+    result["accuracy FIXED model - test data"] = accuracy_fixed
+    result["diff fixed"] = accuracy_fixed - accuracy_orig
 
     print("--- misclassified (new) data accuracy ---")
     bad_samples_indexes = np.array(BAD_SAMPLES) + SIZE
@@ -238,7 +247,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     print(f"number of bad samples: {len(bad_samples)}")
     result["number of bad samples"] = len(bad_samples)
     bad_samples_x = bad_samples[dataset.features]
-    prediction_bad = model.predict(bad_samples_x)
+    prediction_bad = fixed_model.predict(bad_samples_x)
     bad_samples_y = bad_samples[dataset.target]
     accuracy = metrics.accuracy_score(bad_samples_y, prediction_bad)
     print("Accuracy of Fixed model on BAD samples only:", accuracy)
@@ -326,11 +335,13 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         fixed_model_train_subtree = train_subtree(model_to_fix, faulty_nodes[0], dataset, model_rep)
         if fixed_model_train_subtree == -1:  # no samples in node
             result["TrainSubtree: accuracy fixed model (faulty nodes) - test data"] = -1
+            result["diff subtree"] = -1
         else:
             prediction4 = fixed_model_train_subtree.predict(test_set_x)
             accuracy = metrics.accuracy_score(test_set_y, prediction4)
             print("Accuracy of the Fixed model (based on faulty nodes) on test data:", accuracy)
             result["TrainSubtree: accuracy fixed model (faulty nodes) - test data"] = accuracy
+            result["diff subtree"] = accuracy - accuracy_orig
 
         model_to_fix = copy.deepcopy(model)
         fixed_model_change_threshold_node = fix_nodes_by_type(model_to_fix, faulty_nodes, dataset,
@@ -338,12 +349,14 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         prediction = fixed_model_change_threshold_node.predict(test_set_x)
         accuracy = metrics.accuracy_score(test_set_y, prediction)
         result["NodeThreshold: accuracy fixed model (faulty nodes) - test data"] = accuracy
+        result["diff node"] = accuracy - accuracy_orig
 
         model_to_fix = copy.deepcopy(model)
         fixed_model_change_threshold_all = fix_nodes_by_type(model_to_fix, faulty_nodes, dataset)
         prediction = fixed_model_change_threshold_all.predict(test_set_x)
         accuracy = metrics.accuracy_score(test_set_y, prediction)
         result["AllThreshold: accuracy fixed model (faulty nodes) - test data"] = accuracy
+        result["diff all"] = accuracy - accuracy_orig
 
     return result
 

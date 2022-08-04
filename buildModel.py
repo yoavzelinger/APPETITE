@@ -69,6 +69,7 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
 
     accuracy_val = np.array(accuracy_val)
     best_accuracy = np.max(accuracy_val)
+    print(best_accuracy)
     best = np.where(accuracy_val == best_accuracy)[0][-1]  # best val accuracy, max pruning
     best_clf = clfs[best]
     return best_clf
@@ -158,8 +159,9 @@ def print_tree_rules(tree, feature_names):
 
 
 if __name__ == '__main__':
-    sizes = (0.7, 0.10, 0.2)
+    sizes = (0.7, 0.1, 0.2)
     all_datasets_build = [
+        DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
         DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
         DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
         DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"]*4, sizes, name="data_banknote_authentication", to_shuffle=True),

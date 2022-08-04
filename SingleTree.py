@@ -41,7 +41,7 @@ def feature_diff_after_concept_drift(data_set, drift_size, new_data_size):
         before_avg = before.mean()
         after = data_set.data[feature].iloc[drift_size: drift_size + new_data_size]
         after_avg = after.mean()
-        diff[i] = before_avg - after_avg
+        diff[i] = after_avg - before_avg
         i += 1
     return diff
 
@@ -56,14 +56,26 @@ def diagnose_SHAP(model, dataset, new_data, prediction):
     first_diagnosis = diagnosis[0].diagnosis
     return first_diagnosis
 
-def best_diagnosis(diagnoses, probabilities, spectra, error_vector, best="first"):
+def best_diagnosis(diagnoses, probabilities, spectra, error_vector, best_method="first"):
     print("diagnoses: {}".format(diagnoses))
     print("probabilities: {}".format(probabilities))
-    if best == "first":
-        first_diagnosis = diagnoses[0]
-        if type(first_diagnosis == int):
-            first_diagnosis = [first_diagnosis]
-    return first_diagnosis
+    if best_method == "first":
+        best = diagnoses[0]
+        if type(best == int):
+            best = [best]
+    return best
+
+def barinel_single_node(diagnoses, probabilities, n_nodes):
+    score = np.zeros(n_nodes)
+    for i in range(len(diagnoses)):
+        prob = probabilities[i]
+        d = diagnoses[i]
+        score[d] += prob
+    d_order = np.argsort(-score)
+    probabilities = score[d_order]
+    diagnoses = list(map(int, d_order))
+    return diagnoses, probabilities
+
 
 def fix_SHAP(model, diagnosis, dataset):
     # fix model - SHAP
@@ -76,17 +88,16 @@ def fix_SHAP(model, diagnosis, dataset):
 def diagnose_Nodes(model, new_data, model_rep):
     nodes = model.tree_.node_count
     print("number of nodes: {}".format(nodes))
-    assert nodes == len(model_rep)
-
     BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(model, new_data, model_rep)
-    priors = get_prior_probs(model_rep)
+    priors = get_prior_probs(model_rep, nodes)
     diagnoses, probabilities = get_diagnosis_barinel(spectra, error_vector, priors)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def diagnose_single_node(model, new_data, model_rep):
+    nodes = model.tree_.node_count
     BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(model, new_data, model_rep)
-    # priors = get_prior_probs(model_rep)
-    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "dice")
+    priors = get_prior_probs(model_rep, nodes)
+    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "cosine", priors=priors)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def fix_nodes_binary(model, diagnosis):
@@ -96,17 +107,17 @@ def fix_nodes_binary(model, diagnosis):
     return fixed_model
 
 def fix_nodes_numeric(model, diagnosis, dataset):
-    # fix model - Nodes, change node's thresholds
+    # fix model - Nodes, change node's thresholds (feature mean before & after drift)
     model_to_fix = copy.deepcopy(model)
     features_diff = feature_diff_after_concept_drift(dataset, SIZE, NEW_DATA_SIZE)
     fixed_model = change_nodes_threshold(model_to_fix, diagnosis, features_diff)
     return fixed_model
 
-def fix_nodes_by_type(model, diagnosis, dataset):
+def fix_nodes_by_type(model, diagnosis, dataset, diff_type="all", tree_rep=None):
     # fix model - Nodes, change selection or threshold
     model_to_fix = copy.deepcopy(model)
     features_diff = feature_diff_after_concept_drift(dataset, SIZE, NEW_DATA_SIZE)
-    fixed_model = change_nodes_by_type(model_to_fix, diagnosis, dataset.feature_types, features_diff)
+    fixed_model = change_nodes_by_type(model_to_fix, diagnosis, dataset.feature_types, features_diff, diff_type,tree_rep,dataset)
     return fixed_model
 
 def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, faulty_nodes=[]):
@@ -132,7 +143,8 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     print("Accuracy of original model on data BEFORE concept drift:", accuracy)
     result["accuracy original model BEFORE drift"] = accuracy
 
-    result["tree size"] = model.tree_.node_count
+    result["number of nodes"] = model.tree_.node_count
+    result["tree size"] = len(model_rep)
     # check model accuracy on data after concept drift
     new_data = dataset.data.iloc[SIZE: SIZE + NEW_DATA_SIZE]
     new_data_x = new_data[dataset.features]
@@ -148,8 +160,9 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     # RUN ALGORITHM
     samples = (new_data_x, prediction, new_data_y)
     time1 = datetime.now()
-    # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, samples, model_rep)
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_single_node(model, samples, model_rep)
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, samples, model_rep)
+    diagnoses, probabilities = barinel_single_node(diagnoses,probabilities,model.tree_.node_count)
+    #(diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_single_node(model, samples, model_rep)
     diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
     time2 = datetime.now()
     result["diagnosis time"] = time2 - time1
@@ -231,6 +244,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     print("Accuracy of Fixed model on BAD samples only:", accuracy)
     result["FIXED accuracy on bad samples"] = accuracy
 
+    # Check diagnosis queality
     if check_diagnosis:
         result["faulty nodes"] = faulty_nodes
         result["# faulty nodes "] = len(faulty_nodes)
@@ -305,23 +319,31 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         errors_p = errors_in_node / samples_in_node_after_drift if samples_in_node_after_drift > 0 else -1
         result["% errors in node after drift"] = errors_p
 
-    # if len(faulty_nodes) > 0:
-    #     correct_fixed_model = fix_nodes_by_type(model, faulty_nodes, dataset)
-    #     prediction4 = correct_fixed_model.predict(test_set_x)
-    #     accuracy = metrics.accuracy_score(test_set_y, prediction4)
-    #     print("Accuracy of the Fixed model (based on faulty nodes) on test data:", accuracy)
-    #     result["accuracy fixed model (faulty nodes) - test data"] = accuracy
-
+    # test all fixes
     if len(faulty_nodes) > 0:  # fix the tree, diagnosis = faulty node
+        # train subtree
         model_to_fix = copy.deepcopy(model)
-        correct_fixed_model = train_subtree(model_to_fix, faulty_nodes[0], dataset, model_rep)
-        if correct_fixed_model == -1:  # no samples in node
-            result["accuracy fixed model (faulty nodes) - test data"] = -1
+        fixed_model_train_subtree = train_subtree(model_to_fix, faulty_nodes[0], dataset, model_rep)
+        if fixed_model_train_subtree == -1:  # no samples in node
+            result["TrainSubtree: accuracy fixed model (faulty nodes) - test data"] = -1
         else:
-            prediction4 = correct_fixed_model.predict(test_set_x)
+            prediction4 = fixed_model_train_subtree.predict(test_set_x)
             accuracy = metrics.accuracy_score(test_set_y, prediction4)
             print("Accuracy of the Fixed model (based on faulty nodes) on test data:", accuracy)
-            result["accuracy fixed model (faulty nodes) - test data"] = accuracy
+            result["TrainSubtree: accuracy fixed model (faulty nodes) - test data"] = accuracy
+
+        model_to_fix = copy.deepcopy(model)
+        fixed_model_change_threshold_node = fix_nodes_by_type(model_to_fix, faulty_nodes, dataset,
+                                                              diff_type="node", tree_rep=model_rep)
+        prediction = fixed_model_change_threshold_node.predict(test_set_x)
+        accuracy = metrics.accuracy_score(test_set_y, prediction)
+        result["NodeThreshold: accuracy fixed model (faulty nodes) - test data"] = accuracy
+
+        model_to_fix = copy.deepcopy(model)
+        fixed_model_change_threshold_all = fix_nodes_by_type(model_to_fix, faulty_nodes, dataset)
+        prediction = fixed_model_change_threshold_all.predict(test_set_x)
+        accuracy = metrics.accuracy_score(test_set_y, prediction)
+        result["AllThreshold: accuracy fixed model (faulty nodes) - test data"] = accuracy
 
     return result
 

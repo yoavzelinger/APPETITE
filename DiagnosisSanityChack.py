@@ -4,7 +4,7 @@ from datetime import datetime
 from pandas.core.common import SettingWithCopyWarning
 import numpy as np
 from DataSet import DataSet
-from buildModel import build_model, map_tree
+from buildModel import build_model, map_tree, prune_tree
 from updateModel import print_tree_rules
 from SingleTree import run_single_tree_experiment
 from HiddenPrints import HiddenPrints
@@ -14,9 +14,9 @@ import random
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 sizes = (0.7, 0.10, 0.2)
 all_datasets = [
+    #DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"] * 11, sizes, name="winequality-white", to_shuffle=True),
     DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="data_banknote_authentication", to_shuffle=True),
-    DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
-    DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
+    #DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
     #DataSet("data/real/iris.data", "diagnosis_check", "class", 100, ["numeric"]*4, name="iris", to_shuffle=True),
     DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
 ]
@@ -161,12 +161,15 @@ for dataset in all_datasets:
     train = dataset.data.iloc[0:int(0.9 * concept_size)]
     validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
     model = build_model(train, dataset.features, dataset.target, val_data=validation)
+    tree_rep = map_tree(model)
+    model = prune_tree(model, tree_rep)
     print("TREE:")
     print_tree_rules(model, dataset.features)
 
-    node_list = list(range(model.tree_.node_count))
-    print(f"tree size: {len(node_list)}")
+
     tree_rep = map_tree(model)
+    node_list = list(tree_rep.keys())
+    print(f"tree size: {len(node_list)}")
     non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
     print(non_leaf_nodes)
     leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))

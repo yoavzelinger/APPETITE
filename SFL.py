@@ -130,31 +130,38 @@ def get_SFL_for_diagnosis_nodes(model, samples, model_rep):
     print(f"Number of misclassified samples: {errors}")
     return BAD_SAMPLES, spectra, error_vector, conflicts
 
-def get_prior_probs(model_rep):
+def get_prior_probs(model_rep, number_of_nodes):
     # define prior vector
-    number_of_nodes = len(model_rep)
     priors = np.ones(number_of_nodes) * 0.99
-    depth = [model_rep[node]["depth"] for node in range(number_of_nodes)]
+    depth = [model_rep[node]["depth"] if node in model_rep else 0 for node in range(number_of_nodes)]
     max_depth = max(depth)
-    # priors = [0.99 ** (max_depth - depth[node]) for node in range(number_of_nodes)]
-    # priors = [0.99**(max_depth - depth[node]) if model_rep[node]["left"] != -1 else 0.99**((max_depth - depth[node])*4) for node in range(number_of_nodes)]
     # priors = [
-    #     0.01 * (depth[node]+1) if model_rep[node]["left"] != -1 else 0.01 * (depth[node]+1)/4
+    #     0.99**(max_depth - depth[node])
+    #     if node in model_rep and model_rep[node]["left"] != -1
+    #     else 0.99**((max_depth - depth[node])*4)
     #     for node in range(number_of_nodes)]
     # priors = [
-    #     0.1 / (max_depth - depth[node] + 1) # if model_rep[node]["left"] != -1 else 0.1 / (4*(max_depth - depth[node] + 1))
+    #     0.01 * (depth[node]+1)
+    #     if node in model_rep and model_rep[node]["left"] != -1
+    #     else 0.01 * (depth[node]+1)/4
     #     for node in range(number_of_nodes)]
     # priors = [
-    #     1 - ((max_depth - depth[node] + 1) / (max_depth + 2))
-    #     if model_rep[node]["left"] != -1
-    #     else (1 - ((max_depth - depth[node] + 1) / (max_depth + 2))) / 4
+    #     0.1 / (max_depth - depth[node] + 1)
+    #     if node in model_rep and model_rep[node]["left"] != -1
+    #     else 0.1 / (4*(max_depth - depth[node] + 1))
     #     for node in range(number_of_nodes)]
+    priors = [
+        1 - ((max_depth - depth[node] + 1) / (max_depth + 2))
+        if node in model_rep and model_rep[node]["left"] != -1
+        else (1 - ((max_depth - depth[node] + 1) / (max_depth + 2))) / 4
+        for node in range(number_of_nodes)]
     priors = np.array(priors)
+    return priors
 
 def get_diagnosis_barinel(spectra, error_vector, priors):
     diagnoses, probabilities = calculate_diagnoses_and_probabilities_barinel_shaked(spectra, error_vector, priors)
     return diagnoses, probabilities
 
-def get_diagnosis_single_fault(spectra, error_vector, similarity_method):
-    diagnoses, probabilities = diagnose_single_fault(spectra, error_vector, similarity_method)
+def get_diagnosis_single_fault(spectra, error_vector, similarity_method,priors=None):
+    diagnoses, probabilities = diagnose_single_fault(spectra, error_vector, similarity_method, priors)
     return diagnoses, probabilities

@@ -1,9 +1,10 @@
 import numpy as np
 
+epsilon = np.finfo(np.float64).eps
 
 def diagnose_single_fault(spectra,  # np array [number of tests, number of components] - binary
                           error_vector,  # np array [number of tests] - binary
-                          similarity_method):
+                          similarity_method, prior=None):
 
     methods = {  # function(a,b,c,d) -> similarity
         "jaccard": jaccard_similarity,
@@ -18,13 +19,19 @@ def diagnose_single_fault(spectra,  # np array [number of tests, number of compo
     similarity_func = methods[similarity_method]
     similarity = similarity_func(a, b, c, d)
 
-    d_order = np.argsort(-similarity)
+    probabilities = similarity
+    if prior is not None:
+        probabilities *= prior
+
+    # normalize probabilities
+    probabilities = probabilities / probabilities.sum()
+
+    # order diagnoses by probability
+    d_order = np.argsort(-probabilities)  # highest prob first
     diagnoses = list(map(int, d_order))
-    probabilities = similarity / similarity.sum()
     probabilities = probabilities[d_order]
 
     return diagnoses, probabilities
-
 
 def jaccard_similarity(a, b, c, d):
     return a / (a + b + c)
@@ -42,7 +49,8 @@ def faith_similatiry(a, b, c, d):
     return a + 0.5 * d / (a + b + c + d)
 
 def cosine_similarity(a, b, c, d):
-    return a / np.sqrt((a + b) * (a + c))
+    epsilon_vec = np.ones(a.shape)*epsilon
+    return a / (np.sqrt((a + b) * (a + c)) + epsilon_vec)
 
 
 def calc_a_b_c_d(spectra, error_vector):

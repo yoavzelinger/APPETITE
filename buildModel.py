@@ -45,6 +45,7 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
         min_y_count = 2
     n_split = min(5, min_y_count)
 
+    # choose best parameters
     dec_tree = DecisionTreeClassifier()
     clf_GS = GridSearchCV(estimator=dec_tree, param_grid=param_grid_tree, cv=n_split)
     clf_GS.fit(x_train1, y_train1)
@@ -66,7 +67,9 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
         accuracy = metrics.accuracy_score(y_val, pred)
         accuracy_val.append(accuracy)
 
-    best = np.argmax(np.array(accuracy_val))
+    accuracy_val = np.array(accuracy_val)
+    best_accuracy = np.max(accuracy_val)
+    best = np.where(accuracy_val == best_accuracy)[0][-1]  # best val accuracy, max pruning
     best_clf = clfs[best]
     return best_clf
 
@@ -119,22 +122,35 @@ def map_tree(tree):
 
 def prune_tree(tree, tree_rep):
     node_list = list(range(tree.tree_.node_count))
-    non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
     leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))
-    for leaf in leaf_nodes:
+    pruned = []
+    while len(leaf_nodes) > 0:
+        leaf = leaf_nodes.pop()
         parent = tree_rep[leaf]["parent"]
+        class_name = tree_rep[leaf]["class"]
         if tree_rep[leaf]["type"] == "left":
             brother = tree_rep[parent]["right"]
         else:
             brother = tree_rep[parent]["left"]
-        if brother in leaf_nodes and brother["class"] == leaf["class"]:  # prune
-            leaf_nodes.remove(brother)
-            leaf_nodes.remove(leaf)
-            # todo: change
-            leaf_nodes.append(parent)
-            non_leaf_nodes.remove(parent)
 
-    pass
+        if brother in leaf_nodes and tree_rep[brother]["class"] == class_name:  # prune
+            leaf_nodes.remove(brother)
+            pruned += [leaf, brother]
+
+            value_leaf = tree.tree_.value[leaf]
+            value_brother = tree.tree_.value[brother]
+            value_parent = tree.tree_.value[parent]
+            assert (value_parent == value_brother+value_leaf).all(), f"values parent: {value_parent} is not equal to brother values\nvalue leaf: {value_leaf} + value brother {value_brother}"
+
+            tree.tree_.children_left[parent] = -1
+            tree.tree_.children_right[parent] = -1
+            tree.tree_.feature[parent] = -2
+            tree_rep[parent]["class"] = class_name
+
+            leaf_nodes.append(parent)
+
+    print(f"pruned {len(pruned)} nodes, list: {pruned}")
+    return tree
 
 def print_tree_rules(tree, feature_names):
     tree_rules = export_text(tree, feature_names=feature_names)
@@ -142,7 +158,7 @@ def print_tree_rules(tree, feature_names):
 
 
 if __name__ == '__main__':
-    sizes = (0.75, 0.05, 0.2)
+    sizes = (0.7, 0.10, 0.2)
     all_datasets_build = [
         DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
         DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
@@ -154,7 +170,10 @@ if __name__ == '__main__':
         train = dataset.data.iloc[0:int(0.9 * concept_size)]
         validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
         model = build_model(train, dataset.features, dataset.target, val_data=validation)
-        map_tree(model)
+        tree_rep = map_tree(model)
         print("TREE:")
         print_tree_rules(model, dataset.features)
         print(f"number of nodes: {model.tree_.node_count}")
+
+        pruned_model = prune_tree(model, tree_rep)
+        print_tree_rules(model, dataset.features)

@@ -77,7 +77,7 @@ def change_nodes_threshold(model, nodes, features_diff):
         model.tree_.threshold[node] = new_threshold
     return model
 
-def change_nodes_by_type(model, nodes,feature_types, features_diff):
+def change_nodes_by_type(model, nodes,feature_types, features_diff, diff_type="all", tree_rep=None, dataset=None):
     binary_categorical = list()
     numeric = list()
     for node in nodes:
@@ -89,7 +89,10 @@ def change_nodes_by_type(model, nodes,feature_types, features_diff):
             numeric.append(node)
         elif f_type == "binary" or f_type == "categorical":
             binary_categorical.append(node)
-    model = change_nodes_threshold(model, numeric, features_diff)
+    if diff_type == "all":
+        model = change_nodes_threshold(model, numeric, features_diff)
+    else:
+        model = change_nodes_threshold_only_node(model, tree_rep, numeric, dataset)
     model = change_tree_selection(model, binary_categorical)
     return model
 
@@ -124,12 +127,12 @@ def filter_data_for_node(tree_rep, node, dataset, data_type):
         filtered_data = dataset.data.iloc[:dataset.before_size].copy()
     elif data_type == "after":
         filtered_data = dataset.data.iloc[dataset.before_size: dataset.before_size + dataset.after_size].copy()
-    else:
+    else: # test set
         filtered_data = dataset.data.iloc[dataset.before_size + dataset.after_size:-1].copy()
 
     filtered_data["true"] = 1
     indexes_filtered_data = (filtered_data["true"] == 1) # all true
-    filtered_data.drop(columns=["true"])
+    filtered_data = filtered_data.drop(columns=["true"])
 
     conditions = tree_rep[node]["condition"]
     for cond in conditions:
@@ -144,6 +147,28 @@ def filter_data_for_node(tree_rep, node, dataset, data_type):
         indexes_filtered_data = indexes_filtered & indexes_filtered_data
 
     return filtered_data[indexes_filtered_data]
+
+def change_nodes_threshold_only_node(model, tree_rep, diagnosis, dataset):
+    for node in diagnosis:
+        feature = model.tree_.feature[node]
+        if feature == -2:
+            continue
+        feature_name = dataset.features[feature]
+
+        # filter data for node
+        data_before = filter_data_for_node(tree_rep, node, dataset, "before")
+        data_after = filter_data_for_node(tree_rep, node, dataset, "after")
+
+        # calculate diff
+        mean_before = data_before[feature_name].mean()
+        mean_after = data_after[feature_name].mean()
+        diff = mean_after - mean_before
+
+        # change threshold
+        new_threshold = model.tree_.threshold[node] + diff
+        model.tree_.threshold[node] = new_threshold
+
+    return model
 
 
 if __name__ == '__main__':
@@ -175,5 +200,8 @@ if __name__ == '__main__':
     prediction = model.predict(test_set_x)
     accuracy = metrics.accuracy_score(test_set_y, prediction)
     print("Accuracy of the original model:", accuracy)
+
+    print(dataset.data.iloc[dataset.before_size:dataset.before_size + dataset.after_size])
+    print(filter_data_for_node(tree_rep, 0, dataset, "after"))
 
 

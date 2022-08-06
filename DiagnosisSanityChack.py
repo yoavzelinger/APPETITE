@@ -10,16 +10,9 @@ from SingleTree import run_single_tree_experiment
 from HiddenPrints import HiddenPrints
 import xlsxwriter
 import random
+import copy
 
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
-sizes = (0.7, 0.10, 0.2)
-all_datasets = [
-    DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
-    #DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"] * 11, sizes, name="winequality-white", to_shuffle=True),
-    DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="data_banknote_authentication", to_shuffle=True),
-    #DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
-    DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
-]
 
 def softmax(x):
     y = np.exp(x - np.max(x))
@@ -33,6 +26,7 @@ def manipulate_node(node, dataset, save_to_csv=False):
     print(f"changing feature: {feature_to_change} in node {node}")
     feature_in_path = False
 
+    concept_size = dataset.before_size
     conditions = tree_rep[node]["condition"]
     verification_data = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
     not_changed_data = dataset.data.iloc[0:concept_size].copy()
@@ -148,78 +142,99 @@ severity = {
     "softmax orig dist": 2,
     "softmax filtered dist": 1
 }
+if __name__ == '__main__':
+    all_results = []
+    time_stamp = datetime.now()
+    date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
 
-all_results = []
-time_stamp = datetime.now()
-date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
+    all_sizes = [
+        (0.7, 0.1, 0.2),
+        (0.7, 0.07, 0.2),
+        (0.7, 0.05, 0.2),
+        (0.7, 0.02, 0.2)
+    ]
 
-for dataset in all_datasets:
-    print(f"-------------{dataset.name.upper()}-------------")
-    concept_size = dataset.before_size
-    target = dataset.target
-    feature_types = dataset.feature_types
-    train = dataset.data.iloc[0:int(0.9 * concept_size)]
-    validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
-    model = build_model(train, dataset.features, dataset.target, val_data=validation)
-    tree_rep = map_tree(model)
-    model = prune_tree(model, tree_rep)
-    print("TREE:")
-    print_tree_rules(model, dataset.features)
+    for sizes in all_sizes:
+        all_datasets = [
+            DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
+            #DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"] * 11, sizes, name="winequality-white", to_shuffle=True),
+            DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="data_banknote_authentication", to_shuffle=True),
+            #DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
+            DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
+        ]
 
+        for dataset in all_datasets:
+            print(f"-------------{dataset.name.upper()} {sizes}-------------")
+            concept_size = dataset.before_size
+            target = dataset.target
+            feature_types = dataset.feature_types
+            train = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
+            validation = dataset.data.iloc[int(0.9 * concept_size):concept_size].copy()
+            model = build_model(train, dataset.features, dataset.target, val_data=validation)
+            tree_rep = map_tree(model)
+            model = prune_tree(model, tree_rep)
+            print("TREE:")
+            print_tree_rules(model, dataset.features)
 
-    tree_rep = map_tree(model)
-    node_list = list(tree_rep.keys())
-    print(f"tree size: {len(node_list)}")
-    non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
-    print(non_leaf_nodes)
-    leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))
-    print(leaf_nodes)
+            tree_rep = map_tree(model)
+            node_list = list(tree_rep.keys())
+            print(f"tree size: {len(node_list)}")
+            non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
+            print(non_leaf_nodes)
+            leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))
+            print(leaf_nodes)
 
-    # manipulate data & run experiment
-    for node in non_leaf_nodes:
-        print(f"node: {node}, depth: {tree_rep[node]['depth']}")
-        manipulated_data = manipulate_node(node, dataset)
+            data_before_manipulation = dataset.data.iloc[0:concept_size]
+            # manipulate data & run experiment
+            for node in non_leaf_nodes:
+                print(f"node: {node}, depth: {tree_rep[node]['depth']}")
+                manipulated_data = manipulate_node(node, dataset)
 
-        for data, change, type_of_feature, feature_in_path in manipulated_data:
-            dataset_for_exp = DataSet(data, "diagnosis_check", target, feature_types, sizes)
-            with HiddenPrints():
-                result = run_single_tree_experiment(dataset_for_exp, model=model, check_diagnosis=True, faulty_nodes=[node])
-            result["dataset"] = dataset.name
-            result["depth"] = tree_rep[node]['depth']
-            result["samples in node"] = model.tree_.n_node_samples[node]
-            result["change severity"] = severity[change]
-            if change in change_types:
-                change = change_types[change]
-            result["change type"] = change
-            result["feature type"] = type_of_feature
-            result["number of faulty nodes"] = 1
-            result["feature in path"] = feature_in_path
-            all_results.append(result)
+                for data, change, type_of_feature, feature_in_path in manipulated_data:
+                    dataset_for_exp = DataSet(data, "diagnosis_check", target, feature_types, sizes)
+                    data_after_manipulation = dataset_for_exp.data.iloc[0:concept_size]
+                    assert data_after_manipulation.equals(data_before_manipulation.astype(data_after_manipulation.dtypes)), \
+                        f"before:\n{data_before_manipulation}\n\nafter:\n{data_after_manipulation}"
 
-# write results to excel
-file_name = f"results/result_run_{date_time}.xlsx"
-workbook = xlsxwriter.Workbook(file_name)
-worksheet = workbook.add_worksheet()
-# write headers
-dict_example = all_results[0]
-index_col = {}
-col_num = 0
-for key in dict_example.keys():
-    worksheet.write(0, col_num, key)
-    index_col[key] = col_num
-    col_num += 1
-# write values
-row_num = 1
-for dict_res in all_results:
-    for key, value in dict_res.items():
-        if type(value) in (list, set, dict):
-            value = str(value)
-        col_num = index_col[key]
-        try:
-            worksheet.write(row_num, col_num, value)
-        except TypeError:
-            print(f"problem with key: '{key}', value: {value}")
-    row_num += 1
-workbook.close()
+                    with HiddenPrints():
+                        result = run_single_tree_experiment(dataset_for_exp, model=copy.deepcopy(model), check_diagnosis=True, faulty_nodes=[node])
+                    result["size"] = sizes[1]
+                    result["dataset"] = dataset.name
+                    result["depth"] = tree_rep[node]['depth']
+                    result["samples in node"] = model.tree_.n_node_samples[node]
+                    result["change severity"] = severity[change]
+                    if change in change_types:
+                        change = change_types[change]
+                    result["change type"] = change
+                    result["feature type"] = type_of_feature
+                    result["number of faulty nodes"] = 1
+                    result["feature in path"] = feature_in_path
+                    all_results.append(result)
 
-print("DONE")
+    # write results to excel
+    file_name = f"results/result_run_{date_time}.xlsx"
+    workbook = xlsxwriter.Workbook(file_name)
+    worksheet = workbook.add_worksheet()
+    # write headers
+    dict_example = all_results[0]
+    index_col = {}
+    col_num = 0
+    for key in dict_example.keys():
+        worksheet.write(0, col_num, key)
+        index_col[key] = col_num
+        col_num += 1
+    # write values
+    row_num = 1
+    for dict_res in all_results:
+        for key, value in dict_res.items():
+            if type(value) in (list, set, dict):
+                value = str(value)
+            col_num = index_col[key]
+            try:
+                worksheet.write(row_num, col_num, value)
+            except TypeError:
+                print(f"problem with key: '{key}', value: {value}")
+        row_num += 1
+    workbook.close()
+
+    print("DONE")

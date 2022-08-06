@@ -8,6 +8,38 @@ from buildModel import build_model, map_tree
 import numpy as np
 import copy
 
+def change_leaf_classification(tree, nodes, leaf_fix_type="second", dataset=None, tree_rep=None):
+    if leaf_fix_type == "second":
+        # switch between first classification to second classification (second most popular in node)
+        for node in nodes:
+            values = tree.tree_.value[node]
+            val_order = np.argsort(-values)[0]  # highest first
+            first = val_order[0]
+            first_val = values[0][first]
+            second = val_order[1]
+            values[0][first] = values[0][second]
+            values[0][second] = first_val
+            tree.tree_.value[node] = values
+
+    elif leaf_fix_type == "new_data":
+        # classification is most common class in node after drift
+        assert (dataset is not None)
+        assert (tree_rep is not None)
+        for node in nodes:
+            filtered_data = filter_data_for_node(tree_rep, node, dataset, "after")
+            labels = filtered_data[dataset.target]
+            common_class = labels.value_counts().idxmax()
+
+            values = tree.tree_.value[node]
+            max_count = np.max(values) +1
+            values[0][common_class] = max_count
+            tree.tree_.value[node] = values
+
+    else:
+        assert 1 < 0, f"leaf fix type illegal: {leaf_fix_type}"
+
+    return tree
+
 def change_tree_threshold(tree, nodes, thresholds):
     for i in range(len(nodes)):
         tree.tree_.threshold[nodes[i]] = thresholds[i]
@@ -77,23 +109,28 @@ def change_nodes_threshold(model, nodes, features_diff):
         model.tree_.threshold[node] = new_threshold
     return model
 
-def change_nodes_by_type(model, nodes,feature_types, features_diff, diff_type="all", tree_rep=None, dataset=None):
+def change_nodes_by_type(model, nodes,feature_types, features_diff,
+                         diff_type="all", leaf_fix_type="new_data", tree_rep=None, dataset=None):
     binary_categorical = list()
     numeric = list()
+    leaves = list()
     for node in nodes:
         feature = model.tree_.feature[node]
         if feature == -2:  # node is a leaf
-            continue
+            leaves.append(node)
         f_type = feature_types[feature]
         if f_type == "numeric":
             numeric.append(node)
         elif f_type == "binary" or f_type == "categorical":
             binary_categorical.append(node)
+
     if diff_type == "all":
         model = change_nodes_threshold(model, numeric, features_diff)
     else:
+        assert (dataset is not None)
         model = change_nodes_threshold_only_node(model, tree_rep, numeric, dataset)
     model = change_tree_selection(model, binary_categorical)
+    model = change_leaf_classification(model, leaves, leaf_fix_type, dataset, tree_rep)
     return model
 
 def get_parents(nodes):
@@ -127,8 +164,8 @@ def filter_data_for_node(tree_rep, node, dataset, data_type):
         filtered_data = dataset.data.iloc[:dataset.before_size].copy()
     elif data_type == "after":
         filtered_data = dataset.data.iloc[dataset.before_size: dataset.before_size + dataset.after_size].copy()
-    else: # test set
-        filtered_data = dataset.data.iloc[dataset.before_size + dataset.after_size:-1].copy()
+    else:  # test set
+        filtered_data = dataset.data.iloc[len(dataset.data) - dataset.test_size:-1].copy()
 
     filtered_data["true"] = 1
     indexes_filtered_data = (filtered_data["true"] == 1) # all true
@@ -172,36 +209,39 @@ def change_nodes_threshold_only_node(model, tree_rep, diagnosis, dataset):
 
 
 if __name__ == '__main__':
-    sizes = (0.75, 0.05, 0.2)
-    dataset = DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
-
-    concept_size = dataset.before_size
-    train = dataset.data.iloc[0:int(0.9 * concept_size)]
-    validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
-    model = build_model(train, dataset.features, dataset.target, val_data=validation)
-    tree_rep = map_tree(model)
-    print(tree_rep)
-    print("TREE:")
-    print_tree_rules(model, dataset.features)
-    print(f"number of nodes: {model.tree_.node_count}")
-
-    model_to_fix = copy.deepcopy(model)
-    fixed_model = train_subtree(model_to_fix, 1, dataset, tree_rep)
-    print("TREE:")
-    print(fixed_model.tree_rep)
-
-    test = dataset.data.iloc[dataset.before_size + dataset.after_size:-1]
-    test_set_x = test[dataset.features]
-    test_set_y = test[dataset.target]
-    prediction = fixed_model.predict(test_set_x)
-    accuracy = metrics.accuracy_score(test_set_y, prediction)
-    print("Accuracy of the fixed model:", accuracy)
-
-    prediction = model.predict(test_set_x)
-    accuracy = metrics.accuracy_score(test_set_y, prediction)
-    print("Accuracy of the original model:", accuracy)
-
-    print(dataset.data.iloc[dataset.before_size:dataset.before_size + dataset.after_size])
-    print(filter_data_for_node(tree_rep, 0, dataset, "after"))
+    # sizes = (0.7, 0.1, 0.2)
+    # dataset = DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
+    #
+    # concept_size = dataset.before_size
+    # train = dataset.data.iloc[0:int(0.9 * concept_size)]
+    # validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
+    # model = build_model(train, dataset.features, dataset.target, val_data=validation)
+    # tree_rep = map_tree(model)
+    # print(tree_rep)
+    # print("TREE:")
+    # print_tree_rules(model, dataset.features)
+    # print(f"number of nodes: {model.tree_.node_count}")
+    #
+    # model_to_fix = copy.deepcopy(model)
+    # fixed_model = change_nodes_by_type(model_to_fix, [7], dataset.feature_types, dataset.features, tree_rep=tree_rep, dataset=dataset)
+    # #fixed_model = train_subtree(model_to_fix, 7, dataset, tree_rep)
+    # print("FIXED TREE:")
+    # print_tree_rules(fixed_model, dataset.features)
+    # #print(fixed_model.tree_rep)
+    #
+    # test = dataset.data.iloc[dataset.before_size + dataset.after_size:-1]
+    # test_set_x = test[dataset.features]
+    # test_set_y = test[dataset.target]
+    # prediction = fixed_model.predict(test_set_x)
+    # accuracy = metrics.accuracy_score(test_set_y, prediction)
+    # print("Accuracy of the fixed model:", accuracy)
+    #
+    # prediction = model.predict(test_set_x)
+    # accuracy = metrics.accuracy_score(test_set_y, prediction)
+    # print("Accuracy of the original model:", accuracy)
+    #
+    # # print(dataset.data.iloc[dataset.before_size:dataset.before_size + dataset.after_size])
+    # # print(filter_data_for_node(tree_rep, 0, dataset, "after"))
+    pass
 
 

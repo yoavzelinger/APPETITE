@@ -132,8 +132,8 @@ if __name__ == '__main__':
     sizes = (0.75, 0.1, 0.15)
     dataset = DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True)
     concept_size = dataset.before_size
-    train = dataset.data.iloc[0:int(0.9 * concept_size)]
-    validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
+    train = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
+    validation = dataset.data.iloc[int(0.9 * concept_size):concept_size].copy()
     model = build_model(train, dataset.features, dataset.target, val_data=validation)
 
     test_set_x = dataset.data[dataset.features]

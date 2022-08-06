@@ -10,13 +10,15 @@ from DataSet import DataSet
 param_grid_tree = {
     "criterion": ["gini", "entropy"],
     # "min_samples_split": [2, 0.1, 0.05, 3],
-    "max_depth": [4, 6, 8, 10, 12],
+    # "max_depth": [4, 6, 8, 10, 12],
     # "min_samples_leaf": [1, 2, 5, 10],
     "max_leaf_nodes": [10, 20, 30]
 }
 
 
 def build_model(data, features, target, model_type="tree", to_split=False, val_data=None):
+    np.random.seed(0)
+
     x_train_all = data[features]
     y_train_all = data[target]
 
@@ -26,7 +28,10 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
         else:
             x_train, x_val = x_train_all, x_train_all
             y_train, y_val = y_train_all, y_train_all
-    else:
+        print(f"x train:\n{x_train}")
+        print(f"x val:\n{x_val}")
+    else:  # do not split, use validation data given
+        assert val_data is not None
         x_val = val_data[features]
         y_val = val_data[target]
         x_train, y_train = x_train_all, y_train_all
@@ -50,16 +55,17 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
     clf_GS = GridSearchCV(estimator=dec_tree, param_grid=param_grid_tree, cv=n_split)
     clf_GS.fit(x_train1, y_train1)
     best_params = clf_GS.best_params_
+    print(best_params)
 
     # train tree on best params and then prune
-    clf = DecisionTreeClassifier(criterion=best_params["criterion"], max_depth=best_params["max_depth"],
+    clf = DecisionTreeClassifier(criterion=best_params["criterion"], #max_depth=best_params["max_depth"],
                                      max_leaf_nodes=best_params["max_leaf_nodes"])
     path = clf.cost_complexity_pruning_path(x_train, y_train)
     ccp_alphas = set(path.ccp_alphas)
     clfs = []
     accuracy_val = []
     for ccp_alpha in ccp_alphas:
-        clf = DecisionTreeClassifier(criterion=best_params["criterion"], max_depth=best_params["max_depth"],
+        clf = DecisionTreeClassifier(criterion=best_params["criterion"], #max_depth=best_params["max_depth"],
                                      max_leaf_nodes=best_params["max_leaf_nodes"], ccp_alpha=ccp_alpha)
         clf.fit(x_train, y_train)
         clfs.append(clf)
@@ -71,6 +77,7 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
     best_accuracy = np.max(accuracy_val)
     print(best_accuracy)
     best = np.where(accuracy_val == best_accuracy)[0][-1]  # best val accuracy, max pruning
+    print(best)
     best_clf = clfs[best]
     return best_clf
 
@@ -97,6 +104,8 @@ def map_tree(tree):
 
         tree_representation[node]["feature"] = tree.tree_.feature[node]
         tree_representation[node]["threshold"] = tree.tree_.threshold[node]
+
+        tree_representation[node]["value"] = tree.tree_.value[node]
 
         if node != 0:
             parent = tree_representation[node]["parent"]
@@ -162,11 +171,11 @@ if __name__ == '__main__':
     sizes = (0.7, 0.1, 0.2)
     all_datasets_build = [
         DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
-        DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
-        DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
-        DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"]*4, sizes, name="data_banknote_authentication", to_shuffle=True),
-        DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
-]
+        # DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
+        # DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
+        # DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"]*4, sizes, name="data_banknote_authentication", to_shuffle=True),
+        # DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
+    ]
     for dataset in all_datasets_build:
         concept_size = dataset.before_size
         train = dataset.data.iloc[0:int(0.9 * concept_size)]

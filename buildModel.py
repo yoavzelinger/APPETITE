@@ -77,7 +77,7 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
     best_accuracy = np.max(accuracy_val)
     print(best_accuracy)
     best = np.where(accuracy_val == best_accuracy)[0][-1]  # best val accuracy, max pruning
-    print(best)
+    # print(best)
     best_clf = clfs[best]
     return best_clf
 
@@ -162,6 +162,65 @@ def prune_tree(tree, tree_rep):
     print(f"pruned {len(pruned)} nodes, list: {pruned}")
     return tree
 
+def calculate_error(tree_rep):
+    error_dictionary = {}
+
+    def calculate_node_error(node, tree_rep):
+        left = tree_rep[node]["left"]
+        right = tree_rep[node]["right"]
+
+        if left == -1: #leaf
+            values = tree_rep[node]["value"].copy()
+            n_samples = values.sum()
+            class_num = values.argmax()
+            error_rate = 1 - (values[0][class_num]/n_samples)
+            error_dictionary[node] = error_rate
+            return error_rate
+
+        else: # non-terminal node
+            n_samples = tree_rep[node]["value"].sum()
+
+            if left in error_dictionary:
+                left_error = error_dictionary[left]
+            else:
+                left_error = calculate_node_error(left, tree_rep)
+            n_samples_left = tree_rep[left]["value"].sum()
+
+            if right in error_dictionary:
+                right_error = error_dictionary[right]
+            else:
+                right_error = calculate_node_error(right, tree_rep)
+            n_samples_right = tree_rep[right]["value"].sum()
+
+            assert n_samples == n_samples_right + n_samples_left
+            error_rate = (right_error*n_samples_right + left_error*n_samples_left)/n_samples
+            error_dictionary[node] = error_rate
+            return error_rate
+
+    calculate_node_error(0, tree_rep)
+    return error_dictionary
+
+def calculate_left_right_ratio(tree_rep):
+    left_right_dict = {}
+    nodes_to_check = [0]
+    while len(nodes_to_check) > 0:
+        node = nodes_to_check.pop(0)
+        left = tree_rep[node]["left"]
+        right = tree_rep[node]["right"]
+
+        if left == -1:  # leaf
+            left_right_dict[node] = -1
+        else:
+            went_left = tree_rep[left]["value"].sum()
+            went_right = tree_rep[right]["value"].sum()
+            total = tree_rep[node]["value"].sum()
+            assert went_left + went_right == total
+
+            left_right_dict[node] = went_left / total
+            nodes_to_check.append(left)
+            nodes_to_check.append(right)
+    return left_right_dict
+
 def print_tree_rules(tree, feature_names):
     tree_rules = export_text(tree, feature_names=feature_names)
     print(tree_rules)
@@ -188,3 +247,10 @@ if __name__ == '__main__':
 
         pruned_model = prune_tree(model, tree_rep)
         print_tree_rules(model, dataset.features)
+        tree_rep = map_tree(model)
+
+        errors = calculate_error(tree_rep)
+        print(errors)
+
+        ratio = calculate_left_right_ratio(tree_rep)
+        print(ratio)

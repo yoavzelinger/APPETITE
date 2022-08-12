@@ -3,6 +3,8 @@ import warnings
 from datetime import datetime
 from pandas.core.common import SettingWithCopyWarning
 import numpy as np
+from sklearn import metrics
+
 from DataSet import DataSet
 from buildModel import build_model, map_tree, prune_tree
 from updateModel import print_tree_rules
@@ -13,6 +15,7 @@ import random
 import copy
 
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+epsilon = np.finfo(np.float64).eps
 
 def softmax(x):
     y = np.exp(x - np.max(x))
@@ -25,6 +28,8 @@ def manipulate_node(node, dataset, save_to_csv=False):
     feature_to_change = dataset.features[int(feature_to_change_num)]
     print(f"changing feature: {feature_to_change} in node {node}")
     feature_in_path = False
+    max_value = None
+    min_value = None
 
     concept_size = dataset.before_size
     conditions = tree_rep[node]["condition"]
@@ -42,6 +47,10 @@ def manipulate_node(node, dataset, save_to_csv=False):
         thresh = cond["thresh"]
         if feature == feature_to_change_num:
             feature_in_path = True
+            if sign == ">":
+                min_value = thresh
+            else:
+                max_value = thresh
         feature_name = dataset.features[int(feature)]
         if sign == ">":
             indexes_filtered = filtered_data[feature_name] > thresh
@@ -111,6 +120,14 @@ def manipulate_node(node, dataset, save_to_csv=False):
     # saving changes to csv \ yield
     for i in range(len(feature_changes)):
         change = feature_changes[i]
+        # assuring the drift will not affect other nodes
+        if min_value is not None:
+            change[change < min_value] = min_value
+            assert (change >= min_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
+        if max_value is not None:
+            change[change >= max_value] = max_value - 0.0001
+            assert (change < max_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
+
         change_name = feature_changes_names[i]
         to_save = filtered_data.copy()
         to_save.loc[indexes_filtered_data,feature_to_change] = change
@@ -148,6 +165,7 @@ if __name__ == '__main__':
     date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
 
     all_sizes = [
+        #(0.6, 0.2, 0.2),
         (0.7, 0.1, 0.2),
         (0.7, 0.07, 0.2),
         (0.7, 0.05, 0.2),
@@ -175,6 +193,18 @@ if __name__ == '__main__':
             model = prune_tree(model, tree_rep)
             print("TREE:")
             print_tree_rules(model, dataset.features)
+
+            after_samples = dataset.data.iloc[concept_size:concept_size + dataset.after_size].copy()
+            after_data_x = after_samples[dataset.features]
+            prediction = model.predict(after_data_x)
+            after_data_y = after_samples[dataset.target]
+            accuracy_after_no_drift = metrics.accuracy_score(after_data_y, prediction)
+
+            test_samples = dataset.data.iloc[len(dataset.data) - dataset.test_size: -1].copy()
+            test_data_x = test_samples[dataset.features]
+            prediction = model.predict(test_data_x)
+            test_data_y = test_samples[dataset.target]
+            accuracy_test_no_drift = metrics.accuracy_score(test_data_y, prediction)
 
             tree_rep = map_tree(model)
             node_list = list(tree_rep.keys())
@@ -209,6 +239,8 @@ if __name__ == '__main__':
                     result["feature type"] = type_of_feature
                     result["number of faulty nodes"] = 1
                     result["feature in path"] = feature_in_path
+                    result["model accuracy - no drift - after"] = accuracy_after_no_drift
+                    result["model accuracy - no drift - test"] = accuracy_test_no_drift
                     all_results.append(result)
 
     # write results to excel

@@ -53,23 +53,38 @@ class DataSet:
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
 if __name__ == '__main__':
-    """
-    d = DataSet("data/sea.arff", None, "cl")
-    print(d.features)
-    d = DataSet("data/sea_0123_abrupto_noise_0.2.csv", None, "class")
-    print(d.features)
-    """
-    sizes = (0.7, 0.1, 0.2)
-    all_datasets = [
-        DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris",
-                to_shuffle=True),
-        DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris",
-                to_shuffle=True)
-        # DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes,
-        #         name="data_banknote_authentication", to_shuffle=True),
-        #  DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"] * 8, sizes,
-        #         name="pima-indians-diabetes", to_shuffle=True)
+    all_sizes = [
+        (0.4, 0.4, 0.2),
+        # (0.7, 0.1, 0.2),
+        # (0.7, 0.07, 0.2),
+        # (0.7, 0.05, 0.2),
+        # (0.7, 0.02, 0.2)
     ]
-    dataset1 = all_datasets[0]
-    dataset2 = all_datasets[1]
-    assert dataset1.data.equals(dataset2.data)
+    for sizes in all_sizes:
+        all_datasets = [
+            DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris",
+                    to_shuffle=True),
+            DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes,
+                    name="data_banknote_authentication", to_shuffle=True),
+             DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"] * 8, sizes,
+                    name="pima-indians-diabetes", to_shuffle=True)
+        ]
+
+        for dataset in all_datasets:
+            print(f"--------{dataset.name} {sizes}----------")
+            data = dataset.data
+            print("all dataset")
+            print(f" values: {data[dataset.target].unique()} count:\n{data[dataset.target].value_counts()}")
+
+            before = dataset.data.iloc[:dataset.before_size]
+            print("before")
+            print(f" values: {before[dataset.target].unique()} count: \n{before[dataset.target].value_counts()}")
+
+            after = dataset.data.iloc[dataset.before_size: dataset.before_size + dataset.after_size]
+            print("after")
+            print(f" values: {after[dataset.target].unique()} count: \n{after[dataset.target].value_counts()}")
+
+            test = dataset.data.iloc[len(dataset.data) - dataset.test_size:-1]
+            print("test")
+            print(f" values: {test[dataset.target].unique()} count: \n{test[dataset.target].value_counts()}")
+

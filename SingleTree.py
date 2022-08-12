@@ -90,15 +90,27 @@ def diagnose_Nodes(orig_model, new_data, model_rep):
     nodes = orig_model.tree_.node_count
     print("number of nodes: {}".format(nodes))
     BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
-    priors = get_prior_probs(model_rep, nodes)
+    priors = get_prior_probs_left_right(model_rep, spectra)
+    #priors = get_prior_probs_depth(model_rep, nodes)
     diagnoses, probabilities = get_diagnosis_barinel(spectra, error_vector, priors)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def diagnose_single_node(orig_model, new_data, model_rep):
     nodes = orig_model.tree_.node_count
     BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
-    priors = get_prior_probs(model_rep, nodes)
+    # priors = get_prior_probs_depth(model_rep, nodes)
+    priors = get_prior_probs_left_right(model_rep, spectra)
     diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "cosine", priors=priors)
+    return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
+
+def diagnose_by_error(orig_model, new_data, model_rep):
+    BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
+    diagnoses, probabilities = get_diagnosis_error_rate(spectra, error_vector, model_rep)
+    return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
+
+def diagnose_by_left_right(orig_model, new_data, model_rep):
+    BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
+    diagnoses, probabilities = get_diagnosis_left_right(spectra, error_vector, model_rep)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def fix_nodes_binary(orig_model, diagnosis):
@@ -163,11 +175,13 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     # RUN ALGORITHM
     samples = (new_data_x, prediction, new_data_y)
     time1 = datetime.now()
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, samples, model_rep)
+    # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_Nodes(model, samples, model_rep)
     # result["diagnoses list barinel"] = diagnoses
     # result["probabilities barinel"] = probabilities.tolist()
     # diagnoses, probabilities = barinel_single_node(diagnoses,probabilities,model.tree_.node_count)
-    #(diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_single_node(model, samples, model_rep)
+    # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_by_error(model, samples, model_rep)
+    # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_by_left_right(model, samples, model_rep)
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_single_node(model, samples, model_rep)
     diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
     time2 = datetime.now()
     result["diagnosis time"] = time2 - time1

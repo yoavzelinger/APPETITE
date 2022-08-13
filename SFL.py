@@ -184,7 +184,7 @@ def get_diagnosis_single_fault(spectra, error_vector, similarity_method,priors=N
 def calculate_nodes_error(spectra, error_vector):
     participation = spectra.sum(axis=0)
     errors = (spectra * (error_vector.reshape(-1,1))).sum(axis=0)
-    error_rate = errors / participation
+    error_rate = errors / (participation + epsilon)
     return error_rate
 
 def calculate_left_right_diff(spectra, model_rep):

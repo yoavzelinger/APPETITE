@@ -122,11 +122,21 @@ def manipulate_node(node, dataset, save_to_csv=False):
         change = feature_changes[i]
         # assuring the drift will not affect other nodes
         if min_value is not None:
-            change[change < min_value] = min_value
-            assert (change >= min_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
+            if type_of_feature != "numeric":
+                c1 = int(min_value - 0.5)
+                change = [c1 if c < min_value else c for c in change]
+                assert len(list(filter(lambda x: x < max_value, change))) == 0
+            else:
+                change[change < min_value] = min_value
+                assert (change >= min_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
         if max_value is not None:
-            change[change >= max_value] = max_value - 0.0001
-            assert (change < max_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
+            if type_of_feature != "numeric":
+                c1 = int(max_value - 0.5)
+                change = [c1 if c >= max_value else c for c in change]
+                assert len(list(filter(lambda x: x >= max_value, change))) == 0
+            else:
+                change[change >= max_value] = max_value - 0.0001
+                assert (change < max_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
 
         change_name = feature_changes_names[i]
         to_save = filtered_data.copy()
@@ -159,13 +169,14 @@ severity = {
     "softmax orig dist": 2,
     "softmax filtered dist": 1
 }
+
+
 if __name__ == '__main__':
     all_results = []
     time_stamp = datetime.now()
     date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
 
     all_sizes = [
-        #(0.6, 0.2, 0.2),
         (0.7, 0.1, 0.2),
         (0.7, 0.07, 0.2),
         (0.7, 0.05, 0.2),
@@ -173,15 +184,24 @@ if __name__ == '__main__':
     ]
 
     for sizes in all_sizes:
-        all_datasets = [
-            DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
-            #DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"] * 11, sizes, name="winequality-white", to_shuffle=True),
-            DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="data_banknote_authentication", to_shuffle=True),
-            #DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
-            DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
-        ]
+        # all_datasets = [
+        #     DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
+        #     #DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"] * 11, sizes, name="winequality-white", to_shuffle=True),
+        #     DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="data_banknote_authentication", to_shuffle=True),
+        #     #DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
+        #     DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
+        # ]
 
-        for dataset in all_datasets:
+        all_datasets = pd.read_csv('data/all_datasets.csv', index_col=0)
+
+        for index, row in all_datasets.iterrows():
+            # if index > 2:
+            #             #     break
+            dataset = DataSet(row["path"], "diagnosis_check", None, None, sizes, name=row["name"],
+                          to_shuffle=True)
+
+        # for dataset in all_datasets:
+
             print(f"-------------{dataset.name.upper()} {sizes}-------------")
             concept_size = dataset.before_size
             target = dataset.target

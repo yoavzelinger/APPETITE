@@ -20,21 +20,34 @@ class DataSet:
         if name is not None:
             self.name = name
 
-        # convert categorical to nums
+        feature_type = []
         for col in data_df:
+            target = col
             if data_df[col].dtype == object:
+                feature_type.append("categorical")
+                if pd.isna(data_df[col]).any():
+                    data_df[col].fillna(data_df[col].mode().iloc[0], inplace=True)
+                # convert categorical to nums
                 data_df[col] = pd.Categorical(data_df[col])
                 data_df[col] = data_df[col].cat.codes
+            else:
+                feature_type.append("numeric")
+                if pd.isna(data_df[col]).any():
+                    data_df[col].fillna((data_df[col].mean()), inplace=True)
 
         if to_shuffle:  # shuffle data, same shuffle always
             data_df = data_df.sample(frac=1, random_state=42).reset_index(drop=True)
         self.data = data_df
 
+        if target_class is None:
+            target_class = target
         self.dataset_type = dataset_type
         self.features = list(self.data.columns)
         self.features.remove(target_class)
         self.target = target_class
-        # self.batch_size = batch_size
+
+        if feature_types is None:
+            feature_types = feature_type[:-1]
         self.feature_types = feature_types
 
         n_samples = len(data_df)
@@ -53,38 +66,39 @@ class DataSet:
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
 if __name__ == '__main__':
-    all_sizes = [
-        (0.4, 0.4, 0.2),
-        # (0.7, 0.1, 0.2),
-        # (0.7, 0.07, 0.2),
-        # (0.7, 0.05, 0.2),
-        # (0.7, 0.02, 0.2)
-    ]
-    for sizes in all_sizes:
-        all_datasets = [
-            DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris",
-                    to_shuffle=True),
-            DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes,
-                    name="data_banknote_authentication", to_shuffle=True),
-             DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"] * 8, sizes,
-                    name="pima-indians-diabetes", to_shuffle=True)
-        ]
+    # all_sizes = [
+    #     (0.4, 0.4, 0.2),
+    #     # (0.7, 0.1, 0.2),
+    #     # (0.7, 0.07, 0.2),
+    #     # (0.7, 0.05, 0.2),
+    #     # (0.7, 0.02, 0.2)
+    # ]
+    # for sizes in all_sizes:
+    #     all_datasets = [
+    #         DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris",
+    #                 to_shuffle=True),
+    #         DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"] * 4, sizes,
+    #                 name="data_banknote_authentication", to_shuffle=True),
+    #          DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"] * 8, sizes,
+    #                 name="pima-indians-diabetes", to_shuffle=True)
+    #     ]
+    #
+    #     for dataset in all_datasets:
+    #         print(f"--------{dataset.name} {sizes}----------")
+    #         data = dataset.data
+    #         print("all dataset")
+    #         print(f" values: {data[dataset.target].unique()} count:\n{data[dataset.target].value_counts()}")
+    #
+    #         before = dataset.data.iloc[:dataset.before_size]
+    #         print("before")
+    #         print(f" values: {before[dataset.target].unique()} count: \n{before[dataset.target].value_counts()}")
+    #
+    #         after = dataset.data.iloc[dataset.before_size: dataset.before_size + dataset.after_size]
+    #         print("after")
+    #         print(f" values: {after[dataset.target].unique()} count: \n{after[dataset.target].value_counts()}")
+    #
+    #         test = dataset.data.iloc[len(dataset.data) - dataset.test_size:-1]
+    #         print("test")
+    #         print(f" values: {test[dataset.target].unique()} count: \n{test[dataset.target].value_counts()}")
 
-        for dataset in all_datasets:
-            print(f"--------{dataset.name} {sizes}----------")
-            data = dataset.data
-            print("all dataset")
-            print(f" values: {data[dataset.target].unique()} count:\n{data[dataset.target].value_counts()}")
-
-            before = dataset.data.iloc[:dataset.before_size]
-            print("before")
-            print(f" values: {before[dataset.target].unique()} count: \n{before[dataset.target].value_counts()}")
-
-            after = dataset.data.iloc[dataset.before_size: dataset.before_size + dataset.after_size]
-            print("after")
-            print(f" values: {after[dataset.target].unique()} count: \n{after[dataset.target].value_counts()}")
-
-            test = dataset.data.iloc[len(dataset.data) - dataset.test_size:-1]
-            print("test")
-            print(f" values: {test[dataset.target].unique()} count: \n{test[dataset.target].value_counts()}")
-
+    DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, (0.7,0.1,0.2), name="iris", to_shuffle=True)

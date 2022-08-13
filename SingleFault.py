@@ -24,7 +24,7 @@ def diagnose_single_fault(spectra,  # np array [number of tests, number of compo
         probabilities *= prior
 
     # normalize probabilities
-    probabilities = probabilities / probabilities.sum()
+    probabilities = probabilities / (probabilities.sum() + epsilon)
 
     # order diagnoses by probability
     d_order = np.argsort(-probabilities)  # highest prob first
@@ -34,10 +34,10 @@ def diagnose_single_fault(spectra,  # np array [number of tests, number of compo
     return diagnoses, probabilities
 
 def jaccard_similarity(a, b, c, d):
-    return a / (a + b + c)
+    return a / ((a + b + c) + epsilon)
 
 def dice_similarity(a, b, c, d):
-    return 2 * a / (2 * a + b + c)
+    return 2 * a / ((2 * a + b + c) + epsilon)
 
 def intersection_similarity(a, b, c, d):
     return a
@@ -46,7 +46,7 @@ def inner_product_similarity(a, b, c, d):
     return a + d
 
 def faith_similatiry(a, b, c, d):
-    return a + 0.5 * d / (a + b + c + d)
+    return a + 0.5 * d / ((a + b + c + d) + epsilon)
 
 def cosine_similarity(a, b, c, d):
     epsilon_vec = np.ones(a.shape)*epsilon

@@ -136,6 +136,8 @@ def prune_tree(tree, tree_rep):
     pruned = []
     while len(leaf_nodes) > 0:
         leaf = leaf_nodes.pop()
+        if leaf == 0:
+            break
         parent = tree_rep[leaf]["parent"]
         class_name = tree_rep[leaf]["class"]
         if tree_rep[leaf]["type"] == "left":

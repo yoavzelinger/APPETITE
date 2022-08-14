@@ -19,7 +19,7 @@ def diagnose_single_fault(spectra,  # np array [number of tests, number of compo
     similarity_func = methods[similarity_method]
     similarity = similarity_func(a, b, c, d)
 
-    probabilities = similarity
+    probabilities = similarity.astype(np.float64)
     if prior is not None:
         probabilities *= prior
 

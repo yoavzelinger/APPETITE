@@ -123,9 +123,9 @@ def manipulate_node(node, dataset, save_to_csv=False):
         # assuring the drift will not affect other nodes
         if min_value is not None:
             if type_of_feature != "numeric":
-                c1 = int(min_value - 0.5)
+                c1 = int(min_value + 0.5)
                 change = [c1 if c < min_value else c for c in change]
-                assert len(list(filter(lambda x: x < max_value, change))) == 0
+                assert len(list(filter(lambda x: x < min_value, change))) == 0
             else:
                 change[change < min_value] = min_value
                 assert (change >= min_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
@@ -195,73 +195,76 @@ if __name__ == '__main__':
         all_datasets = pd.read_csv('data/all_datasets.csv', index_col=0)
 
         for index, row in all_datasets.iterrows():
-            # if index > 2:
-            #             #     break
-            dataset = DataSet(row["path"], "diagnosis_check", None, None, sizes, name=row["name"],
+            # if index > 10:
+            #     break
+            dataset = DataSet(row["path"].replace("\\","/"), "diagnosis_check", None, None, sizes, name=row["name"],
                           to_shuffle=True)
 
         # for dataset in all_datasets:
+            try:
+                print(f"-------------{dataset.name.upper()} {sizes}-------------")
+                concept_size = dataset.before_size
+                target = dataset.target
+                feature_types = dataset.feature_types
+                train = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
+                validation = dataset.data.iloc[int(0.9 * concept_size):concept_size].copy()
+                model = build_model(train, dataset.features, dataset.target, val_data=validation)
+                tree_rep = map_tree(model)
+                model = prune_tree(model, tree_rep)
+                print("TREE:")
+                print_tree_rules(model, dataset.features)
 
-            print(f"-------------{dataset.name.upper()} {sizes}-------------")
-            concept_size = dataset.before_size
-            target = dataset.target
-            feature_types = dataset.feature_types
-            train = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
-            validation = dataset.data.iloc[int(0.9 * concept_size):concept_size].copy()
-            model = build_model(train, dataset.features, dataset.target, val_data=validation)
-            tree_rep = map_tree(model)
-            model = prune_tree(model, tree_rep)
-            print("TREE:")
-            print_tree_rules(model, dataset.features)
+                after_samples = dataset.data.iloc[concept_size:concept_size + dataset.after_size].copy()
+                after_data_x = after_samples[dataset.features]
+                prediction = model.predict(after_data_x)
+                after_data_y = after_samples[dataset.target]
+                accuracy_after_no_drift = metrics.accuracy_score(after_data_y, prediction)
 
-            after_samples = dataset.data.iloc[concept_size:concept_size + dataset.after_size].copy()
-            after_data_x = after_samples[dataset.features]
-            prediction = model.predict(after_data_x)
-            after_data_y = after_samples[dataset.target]
-            accuracy_after_no_drift = metrics.accuracy_score(after_data_y, prediction)
+                test_samples = dataset.data.iloc[len(dataset.data) - dataset.test_size: -1].copy()
+                test_data_x = test_samples[dataset.features]
+                prediction = model.predict(test_data_x)
+                test_data_y = test_samples[dataset.target]
+                accuracy_test_no_drift = metrics.accuracy_score(test_data_y, prediction)
 
-            test_samples = dataset.data.iloc[len(dataset.data) - dataset.test_size: -1].copy()
-            test_data_x = test_samples[dataset.features]
-            prediction = model.predict(test_data_x)
-            test_data_y = test_samples[dataset.target]
-            accuracy_test_no_drift = metrics.accuracy_score(test_data_y, prediction)
+                tree_rep = map_tree(model)
+                node_list = list(tree_rep.keys())
+                print(f"tree size: {len(node_list)}")
+                non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
+                print(non_leaf_nodes)
+                leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))
+                print(leaf_nodes)
 
-            tree_rep = map_tree(model)
-            node_list = list(tree_rep.keys())
-            print(f"tree size: {len(node_list)}")
-            non_leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] != -1, node_list))
-            print(non_leaf_nodes)
-            leaf_nodes = list(filter(lambda n: tree_rep[n]["left"] == -1, node_list))
-            print(leaf_nodes)
+                data_before_manipulation = dataset.data.iloc[0:concept_size]
+                # manipulate data & run experiment
+                for node in non_leaf_nodes:
+                    print(f"node: {node}, depth: {tree_rep[node]['depth']}")
+                    manipulated_data = manipulate_node(node, dataset)
 
-            data_before_manipulation = dataset.data.iloc[0:concept_size]
-            # manipulate data & run experiment
-            for node in non_leaf_nodes:
-                print(f"node: {node}, depth: {tree_rep[node]['depth']}")
-                manipulated_data = manipulate_node(node, dataset)
+                    for data, change, type_of_feature, feature_in_path in manipulated_data:
+                        dataset_for_exp = DataSet(data, "diagnosis_check", target, feature_types, sizes)
+                        data_after_manipulation = dataset_for_exp.data.iloc[0:concept_size]
+                        assert data_after_manipulation.equals(data_before_manipulation.astype(data_after_manipulation.dtypes)), \
+                            f"before:\n{data_before_manipulation}\n\nafter:\n{data_after_manipulation}"
 
-                for data, change, type_of_feature, feature_in_path in manipulated_data:
-                    dataset_for_exp = DataSet(data, "diagnosis_check", target, feature_types, sizes)
-                    data_after_manipulation = dataset_for_exp.data.iloc[0:concept_size]
-                    assert data_after_manipulation.equals(data_before_manipulation.astype(data_after_manipulation.dtypes)), \
-                        f"before:\n{data_before_manipulation}\n\nafter:\n{data_after_manipulation}"
-
-                    with HiddenPrints():
-                        result = run_single_tree_experiment(dataset_for_exp, model=copy.deepcopy(model), check_diagnosis=True, faulty_nodes=[node])
-                    result["size"] = sizes[1]
-                    result["dataset"] = dataset.name
-                    result["depth"] = tree_rep[node]['depth']
-                    result["samples in node"] = model.tree_.n_node_samples[node]
-                    result["change severity"] = severity[change]
-                    if change in change_types:
-                        change = change_types[change]
-                    result["change type"] = change
-                    result["feature type"] = type_of_feature
-                    result["number of faulty nodes"] = 1
-                    result["feature in path"] = feature_in_path
-                    result["model accuracy - no drift - after"] = accuracy_after_no_drift
-                    result["model accuracy - no drift - test"] = accuracy_test_no_drift
-                    all_results.append(result)
+                        with HiddenPrints():
+                            result = run_single_tree_experiment(dataset_for_exp, model=copy.deepcopy(model), check_diagnosis=True, faulty_nodes=[node])
+                        result["size"] = sizes[1]
+                        result["dataset"] = dataset.name
+                        result["depth"] = tree_rep[node]['depth']
+                        result["samples in node"] = model.tree_.n_node_samples[node]
+                        result["change severity"] = severity[change]
+                        if change in change_types:
+                            change = change_types[change]
+                        result["change type"] = change
+                        result["feature type"] = type_of_feature
+                        result["number of faulty nodes"] = 1
+                        result["feature in path"] = feature_in_path
+                        result["model accuracy - no drift - after"] = accuracy_after_no_drift
+                        result["model accuracy - no drift - test"] = accuracy_test_no_drift
+                        all_results.append(result)
+            except Exception as e:
+                print(f"failed in run: {dataset.name.upper()} {sizes}, change type {change}")
+                print(e)
 
     # write results to excel
     file_name = f"results/result_run_{date_time}.xlsx"
@@ -285,7 +288,7 @@ if __name__ == '__main__':
             try:
                 worksheet.write(row_num, col_num, value)
             except TypeError:
-                print(f"problem with key: '{key}', value: {value}")
+                print(f"{dataset.name.upper()} {sizes} - problem with key: '{key}', value: {value}")
         row_num += 1
     workbook.close()
 

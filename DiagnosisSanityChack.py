@@ -128,7 +128,8 @@ def manipulate_node(node, dataset, save_to_csv=False):
                 assert len(list(filter(lambda x: x < min_value, change))) == 0
             else:
                 change[change < min_value] = min_value
-                assert (change >= min_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
+                assert (
+                            change >= min_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
         if max_value is not None:
             if type_of_feature != "numeric":
                 c1 = int(max_value - 0.5)
@@ -136,7 +137,8 @@ def manipulate_node(node, dataset, save_to_csv=False):
                 assert len(list(filter(lambda x: x >= max_value, change))) == 0
             else:
                 change[change >= max_value] = max_value - 0.0001
-                assert (change < max_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
+                assert (
+                            change < max_value).all(), f"node: {node}, conditions: {conditions}\nrangs: {min_value}-{max_value}\n{change}"
 
         change_name = feature_changes_names[i]
         to_save = filtered_data.copy()

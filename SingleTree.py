@@ -144,7 +144,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     result["feature types"] = dataset.feature_types
 
     if not model: # create a model
-        model = build_model(dataset.data.iloc[0:int(0.9*SIZE)].copy(), dataset.features, dataset.target)
+        model = build_model(dataset.data.iloc[0:int(0.9*SIZE)].copy(), dataset.features, dataset.target, to_split=True)
     model_rep = map_tree(model)
 
     # check model accuracy on data before the drift

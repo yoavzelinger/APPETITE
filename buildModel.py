@@ -28,8 +28,8 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
         else:
             x_train, x_val = x_train_all, x_train_all
             y_train, y_val = y_train_all, y_train_all
-        print(f"x train:\n{x_train}")
-        print(f"x val:\n{x_val}")
+        # print(f"x train:\n{x_train}")
+        # print(f"x val:\n{x_val}")
     else:  # do not split, use validation data given
         assert val_data is not None
         x_val = val_data[features]
@@ -55,7 +55,7 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
     clf_GS = GridSearchCV(estimator=dec_tree, param_grid=param_grid_tree, cv=n_split)
     clf_GS.fit(x_train1, y_train1)
     best_params = clf_GS.best_params_
-    print(best_params)
+    # print(best_params)
 
     # train tree on best params and then prune
     clf = DecisionTreeClassifier(criterion=best_params["criterion"], #max_depth=best_params["max_depth"],
@@ -75,7 +75,7 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
 
     accuracy_val = np.array(accuracy_val)
     best_accuracy = np.max(accuracy_val)
-    print(best_accuracy)
+    # print(best_accuracy)
     best = np.where(accuracy_val == best_accuracy)[0][-1]  # best val accuracy, max pruning
     # print(best)
     best_clf = clfs[best]

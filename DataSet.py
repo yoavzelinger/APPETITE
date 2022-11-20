@@ -13,7 +13,7 @@ class DataSet:
             elif source_format == "arff":
                 data, meta = arff.loadarff(source_path)
                 pd_df = pd.DataFrame(data)
-                pd_df[target_class] = pd_df[target_class].astype('int')
+                # pd_df[target_class] = pd_df[target_class].astype('int')
                 data_df = pd_df
         else:  # already dataframe
             data_df = source_path

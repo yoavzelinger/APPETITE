@@ -22,7 +22,7 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
     x_train_all = data[features]
     y_train_all = data[target]
 
-    if to_split:
+    if to_split:  # split to train and validation sets
         if len(x_train_all) > 1:
             x_train, x_val, y_train, y_val = train_test_split(x_train_all, y_train_all, test_size=0.2, random_state=7)  # 80% training and 20% test
         else:
@@ -65,6 +65,8 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
     clfs = []
     accuracy_val = []
     for ccp_alpha in ccp_alphas:
+        if ccp_alpha < 0:
+            continue
         clf = DecisionTreeClassifier(criterion=best_params["criterion"], #max_depth=best_params["max_depth"],
                                      max_leaf_nodes=best_params["max_leaf_nodes"], ccp_alpha=ccp_alpha)
         clf.fit(x_train, y_train)

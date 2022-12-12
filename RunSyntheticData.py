@@ -13,7 +13,7 @@ from pandas.core.common import SettingWithCopyWarning
 
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-directory = r"data\MOA"
+directory = r"data\MOA\gradual"
 
 feature_types = {
     "AgrawalGenerator" : ["numeric"]*3 + ["categorical"]*3 + ["numeric"]*3,
@@ -25,32 +25,38 @@ def parse_file_name(f_name):
     parameters = f_name.split("_")
     generator = parameters[0]
     size = int(parameters[2])
-    return generator, size
+    window = int(parameters[4])
+    if "noise" in parameters:
+        noise  = int(parameters[7])
+    elif "peturbation" in parameters:
+        noise = int(float(parameters[7])*100)
+    else: noise = -1
+    return generator, size, window, noise
 
 if __name__ == '__main__':
     all_results = []
     time_stamp = datetime.now()
     date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
+    samples_used = [0.1, 0.2, 0.3, 0.4]
 
     all_datasets = []
     for filename in os.listdir(directory):
-    # for filename in ["AgrawalGenerator_size_100_abrupt_peturbation_0_8to9.arff"]:
-        print(f"################{filename}################")
-        generator, size = parse_file_name(filename)
-        path = os.path.join(directory, filename)
-        dataset = DataSet(path, "synthetic", "class", feature_types[generator], size)
+        for n_used in samples_used:
+            print(f"################{filename} - {n_used}################")
+            generator, size, window, noise = parse_file_name(filename)
+            path = os.path.join(directory, filename)
+            dataset = DataSet(path, "synthetic", "class", feature_types[generator], [size, window, n_used, 0.6])
 
-    # all_datasets = [
-    #     DataSet("data/example3.arff", "synthetic", "class", ["numeric"]*3, 300),
-    #     DataSet("data/example4.arff", "synthetic", "class", ["numeric"] * 3, 200)
-    # ]
-    #
-    # for dataset in all_datasets:
-    #     result = run_single_tree_experiment(dataset)
-        with HiddenPrints():
-            result = run_single_tree_experiment(dataset)
-        result["dataset"] = dataset.name
-        all_results.append(result)
+            with HiddenPrints():
+                result = run_single_tree_experiment(dataset)
+
+            result["dataset"] = dataset.name
+            result["concept size"] = size
+            result["generator"] = generator
+            result["window"] = window
+            result["noise"] = noise
+            result["samples used"] = n_used
+            all_results.append(result)
 
     # write results to excel
     file_name = f"results/result_run_synthetic_MOA_{date_time}.xlsx"

@@ -63,6 +63,14 @@ class DataSet:
             self.after_size = int(size * 0.1)
             self.test_size = int(size * 0.2)
 
+        elif type(size) == list:
+            concept_size, window, n_used, test = size
+            self.before_size = concept_size - int(window/2)
+            self.after_size = int(window*n_used)
+            self.test_size = int(window*test)
+            self.window = window
+            self.concept_size = concept_size
+
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
 if __name__ == '__main__':

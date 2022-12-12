@@ -217,9 +217,17 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # TEST performances
     print("--- test data accuracy ---")
-    test_start = len(dataset.data) - dataset.test_size
-    test_copy = dataset.data.iloc[test_start: -1].copy()
-    test_set = dataset.data.iloc[test_start: -1].copy()
+    if dataset.dataset_type is "diagnosis_check":
+        test_start = len(dataset.data) - dataset.test_size
+        test_end = -1  # the end of the dataset
+    elif dataset.dataset_type is "synthetic":
+        test_end = dataset.concept_size + int(dataset.window / 2)  # the end of the window
+        test_start = test_end - dataset.test_size
+    else:
+        test_start = dataset.before_size + dataset.after_size
+        test_end = test_start + dataset.test_size  # right after
+    test_copy = dataset.data.iloc[test_start: test_end].copy()
+    test_set = dataset.data.iloc[test_start: test_end].copy()
     test_set_x = test_set[dataset.features]
     test_set_y = test_set[dataset.target]
     result["test set size"] = len(test_set)

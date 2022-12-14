@@ -33,13 +33,25 @@ from updateModel import *
 SIZE = -1
 NEW_DATA_SIZE = -1
 
-def feature_diff_after_concept_drift(data_set, drift_size, new_data_size):
+# def feature_diff_after_concept_drift(data_set, drift_size, new_data_size):
+#     diff = dict()
+#     i = 0
+#     for feature in data_set.features:
+#         before = data_set.data[feature].iloc[0:drift_size]
+#         before_avg = before.mean()
+#         after = data_set.data[feature].iloc[drift_size: drift_size + new_data_size]
+#         after_avg = after.mean()
+#         diff[i] = after_avg - before_avg
+#         i += 1
+#     return diff
+
+def feature_diff_after_concept_drift(data_set, before_indexes, new_data_indexes):
     diff = dict()
     i = 0
     for feature in data_set.features:
-        before = data_set.data[feature].iloc[0:drift_size]
+        before = data_set.data[feature].iloc[before_indexes]
         before_avg = before.mean()
-        after = data_set.data[feature].iloc[drift_size: drift_size + new_data_size]
+        after = data_set.data[feature].iloc[new_data_indexes]
         after_avg = after.mean()
         diff[i] = after_avg - before_avg
         i += 1
@@ -78,9 +90,10 @@ def barinel_single_node(diagnoses, probabilities, n_nodes):
     diagnoses = list(map(int, d_order))
     return diagnoses, probabilities
 
-def fix_SHAP(model, diagnosis, dataset):
+def fix_SHAP(model, diagnosis, dataset, indexes):
+    before_indexes, new_data_indexes = indexes
     # fix model - SHAP
-    features_diff = feature_diff_after_concept_drift(dataset, SIZE, NEW_DATA_SIZE)
+    features_diff = feature_diff_after_concept_drift(dataset, before_indexes, new_data_indexes)
     nodes, thresholds = find_nodes_threshold_from_diagnosis(model, diagnosis, features_diff)
     model_to_fix = copy.deepcopy(model)
     fixed_model = change_tree_threshold(model_to_fix, nodes, thresholds)
@@ -119,17 +132,20 @@ def fix_nodes_binary(orig_model, diagnosis):
     fixed = change_tree_selection(to_fix, diagnosis)
     return fixed
 
-def fix_nodes_numeric(orig_model, diagnosis, dataset1):
+def fix_nodes_numeric(orig_model, diagnosis, dataset1, indexes):
+    before_indexes, new_data_indexes = indexes
     # fix model - Nodes, change node's thresholds (feature mean before & after drift)
     to_fix = copy.deepcopy(orig_model)
-    features_diff = feature_diff_after_concept_drift(dataset1, SIZE, NEW_DATA_SIZE)
+    features_diff = feature_diff_after_concept_drift(dataset1, before_indexes, new_data_indexes)
     fixed = change_nodes_threshold(to_fix, diagnosis, features_diff)
     return fixed
 
-def fix_nodes_by_type(orig_model, diagnosis, dataset1, diff_type="all", tree_representation=None, leaf_fix_type="new_data"):
+# TODO
+def fix_nodes_by_type(orig_model, diagnosis, dataset1, indexes, diff_type="all", tree_representation=None, leaf_fix_type="new_data"):
+    before_indexes, new_data_indexes = indexes
     # fix model - Nodes, change selection or threshold
     to_fix = copy.deepcopy(orig_model)
-    features_diff = feature_diff_after_concept_drift(dataset1, SIZE, NEW_DATA_SIZE)
+    features_diff = feature_diff_after_concept_drift(dataset1, before_indexes, new_data_indexes)  # TODO: change - method get two datasets
     fixed = change_nodes_by_type(to_fix, diagnosis, dataset1.feature_types, features_diff, diff_type, leaf_fix_type, tree_representation, dataset1)
     return fixed
 
@@ -159,8 +175,22 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     result["number of nodes"] = model.tree_.node_count
     result["tree size"] = len(model_rep)
     # check model accuracy on data after concept drift
-    new_data = dataset.data.iloc[SIZE: SIZE + NEW_DATA_SIZE].copy()
-    new_data_copy = dataset.data.iloc[SIZE: SIZE + NEW_DATA_SIZE].copy()
+    if dataset.dataset_type in ("synthetic"):
+        new_end = dataset.before_size + dataset.window
+        new_start = new_end - dataset.after_size
+    elif dataset.dataset_type in ("synthetic sliding"):
+        new_start = dataset.concept_size + int(dataset.slot*dataset.window)
+        new_end = new_start + dataset.after_size
+    else:
+        new_start = SIZE
+        new_end = SIZE + NEW_DATA_SIZE
+
+    indexes_before = list(range(0, SIZE))
+    indexes_new = list(range(new_start, new_end))
+    indexes = (indexes_before, indexes_new)
+
+    new_data = dataset.data.iloc[new_start: new_end].copy()
+    new_data_copy = dataset.data.iloc[new_start: new_end].copy()
     new_data_x = new_data[dataset.features]
     prediction = model.predict(new_data_x)
     new_data_y = new_data[dataset.target]
@@ -196,7 +226,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     print(f"best diagnosis: {diagnosis}")
 
     time1 = datetime.now()
-    fixed_model = fix_nodes_by_type(model, diagnosis, dataset, diff_type="node", tree_representation=model_rep)
+    fixed_model = fix_nodes_by_type(model, diagnosis, dataset, indexes, diff_type="node", tree_representation=model_rep)
     time2 = datetime.now()
     result["fixing time"] = time2 - time1
 
@@ -217,12 +247,13 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # TEST performances
     print("--- test data accuracy ---")
-    if dataset.dataset_type is "diagnosis_check":
+    if dataset.dataset_type in ("diagnosis_check"):
         test_start = len(dataset.data) - dataset.test_size
         test_end = -1  # the end of the dataset
-    elif dataset.dataset_type is "synthetic":
-        test_end = dataset.concept_size + int(dataset.window / 2)  # the end of the window
-        test_start = test_end - dataset.test_size
+    elif dataset.dataset_type in ("synthetic", "synthetic sliding"):
+        test_start = dataset.concept_size + int(dataset.window / 2)  # the end of the window
+        # test_end = test_start + int(dataset.window / 2)
+        test_end = -1  # the end of the dataset
     else:
         test_start = dataset.before_size + dataset.after_size
         test_end = test_start + dataset.test_size  # right after
@@ -240,7 +271,8 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
 
     # train a new model with data before and after drift
     time1 = datetime.now()
-    model_all = build_model(dataset.data.iloc[0:SIZE + NEW_DATA_SIZE].copy(), dataset.features, dataset.target, to_split=True)
+    indexes_all = indexes_before + indexes_new
+    model_all = build_model(dataset.data.iloc[indexes_all].copy(), dataset.features, dataset.target, to_split=True)
     time2 = datetime.now()
     result["new model all time"] = time2 - time1
     prediction2 = model_all.predict(test_set_x)
@@ -282,7 +314,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     else:
         result["FIXED accuracy on bad samples"] = -1
 
-    # Check diagnosis queality
+    # Check diagnosis quality
     if check_diagnosis:
         result["faulty nodes"] = faulty_nodes
         result["# faulty nodes "] = len(faulty_nodes)
@@ -373,7 +405,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
             result["diff subtree"] = accuracy_train_subtree - accuracy_orig
 
         model_to_fix2 = copy.deepcopy(model)
-        fixed_model_change_threshold_node = fix_nodes_by_type(model_to_fix2, faulty_nodes, dataset,
+        fixed_model_change_threshold_node = fix_nodes_by_type(model_to_fix2, faulty_nodes, dataset, indexes,
                                                               diff_type="node", tree_representation=model_rep)
         prediction5 = fixed_model_change_threshold_node.predict(test_set_x)
         accuracy_node = metrics.accuracy_score(test_set_y, prediction5)
@@ -381,7 +413,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         result["diff node"] = accuracy_node - accuracy_orig
 
         model_to_fix3 = copy.deepcopy(model)
-        fixed_model_change_threshold_all = fix_nodes_by_type(model_to_fix3, faulty_nodes, dataset, tree_representation=model_rep)
+        fixed_model_change_threshold_all = fix_nodes_by_type(model_to_fix3, faulty_nodes, dataset, indexes, tree_representation=model_rep)
         prediction6 = fixed_model_change_threshold_all.predict(test_set_x)
         accuracy_thresh_all = metrics.accuracy_score(test_set_y, prediction6)
         result["AllThreshold: accuracy fixed model (faulty nodes) - test data"] = accuracy_thresh_all

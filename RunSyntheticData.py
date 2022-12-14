@@ -37,15 +37,20 @@ if __name__ == '__main__':
     all_results = []
     time_stamp = datetime.now()
     date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
-    samples_used = [0.1, 0.2, 0.3, 0.4]
+    samples_used = [0.1, 0.2, 0.3, 0.4, 0.5]
+    slots = [0, 0.1, 0.2, 0.3, 0.4]
 
     all_datasets = []
     for filename in os.listdir(directory):
+        n_used = 0.1
+        # for slot in slots:
         for n_used in samples_used:
+            # print(f"################{filename} - {slot}################")
             print(f"################{filename} - {n_used}################")
             generator, size, window, noise = parse_file_name(filename)
             path = os.path.join(directory, filename)
             dataset = DataSet(path, "synthetic", "class", feature_types[generator], [size, window, n_used, 0.6])
+            # dataset = DataSet(path, "synthetic sliding", "class", feature_types[generator], [size, window, n_used, 0.6, slot])
 
             with HiddenPrints():
                 result = run_single_tree_experiment(dataset)
@@ -56,6 +61,7 @@ if __name__ == '__main__':
             result["window"] = window
             result["noise"] = noise
             result["samples used"] = n_used
+            # result["slot"] = slot*10
             all_results.append(result)
 
     # write results to excel

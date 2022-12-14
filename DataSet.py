@@ -64,8 +64,12 @@ class DataSet:
             self.test_size = int(size * 0.2)
 
         elif type(size) == list:
-            concept_size, window, n_used, test = size
-            self.before_size = concept_size - int(window/2)
+            if len(size) == 4:
+                concept_size, window, n_used, test = size
+            elif len(size) == 5:
+                concept_size, window, n_used, test, slot = size
+                self.slot = slot
+            self.before_size = concept_size - int(window/2)  # "clean" concept
             self.after_size = int(window*n_used)
             self.test_size = int(window*test)
             self.window = window

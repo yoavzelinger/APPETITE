@@ -315,9 +315,9 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         result["FIXED accuracy on bad samples"] = -1
 
     # Check diagnosis quality
-    if check_diagnosis:
+    if check_diagnosis and len(faulty_nodes) > 0:
         result["faulty nodes"] = faulty_nodes
-        result["# faulty nodes "] = len(faulty_nodes)
+        result["# faulty nodes"] = len(faulty_nodes)
         # check how many features fixed
         diagnosis_features = {}
         good_fixed = 0
@@ -389,20 +389,20 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         errors_p = errors_in_node / samples_in_node_after_drift if samples_in_node_after_drift > 0 else -1
         result["% errors in node after drift"] = errors_p
 
-    # test all fixes
-    if len(faulty_nodes) > 0:  # fix the tree, diagnosis = faulty node
-        # train subtree
-        model_to_fix1 = copy.deepcopy(model)
-        fixed_model_train_subtree = train_subtree(model_to_fix1, faulty_nodes[0], dataset, model_rep)
-        if fixed_model_train_subtree == -1:  # no samples in node
-            result["TrainSubtree: accuracy fixed model (faulty nodes) - test data"] = -1
-            result["diff subtree"] = -1
-        else:
-            prediction4 = fixed_model_train_subtree.predict(test_set_x)
-            accuracy_train_subtree = metrics.accuracy_score(test_set_y, prediction4)
-            print("Accuracy of the Fixed model (based on faulty nodes) on test data:", accuracy_train_subtree)
-            result["TrainSubtree: accuracy fixed model (faulty nodes) - test data"] = accuracy_train_subtree
-            result["diff subtree"] = accuracy_train_subtree - accuracy_orig
+        # test all possible fixes
+        if len(faulty_nodes) > 0:  # fix the tree, diagnosis = faulty node
+            # train subtree
+            model_to_fix1 = copy.deepcopy(model)
+            fixed_model_train_subtree = train_subtree(model_to_fix1, faulty_nodes[0], dataset, model_rep)
+            if fixed_model_train_subtree == -1:  # no samples in node
+                result["TrainSubtree: accuracy fixed model (faulty nodes) - test data"] = -1
+                result["diff subtree"] = -1
+            else:
+                prediction4 = fixed_model_train_subtree.predict(test_set_x)
+                accuracy_train_subtree = metrics.accuracy_score(test_set_y, prediction4)
+                print("Accuracy of the Fixed model (based on faulty nodes) on test data:", accuracy_train_subtree)
+                result["TrainSubtree: accuracy fixed model (faulty nodes) - test data"] = accuracy_train_subtree
+                result["diff subtree"] = accuracy_train_subtree - accuracy_orig
 
         model_to_fix2 = copy.deepcopy(model)
         fixed_model_change_threshold_node = fix_nodes_by_type(model_to_fix2, faulty_nodes, dataset, indexes,
@@ -418,6 +418,26 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
         accuracy_thresh_all = metrics.accuracy_score(test_set_y, prediction6)
         result["AllThreshold: accuracy fixed model (faulty nodes) - test data"] = accuracy_thresh_all
         result["diff all"] = accuracy_thresh_all - accuracy_orig
+
+    elif len(faulty_nodes) > 0:  # feature diagnosis
+        faulty_feature_id = faulty_nodes[0]
+        result["faulty feature id"] = faulty_feature_id
+
+        node = diagnosis[0]
+        feature_id = model.tree_.feature[node]
+        result["diagnosed feature id"] = feature_id
+        result["is feature detected?"] = 1 if faulty_feature_id == feature_id else 0
+
+        result["node condition"] = model_rep[node]["condition"]
+
+        # wasted effort
+        wasted_effort = 0
+        for n in diagnoses:
+            f_id = model.tree_.feature[n]
+            if f_id == faulty_feature_id:
+                break
+            wasted_effort += 1
+        result["feature wasted effort"] = wasted_effort
 
     assert test_set.equals(test_copy), f"test set has changed\nbefore:\n{test_copy}\n\nafter:\n{test_set}"
     assert new_data.equals(new_data_copy), f"new data (after set) has changed\nbefore:\n{new_data_copy}\n\nafter:\n{new_data}"

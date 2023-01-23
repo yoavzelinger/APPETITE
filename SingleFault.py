@@ -12,7 +12,8 @@ def diagnose_single_fault(spectra,  # np array [number of tests, number of compo
         "intersection": intersection_similarity,
         "inner_product": inner_product_similarity,
         "faith": faith_similatiry,
-        "cosine": cosine_similarity
+        "cosine": cosine_similarity,
+        "prior": prior_only
     }
 
     a, b, c, d = calc_a_b_c_d(spectra, error_vector)
@@ -32,6 +33,9 @@ def diagnose_single_fault(spectra,  # np array [number of tests, number of compo
     probabilities = probabilities[d_order]
 
     return diagnoses, probabilities
+
+def prior_only(a, b, c, d):
+    return np.ones(a.shape)
 
 def jaccard_similarity(a, b, c, d):
     return a / ((a + b + c) + epsilon)

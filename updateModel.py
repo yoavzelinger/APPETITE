@@ -28,6 +28,8 @@ def change_leaf_classification(tree, nodes, leaf_fix_type="second", dataset=None
         for node in nodes:
             filtered_data = filter_data_for_node(tree_rep, node, dataset, "after")
             labels = filtered_data[dataset.target]
+            if labels.size < 1:
+                continue
             common_class = labels.value_counts().idxmax()
 
             values = tree.tree_.value[node]

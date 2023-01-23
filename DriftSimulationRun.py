@@ -125,6 +125,7 @@ def change_data_binary2(feature, all_data, filtered_data, indexes_filtered_data)
             continue
         for p in changes:
             to_change = original.copy()
+            random.seed(10)
             indexes_to_change = random.choices(indexes, k=int(n*p))
             to_change.loc[indexes_to_change, feature] = val
             feature_changes.append(to_change[feature])
@@ -170,7 +171,9 @@ def simulate_drift(feature, feature_type, dataset):
     indexes_after_drift = list(range(n_before, n_samples))
 
     # sample before
+    random.seed(42)
     indexes_before = random.sample(indexes_before_drift, k=int(0.8*n_before))
+    random.seed(13)
     indexes_before += random.sample(indexes_after_drift, k=int(0.2*n_before))
     assert len(indexes_before) == len(set(indexes_before))
 
@@ -217,13 +220,13 @@ if __name__ == '__main__':
 
     all_datasets = pd.read_csv('data/all_datasets.csv', index_col=0)
 
-    # categorical_datasets = ["visualizing_livestock"]
+    categorical_datasets = ["annealing"]
     # categorical_datasets = ["analcatdata_boxing1", "braziltourism", "meta", "newton_hema", "socmob", "vote", "newton_hema", "visualizing_livestock"]
 
     for index, row in all_datasets.iterrows():
         # if row["name"] not in categorical_datasets:
         #     continue
-        # if index > 3:  # use for testing
+        # if index > 10:  # use for testing
         #     break
 
         print(f'------------------DATASET: {row["name"]}------------------')
@@ -274,6 +277,13 @@ if __name__ == '__main__':
         for i in range(len(dataset.features)):
             feature = dataset.features[i]
             feature_type = dataset.feature_types[i]
+            if feature_type == "categorical":
+                n_values = dataset.data[feature].unique().size
+                if n_values > 2:
+                    f_type = "categorical"
+                else: f_type = "binary"
+            else:
+                f_type = "numeric"
             if not is_feature_in_tree(tree_rep, i):
                 continue
             manipulated_data = manipulate_feature(feature, feature_type, dataset)
@@ -300,13 +310,14 @@ if __name__ == '__main__':
                         result["change type"] = change_type
                     else: result["change type"] = change
                     result["feature type"] = feature_type
+                    result["f type"] = f_type
                     # result["is feature in tree?"] = is_feature_in_tree(tree_rep, i)
                     result["number of faulty nodes"] = 1
                     result["model accuracy - no drift - after"] = performances[sizes]
                     result["model accuracy - no drift - test"] = accuracy_test_no_drift
                     all_results.append(result)
 
-    write_to_excel(all_results, f"result_run_{date_time}")
+    write_to_excel(all_results, f"REG_FIX_result_run_{date_time}")
 
     print("DONE")
 

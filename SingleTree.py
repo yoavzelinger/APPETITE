@@ -57,6 +57,21 @@ def feature_diff_after_concept_drift(data_set, before_indexes, new_data_indexes)
         i += 1
     return diff
 
+def feature_diff_after_concept_drift2(tree_rep, node, dataset):
+    before = filter_data_for_node(tree_rep, node, dataset, "before")
+    after = filter_data_for_node(tree_rep, node, dataset, "after")
+    diff = dict()
+    i = 0
+    for feature in dataset.features:
+        before_avg = before[feature].mean()
+        if after.size == 0:  # no samples in node - no change
+            after_avg = before_avg
+        else:
+            after_avg = after[feature].mean()
+        diff[i] = after_avg - before_avg
+        i += 1
+    return diff
+
 def diagnose_SHAP(model, dataset, new_data, prediction):
     # diagnose model - SHAP
     shap_values = applySHAP(dataset.features, new_data, model)
@@ -68,13 +83,23 @@ def diagnose_SHAP(model, dataset, new_data, prediction):
     first_diagnosis = diagnosis[0].diagnosis
     return first_diagnosis
 
-def best_diagnosis(diagnoses, probabilities, spectra, error_vector, best_method="first"):
+def best_diagnosis(diagnoses, probabilities, spectra, error_vector, model_rep, best_method="first"):
     print("diagnoses: {}".format(diagnoses))
     print("probabilities: {}".format(probabilities))
     if best_method == "first":
+        best = -1
+        first_index = -1
+        # re-pick if best is a pruned node
+        while best not in model_rep:
+            first_index += 1
+            best = diagnoses[first_index]
+            if best == 26:
+                print(1)
+        best = [best]
+
+    elif best_method == "first_multi":
         best = diagnoses[0]
-        if type(best) == int:
-            best = [best]
+
     return best
 
 def barinel_single_node(diagnoses, probabilities, n_nodes):
@@ -146,6 +171,7 @@ def fix_nodes_by_type(orig_model, diagnosis, dataset1, indexes, diff_type="all",
     # fix model - Nodes, change selection or threshold
     to_fix = copy.deepcopy(orig_model)
     features_diff = feature_diff_after_concept_drift(dataset1, before_indexes, new_data_indexes)  # TODO: change - method get two datasets
+    # features_diff = feature_diff_after_concept_drift2(tree_representation, diagnosis[0], dataset1)
     fixed = change_nodes_by_type(to_fix, diagnosis, dataset1.feature_types, features_diff, diff_type, leaf_fix_type, tree_representation, dataset1)
     return fixed
 
@@ -212,7 +238,7 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_by_error(model, samples, model_rep)
     # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_by_left_right(model, samples, model_rep)
     (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_single_node(model, samples, model_rep)
-    diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector)
+    diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector, model_rep)
     time2 = datetime.now()
     result["diagnosis time"] = time2 - time1
     result["diagnoses list"] = diagnoses

@@ -85,8 +85,9 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
 
 def map_tree(tree):
     class_names = tree.classes_
-    tree_representation = {0: {"depth": 0,
-                "parent": -1}}
+    tree_representation = {"classes": class_names,
+                           0: {"depth": 0,
+                               "parent": -1}}
     nodes_to_check = [0]
     while len(nodes_to_check) > 0:
         node = nodes_to_check.pop(0)

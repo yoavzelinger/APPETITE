@@ -317,7 +317,7 @@ if __name__ == '__main__':
                     result["model accuracy - no drift - test"] = accuracy_test_no_drift
                     all_results.append(result)
 
-    write_to_excel(all_results, f"REG_FIX_result_run_{date_time}")
+    write_to_excel(all_results, f"ALL_FEATURE_DIFF_FIX_result_run_{date_time}")
 
     print("DONE")
 

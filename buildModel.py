@@ -131,6 +131,29 @@ def map_tree(tree):
             class_name = class_names[class_name]
             tree_representation[node]["class"] = class_name
 
+    node_list = list(tree_representation.keys())
+    node_list.remove("classes")
+    leaf_nodes = list(filter(lambda n: tree_representation[n]["left"] == -1, node_list))
+    nodes_to_check = leaf_nodes
+    # nodes_to_check = sorted(leaf_nodes, reverse=True)
+    while len(nodes_to_check) > 0:
+        node = nodes_to_check.pop(nodes_to_check.index(max(nodes_to_check)))
+        if node == -1:
+            break
+        # node = nodes_to_check.pop(0)
+        if tree_representation[node].get("subtree") is not None:
+            continue
+        left_child = tree_representation[node]["left"]
+        right_child = tree_representation[node]["right"]
+        subtree = [node]
+        if left_child != -1:
+            subtree += tree_representation[left_child]["subtree"]
+        if right_child != -1:
+            subtree += tree_representation[right_child]["subtree"]
+        tree_representation[node]["subtree"] = subtree
+
+        nodes_to_check.append(tree_representation[node]["parent"])
+
     return tree_representation
 
 def prune_tree(tree, tree_rep):

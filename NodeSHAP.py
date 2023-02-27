@@ -25,7 +25,10 @@ def predict_sample_from_node(node, sample, tree, active_nodes):
         return tree[node]["value"]
 
     # if subtree doesn't contain active nodes - return classes
-    # TODO: write that function
+    subtree = set(tree[node]["subtree"])
+    active_subtree_nodes = subtree.intersection(set(active_nodes))
+    if len(active_subtree_nodes) == 0:
+        return tree[node]["value"]
 
     # else - calculate recursively
     left_child = tree[node]["left"]
@@ -49,13 +52,68 @@ def predict_sample_from_node(node, sample, tree, active_nodes):
 def get_all_permutations(tree):
     node_list = list(tree_rep.keys())
     node_list.remove("classes")
-    print(node_list)
     non_leaf_nodes = list(filter(lambda n: tree[n]["left"] != -1, node_list))
     n = len(non_leaf_nodes)
     permuts = list()
     for i in range(n+1):
         permuts += itertools.combinations(non_leaf_nodes, r=i)
     return permuts
+
+def calculate_tree_values(tree):
+    results = {}
+    node_list = list(tree_rep.keys())
+    node_list.remove("classes")
+    leaf_nodes = list(filter(lambda n: tree[n]["left"] == -1, node_list))
+    non_leaf_nodes = list(filter(lambda n: tree[n]["left"] != -1, node_list))
+    non_leaf_nodes = sorted(non_leaf_nodes, reverse=True)
+
+    for leaf in leaf_nodes:
+        results[leaf] = {tuple(): tree[leaf]["value"]}
+
+    for node in non_leaf_nodes:
+        results[node] = {tuple(): tree[node]["value"]}
+        subtree = set(tree[node]["subtree"])
+        subtree = subtree.intersection(set(non_leaf_nodes))
+
+        n = len(subtree)
+        permuts = list()
+        for i in range(n + 1):
+            permuts += itertools.combinations(subtree, r=i)
+
+        for p in permuts:
+            results[node][p] = {}
+            options = list(itertools.product(["L", "R"], repeat=len(p)))
+
+            # go trough every Left Right option
+            for opt in options:
+                mode = dict(zip(p,opt))
+                # if node is active calculate left or right
+                if node in p:
+                    if mode[node] == "L":
+                        child = tree[node]["left"]
+                    else:  # R
+                        child = tree[node]["right"]
+                    active_subtree = tuple(set(tree[child]["subtree"]).intersection(set(p)))
+                    child_mode = tuple([mode[i] for i in active_subtree])
+                    ans = results[child][active_subtree][child_mode]
+
+                # if node is inactive - sum left right
+                else:
+                    left_child = tree[node]["left"]
+                    active_subtree_l = tuple(set(tree[left_child]["subtree"]).intersection(set(p)))
+                    child_mode_l = tuple([mode[i] for i in active_subtree_l])
+                    ans_l = results[left_child][active_subtree_l][child_mode_l]
+
+                    right_child = tree[node]["right"]
+                    active_subtree_r = tuple(set(tree[right_child]["subtree"]).intersection(set(p)))
+                    child_mode_r = tuple([mode[i] for i in active_subtree_r])
+                    ans_r = results[right_child][active_subtree_r][child_mode_r]
+
+                    ans = ans_l+ans_r
+
+                results[node][p][opt] = ans
+
+    return results
 
 if __name__ == '__main__':
     dataset = DataSet("data/Classification_Datasets/breast-cancer-wisc-diag.csv", "diagnosis_check", None, None,
@@ -73,6 +131,9 @@ if __name__ == '__main__':
     print("TREE:")
     print_tree_rules(model, dataset.features)
     tree_rep = map_tree(model)
+
+    all_ans = calculate_tree_values(tree_rep)
+    print(all_ans)
 
     permutes = get_all_permutations(tree_rep)
     results = {}

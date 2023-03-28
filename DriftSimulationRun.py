@@ -189,8 +189,10 @@ def simulate_drift(feature, feature_type, dataset):
     return drift_data
 
 def is_feature_in_tree(tree_rep, feature_num):
-    for node, d in tree_rep.items():
-        if d["feature"] == feature_num:
+    node_list = list(tree_rep.keys())
+    node_list.remove("classes")
+    for node in node_list:
+        if tree_rep[node]["feature"] == feature_num:
             return True
     return False
 
@@ -224,10 +226,10 @@ if __name__ == '__main__':
     # categorical_datasets = ["analcatdata_boxing1", "braziltourism", "meta", "newton_hema", "socmob", "vote", "newton_hema", "visualizing_livestock"]
 
     for index, row in all_datasets.iterrows():
-        # if row["name"] not in categorical_datasets:
-        #     continue
-        # if index > 10:  # use for testing
-        #     break
+        if row["name"] not in ("analcatdata_boxing1"):
+            continue
+        if index > 10:  # use for testing
+            break
 
         print(f'------------------DATASET: {row["name"]}------------------')
         data_size = row["dataset size"]
@@ -317,7 +319,7 @@ if __name__ == '__main__':
                     result["model accuracy - no drift - test"] = accuracy_test_no_drift
                     all_results.append(result)
 
-    write_to_excel(all_results, f"ALL_FEATURE_DIFF_FIX_result_run_{date_time}")
+    write_to_excel(all_results, f"NODE_SHAP_result_run_{date_time}")
 
     print("DONE")
 

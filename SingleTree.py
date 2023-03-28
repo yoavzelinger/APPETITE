@@ -137,8 +137,10 @@ def diagnose_single_node(orig_model, new_data, model_rep):
     nodes = orig_model.tree_.node_count
     BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
     # priors = get_prior_probs_depth(model_rep, nodes)
-    priors = get_prior_probs_left_right(model_rep, spectra)
-    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "faith", priors=priors)
+    priors = get_prior_probs_node_shap(new_data[0], model_rep, "confident")
+    # priors = get_prior_probs_left_right(model_rep, spectra)
+    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "prior", priors=priors)
+    # diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "faith", priors=priors)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def diagnose_by_error(orig_model, new_data, model_rep):

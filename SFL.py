@@ -1,6 +1,7 @@
 from sfl.Diagnoser.diagnoserUtils import write_json_planning_file, readPlanningFile
 import numpy as np
 from Barinel import calculate_diagnoses_and_probabilities_barinel_shaked
+from NodeSHAP import calculate_tree_values, calculate_shap_all_nodes
 from SingleFault import diagnose_single_fault
 from buildModel import calculate_error, calculate_left_right_ratio
 
@@ -241,4 +242,25 @@ def get_diagnosis_left_right(spectra, error_vector, model_rep):
     diagnoses = list(map(int, d_order))
     rank = diff_ratio[d_order]
     return diagnoses, rank
+
+def get_diagnosis_node_shap(samples, model_rep, f="confident"):
+    data_x, _, _ = samples
+    shap_values = get_prior_probs_node_shap(data_x, model_rep, f)
+    d_order = np.argsort(-shap_values)
+    diagnoses = list(map(int, d_order))
+    rank = shap_values[d_order]
+    return diagnoses, rank
+
+def get_prior_probs_node_shap(samples, model_rep, f="confident"):
+    all_ans = calculate_tree_values(model_rep)
+    m = samples.shape[0]
+    node_count = len(model_rep) - 1
+    shap_values = np.zeros(node_count)
+    for index, sample in samples.iterrows():
+        shap = calculate_shap_all_nodes(model_rep, all_ans[0], sample, f)
+        shap_values += np.array(shap)
+    shap_values /= m
+    return shap_values
+
+
 

@@ -84,7 +84,7 @@ def get_matrix_entrance(sample_id, samples, node_indicator, conflicts):
     result = 0 if prediction[sample_id] == labels.values[sample_id] else 1  # 1 if there is an error in prediction
     test_detail = f"T{sample_id};{node_index};{result}"
 
-    if result == 1: # classification is wrong
+    if result == 1:  # classification is wrong
         conflicts.add(tuple(node_index))
 
     return test_detail, conflicts
@@ -251,14 +251,17 @@ def get_diagnosis_node_shap(samples, model_rep, f="confident"):
     rank = shap_values[d_order]
     return diagnoses, rank
 
-def get_prior_probs_node_shap(samples, model_rep, f="confident"):
-    all_ans = calculate_tree_values(model_rep)
+def get_prior_probs_node_shap(samples, model_rep, f="confident", tree_analysis=None):
+    if tree_analysis is None:
+        all_ans = calculate_tree_values(model_rep)
+        tree_analysis = all_ans[0]
+
     m = samples.shape[0]
-    node_count = len(model_rep) - 1
+    node_count = len(model_rep) - 1  # todo: fix to -2 when adding criterion
     shap_values = np.zeros(node_count)
     for index, sample in samples.iterrows():
-        shap = calculate_shap_all_nodes(model_rep, all_ans[0], sample, f)
-        shap_values += np.array(shap)
+        shap = calculate_shap_all_nodes(model_rep, tree_analysis, sample, f)
+        shap_values += np.absolute(np.array(shap))
     shap_values /= m
     return shap_values
 

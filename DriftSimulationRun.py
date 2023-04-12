@@ -6,6 +6,7 @@ import numpy as np
 from sklearn import metrics
 
 from DataSet import DataSet
+from NodeSHAP import calculate_tree_values
 from ResultsToExcel import write_to_excel
 from buildModel import build_model, map_tree, prune_tree
 from updateModel import print_tree_rules
@@ -13,6 +14,8 @@ from SingleTree import run_single_tree_experiment
 from HiddenPrints import HiddenPrints
 import random
 import copy
+import pickle
+from os.path import exists
 
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 epsilon = np.finfo(np.float64).eps
@@ -192,7 +195,7 @@ def is_feature_in_tree(tree_rep, feature_num):
     node_list = list(tree_rep.keys())
     node_list.remove("classes")
     for node in node_list:
-        if tree_rep[node]["feature"] == feature_num:
+        if tree_rep[node].get("feature") == feature_num:
             return True
     return False
 
@@ -216,20 +219,36 @@ all_sizes = [
 # ]
 
 if __name__ == '__main__':
+    similarity_measure = "prior"  # no sfl
+    prior_measure = "node_shap"
+    shap_measure = "prediction"  # "confident"
+
+    experiment_name = f"SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}"
+
+    methods = {
+        "SFL": similarity_measure,
+        "prior": prior_measure,
+        "SHAP": shap_measure
+    }
+
     all_results = []
     time_stamp = datetime.now()
     date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
 
     all_datasets = pd.read_csv('data/all_datasets.csv', index_col=0)
 
-    categorical_datasets = ["annealing"]
+    big_trees = ["annealing", "car", "caradiotocography10clases", "image-segmentation", "mfeat-karhunen",
+                 "molec-biol-splice", "socmob", "soybean", "statlog-image", "synthetic-control", "tic-tac-toe",
+                 "wall-following"]
     # categorical_datasets = ["analcatdata_boxing1", "braziltourism", "meta", "newton_hema", "socmob", "vote", "newton_hema", "visualizing_livestock"]
 
     for index, row in all_datasets.iterrows():
-        if row["name"] not in ("analcatdata_boxing1"):
+        if row["name"] in big_trees:
             continue
-        if index > 10:  # use for testing
-            break
+        # if index > 2:  # use for testing
+        #     break
+        # if row["name"] not in ["kc3"]:
+        #     continue
 
         print(f'------------------DATASET: {row["name"]}------------------')
         data_size = row["dataset size"]
@@ -244,10 +263,25 @@ if __name__ == '__main__':
         validation = dataset.data.iloc[int(0.9 * concept_size):concept_size].copy()
         model = build_model(train, dataset.features, dataset.target, val_data=validation)
         tree_rep = map_tree(model)
+        print(f"Tree size before pruning: {model.tree_.node_count}")
         model = prune_tree(model, tree_rep)
-        print("TREE:")
-        print_tree_rules(model, dataset.features)
+        # print("TREE:")
+        # print_tree_rules(model, dataset.features)
         tree_rep = map_tree(model)
+
+        # SHAP - create tree analysis
+        pickle_path = f"tree_analysis\\{row['name']}.pickle"
+        # check if pickle exist, if so, load it:
+        if exists(pickle_path):
+            with open(pickle_path, "rb") as file:
+                tree_analysis = pickle.load(file)
+
+        # if no pickle - calculate and save as pickle
+        else:
+            all_ans = calculate_tree_values(tree_rep)
+            tree_analysis = all_ans[0]
+            with open(pickle_path, "wb") as file:
+                pickle.dump(tree_analysis, file, pickle.HIGHEST_PROTOCOL)
 
         # check performances without drift - after set
         performances = {}
@@ -302,7 +336,7 @@ if __name__ == '__main__':
                         f"before:\n{data_before_manipulation}\n\nafter:\n{data_after_manipulation}"
 
                     with HiddenPrints():
-                        result = run_single_tree_experiment(dataset_for_exp, model=copy.deepcopy(model),
+                        result = run_single_tree_experiment(dataset_for_exp, methods, model=copy.deepcopy(model), tree_analysis=tree_analysis,
                                                             check_diagnosis=False, faulty_nodes=[i])
                     result["size"] = sizes[1]
                     result["dataset"] = dataset.name
@@ -319,69 +353,6 @@ if __name__ == '__main__':
                     result["model accuracy - no drift - test"] = accuracy_test_no_drift
                     all_results.append(result)
 
-    write_to_excel(all_results, f"NODE_SHAP_result_run_{date_time}")
+    write_to_excel(all_results, f"{experiment_name}_result_run_{date_time}")
 
     print("DONE")
-
-# if __name__ == '__main__':
-#     all_results = []
-#     time_stamp = datetime.now()
-#     date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
-#
-#     all_datasets = pd.read_csv('data/all_datasets.csv', index_col=0)
-#     for index, row in all_datasets.iterrows():
-#         # if index > 3:  # use for testing
-#         #     break
-#
-#         print(f'------------------DATASET: {row["name"]}------------------')
-#         data_size = row["dataset size"]
-#
-#         dataset = DataSet(row["path"].replace("\\", "/"), "diagnosis_check", None, None, (0.7, 0.1, 0.2),
-#                           name=row["name"], to_shuffle=False)
-#
-#         # manipulate data & run experiment
-#         for i in range(len(dataset.features)):
-#             feature = dataset.features[i]
-#             feature_type = dataset.feature_types[i]
-#             manipulated_data = simulate_drift(feature, feature_type, dataset)
-#             dataset = DataSet(manipulated_data.copy(), "diagnosis_check", None, None, (0.7, 0.1, 0.2),
-#                               name=row["name"], to_shuffle=False)
-#
-#             # build tree
-#             concept_size = dataset.before_size
-#             target = dataset.target
-#             feature_types = dataset.feature_types
-#             train = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
-#             validation = dataset.data.iloc[int(0.9 * concept_size):concept_size].copy()
-#             model = build_model(train, dataset.features, dataset.target, val_data=validation)
-#             tree_rep = map_tree(model)
-#             model = prune_tree(model, tree_rep)
-#             print("TREE:")
-#             print_tree_rules(model, dataset.features)
-#             tree_rep = map_tree(model)
-#
-#             # pass if feature not in tree
-#             if not is_feature_in_tree(tree_rep, i):
-#                 continue
-#
-#             # experiments
-#             for sizes in all_sizes:
-#                 # check if there is enough data for experiment
-#                 if sizes[1] * data_size < 1:
-#                     continue
-#
-#                 dataset1 = DataSet(manipulated_data.copy(), "diagnosis_check", None, None, sizes,
-#                                   name=row["name"], to_shuffle=False)
-#                 with HiddenPrints():
-#                     result = run_single_tree_experiment(dataset1, model=copy.deepcopy(model),
-#                                                         check_diagnosis=False, faulty_nodes=[i])
-#
-#                 result["size"] = sizes[1]
-#                 result["dataset"] = dataset.name
-#                 result["feature type"] = feature_type
-#                 result["number of faulty nodes"] = 1
-#                 all_results.append(result)
-#
-#     write_to_excel(all_results, f"result_run_{date_time}")
-#
-#     print("DONE")

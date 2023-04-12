@@ -71,7 +71,7 @@ def calculate_tree_values(tree):
     results = {}
     node_list = list(tree.keys())
     node_list.remove("classes")
-    leaf_nodes = list(filter(lambda n: tree[n]["left"] == -1, node_list))
+    leaf_nodes = list(filter(lambda n: tree[n]["left"] == -1 and "parent" in tree[n], node_list))
     non_leaf_nodes = list(filter(lambda n: tree[n]["left"] != -1, node_list))
     non_leaf_nodes = sorted(non_leaf_nodes, reverse=True)
 
@@ -111,15 +111,11 @@ def calculate_tree_values(tree):
                     left_child = tree[node]["left"]
                     active_subtree_l = tuple(sorted(set(tree[left_child]["subtree"]).intersection(set(p))))
                     child_mode_l = tuple([mode[i] for i in active_subtree_l])
-                    if active_subtree_l == (7, 8):
-                        print(1)
                     ans_l = results[left_child][active_subtree_l][child_mode_l]
 
                     right_child = tree[node]["right"]
                     active_subtree_r = tuple(sorted(set(tree[right_child]["subtree"]).intersection(set(p))))
                     child_mode_r = tuple([mode[i] for i in active_subtree_r])
-                    if active_subtree_r == (8, 6):
-                        print(1)
                     ans_r = results[right_child][active_subtree_r][child_mode_r]
 
                     ans = ans_l+ans_r
@@ -133,6 +129,8 @@ def sample_left_right(tree, sample):
     node_list = list(tree.keys())
     node_list.remove("classes")
     for n in node_list:
+        if "parent" not in tree[n]:  # node is pruned
+            continue
         feature = tree[n]["feature"]
         if feature == -2:  # leaf
             continue

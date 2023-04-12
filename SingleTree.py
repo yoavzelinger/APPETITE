@@ -133,14 +133,32 @@ def diagnose_Nodes(orig_model, new_data, model_rep):
     diagnoses, probabilities = get_diagnosis_barinel(spectra, error_vector, priors)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
-def diagnose_single_node(orig_model, new_data, model_rep):
+# def diagnose_single_node(orig_model, new_data, model_rep):
+#     nodes = orig_model.tree_.node_count
+#     BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
+#     # priors = get_prior_probs_depth(model_rep, nodes)
+#     priors = get_prior_probs_node_shap(new_data[0], model_rep, "confident")
+#     # priors = get_prior_probs_left_right(model_rep, spectra)
+#     diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "prior", priors=priors)
+#     # diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "faith", priors=priors)
+#     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
+
+def diagnose_single_node(orig_model, new_data, model_rep, methods, tree_analysis=None):
+    similarity_measure = methods["SFL"]
+    prior_measure = methods["prior"]
+    shap_measure = methods["SHAP"]
+
     nodes = orig_model.tree_.node_count
     BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
-    # priors = get_prior_probs_depth(model_rep, nodes)
-    priors = get_prior_probs_node_shap(new_data[0], model_rep, "confident")
-    # priors = get_prior_probs_left_right(model_rep, spectra)
-    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "prior", priors=priors)
-    # diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "faith", priors=priors)
+
+    if prior_measure == "depth":
+        priors = get_prior_probs_depth(model_rep, nodes)
+    elif prior_measure == "node_shap":
+        priors = get_prior_probs_node_shap(new_data[0], model_rep, shap_measure, tree_analysis)
+    elif prior_measure == "left_right":
+        priors = get_prior_probs_left_right(model_rep, spectra)
+
+    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, similarity_measure, priors=priors)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def diagnose_by_error(orig_model, new_data, model_rep):
@@ -177,7 +195,7 @@ def fix_nodes_by_type(orig_model, diagnosis, dataset1, indexes, diff_type="all",
     fixed = change_nodes_by_type(to_fix, diagnosis, dataset1.feature_types, features_diff, diff_type, leaf_fix_type, tree_representation, dataset1)
     return fixed
 
-def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, faulty_nodes=[]):
+def run_single_tree_experiment(dataset, methods, model=None, check_diagnosis=False, faulty_nodes=[], tree_analysis=None):
     result = {}
     global SIZE, NEW_DATA_SIZE
     SIZE = dataset.before_size
@@ -201,7 +219,9 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     result["accuracy original model BEFORE drift"] = accuracy_b
 
     result["number of nodes"] = model.tree_.node_count
-    result["tree size"] = len(model_rep)
+    nodes = list(range(model.tree_.node_count))
+    num_nodes = list(filter(lambda x: "parent" in model_rep[x], nodes))
+    result["tree size"] = len(num_nodes)
     # check model accuracy on data after concept drift
     if dataset.dataset_type in ("synthetic"):
         new_end = dataset.before_size + dataset.window
@@ -239,7 +259,8 @@ def run_single_tree_experiment(dataset, model=None, check_diagnosis=False, fault
     # diagnoses, probabilities = barinel_single_node(diagnoses,probabilities,model.tree_.node_count)
     # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_by_error(model, samples, model_rep)
     # (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_by_left_right(model, samples, model_rep)
-    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = diagnose_single_node(model, samples, model_rep)
+    (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts = \
+        diagnose_single_node(model, samples, model_rep, methods, tree_analysis)
     diagnosis = best_diagnosis(diagnoses, probabilities, spectra, error_vector, model_rep)
     time2 = datetime.now()
     result["diagnosis time"] = time2 - time1

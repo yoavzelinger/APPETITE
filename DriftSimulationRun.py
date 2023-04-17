@@ -194,6 +194,7 @@ def simulate_drift(feature, feature_type, dataset):
 def is_feature_in_tree(tree_rep, feature_num):
     node_list = list(tree_rep.keys())
     node_list.remove("classes")
+    node_list.remove("criterion")
     for node in node_list:
         if tree_rep[node].get("feature") == feature_num:
             return True
@@ -219,9 +220,9 @@ all_sizes = [
 # ]
 
 if __name__ == '__main__':
-    similarity_measure = "prior"  # no sfl
+    similarity_measure = "dice"  # if prior so no sfl
     prior_measure = "node_shap"
-    shap_measure = "prediction"  # "confident"
+    shap_measure = "confident"
 
     experiment_name = f"SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}"
 

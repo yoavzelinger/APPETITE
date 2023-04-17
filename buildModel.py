@@ -85,9 +85,12 @@ def build_model(data, features, target, model_type="tree", to_split=False, val_d
 
 def map_tree(tree):
     class_names = tree.classes_
-    tree_representation = {"classes": class_names,
+    tree_representation = {"classes": class_names, "criterion": tree.criterion,
                            0: {"depth": 0,
                                "parent": -1}}
+    for n in range(1, tree.tree_.node_count):
+        tree_representation[n] = {"left": -1, "right": -1}
+
     nodes_to_check = [0]
     while len(nodes_to_check) > 0:
         node = nodes_to_check.pop(0)
@@ -133,6 +136,7 @@ def map_tree(tree):
 
     node_list = list(tree_representation.keys())
     node_list.remove("classes")
+    node_list.remove("criterion")
     leaf_nodes = list(filter(lambda n: tree_representation[n]["left"] == -1, node_list))
     nodes_to_check = leaf_nodes
     # nodes_to_check = sorted(leaf_nodes, reverse=True)
@@ -152,7 +156,8 @@ def map_tree(tree):
             subtree += tree_representation[right_child]["subtree"]
         tree_representation[node]["subtree"] = subtree
 
-        nodes_to_check.append(tree_representation[node]["parent"])
+        if "parent" in tree_representation[node]:  # node is not pruned
+            nodes_to_check.append(tree_representation[node]["parent"])
 
     return tree_representation
 

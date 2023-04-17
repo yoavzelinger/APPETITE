@@ -220,7 +220,7 @@ def run_single_tree_experiment(dataset, methods, model=None, check_diagnosis=Fal
 
     result["number of nodes"] = model.tree_.node_count
     nodes = list(range(model.tree_.node_count))
-    num_nodes = list(filter(lambda x: "parent" in model_rep[x], nodes))
+    num_nodes = list(filter(lambda x: "parent" in model_rep[x], nodes))  # filter out pruned nodes
     result["tree size"] = len(num_nodes)
     # check model accuracy on data after concept drift
     if dataset.dataset_type in ("synthetic"):

@@ -30,6 +30,9 @@ class DataSet:
                 # convert categorical to nums
                 data_df[col] = pd.Categorical(data_df[col])
                 data_df[col] = data_df[col].cat.codes
+            elif data_df[col].dtype == bool:
+                data_df[col] = data_df[col].replace({True: 1, False: 0})
+                feature_type.append("binary")
             else:
                 feature_type.append("numeric")
                 if pd.isna(data_df[col]).any():
@@ -113,4 +116,4 @@ if __name__ == '__main__':
     #         print("test")
     #         print(f" values: {test[dataset.target].unique()} count: \n{test[dataset.target].value_counts()}")
 
-    DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, (0.7,0.1,0.2), name="iris", to_shuffle=True)
+    DataSet("data/Classification_Datasets/kc3.csv", "diagnosis_check", "c", None, (0.7,0.1,0.2), name="kc3", to_shuffle=True)

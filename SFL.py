@@ -257,7 +257,7 @@ def get_prior_probs_node_shap(samples, model_rep, f="confident", tree_analysis=N
         tree_analysis = all_ans[0]
 
     m = samples.shape[0]
-    node_count = len(model_rep) - 1  # todo: fix to -2 when adding criterion
+    node_count = len(model_rep) - 2
     shap_values = np.zeros(node_count)
     for index, sample in samples.iterrows():
         shap = calculate_shap_all_nodes(model_rep, tree_analysis, sample, f)

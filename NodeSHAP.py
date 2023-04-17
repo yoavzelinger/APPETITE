@@ -6,6 +6,8 @@ import scipy.special
 from DataSet import DataSet
 from buildModel import build_model, map_tree, prune_tree, print_tree_rules
 
+epsilon = np.finfo(np.float64).eps
+
 
 def predict_sample(sample, tree, active_nodes, f="prediction"):
     node = 0
@@ -23,9 +25,15 @@ def calculate_f(tree, values, f="confident"):
         confident = n / values.sum()
         return confident
     elif f == "entropy":
+        values = values[np.nonzero(values)]  # filter out classes with zero samples
         p = values / values.sum()  # normalizing to get p(x)
         entropy = -(p * np.log(p)).sum()
         return entropy
+    elif f == "gini":
+        values = values[np.nonzero(values)]  # filter out classes with zero samples
+        p = values / values.sum()  # normalizing to get p(x)
+        gini = 1 - (np.power(p, 2)).sum()  # lower is better
+        return gini
 
 def predict_sample_from_node(node, sample, tree, active_nodes):
     # if node is leaf - return classes
@@ -60,6 +68,7 @@ def predict_sample_from_node(node, sample, tree, active_nodes):
 def get_all_permutations(tree):
     node_list = list(tree_rep.keys())
     node_list.remove("classes")
+    node_list.remove("criterion")
     non_leaf_nodes = list(filter(lambda n: tree[n]["left"] != -1, node_list))
     n = len(non_leaf_nodes)
     permuts = list()
@@ -71,6 +80,7 @@ def calculate_tree_values(tree):
     results = {}
     node_list = list(tree.keys())
     node_list.remove("classes")
+    node_list.remove("criterion")
     leaf_nodes = list(filter(lambda n: tree[n]["left"] == -1 and "parent" in tree[n], node_list))
     non_leaf_nodes = list(filter(lambda n: tree[n]["left"] != -1, node_list))
     non_leaf_nodes = sorted(non_leaf_nodes, reverse=True)
@@ -128,6 +138,7 @@ def sample_left_right(tree, sample):
     left_right_dict = {}
     node_list = list(tree.keys())
     node_list.remove("classes")
+    node_list.remove("criterion")
     for n in node_list:
         if "parent" not in tree[n]:  # node is pruned
             continue
@@ -182,11 +193,12 @@ def calculate_shap_node(node, left_right_dict, permuts_values, f="confident"):
     F_Z_i = np.array(without_n_all)
     Sizes = np.array(sizes)
     M = len(left_right_dict)
+
     return calculate_permutation(F_Z, F_Z_i, Sizes, M, f)
 
 def calculate_permutation(F_Z, F_Z_i, Sizes, M, f):
     diff = F_Z - F_Z_i
-    if f == "entropy":
+    if f in ["entropy", "gini"]:
         diff = -diff  # since the node will decrease the entropy, we don't want negative values
     if f == "prediction":
         diff = 1*(F_Z != F_Z_i)  # 1 if prediction has changed, 0 if equal
@@ -199,13 +211,16 @@ def calculate_permutation(F_Z, F_Z_i, Sizes, M, f):
     return shap.sum()
 
 def calculate_shap_all_nodes(tree, calculations, sample, f="confident"):
+    if f == "criterion":
+        f = tree["criterion"]  # gini or entropy, depend on the tree hyper-parameter
+
     # check for each node L\R
     left_right_dict = sample_left_right(tree, sample)
     permuts_values = get_permutation_values(tree, calculations, left_right_dict, f)
 
     # calculate for each node
     nodes = list(left_right_dict.keys())
-    node_count = len(tree) - 1
+    node_count = len(tree) - 2
     shap_values = np.zeros(node_count)
     for node in nodes:
         shap = calculate_shap_node(node, left_right_dict, permuts_values, f)

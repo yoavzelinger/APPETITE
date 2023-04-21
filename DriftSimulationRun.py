@@ -220,11 +220,11 @@ all_sizes = [
 # ]
 
 if __name__ == '__main__':
-    similarity_measure = "dice"  # if prior so no sfl
+    similarity_measure = "faith"  # if prior so no sfl
     prior_measure = "node_shap"
     shap_measure = "confident"
 
-    experiment_name = f"SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}"
+    experiment_name = f"SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}_Only_misclassified_samples"
 
     methods = {
         "SFL": similarity_measure,
@@ -248,7 +248,7 @@ if __name__ == '__main__':
             continue
         # if index > 2:  # use for testing
         #     break
-        # if row["name"] not in ["kc3"]:
+        # if row["name"] not in ["energy-y2"]:
         #     continue
 
         print(f'------------------DATASET: {row["name"]}------------------')

@@ -244,25 +244,35 @@ def get_diagnosis_left_right(spectra, error_vector, model_rep):
     return diagnoses, rank
 
 def get_diagnosis_node_shap(samples, model_rep, f="confident"):
-    data_x, _, _ = samples
-    shap_values = get_prior_probs_node_shap(data_x, model_rep, f)
+    shap_values = get_prior_probs_node_shap(samples, model_rep, f)
     d_order = np.argsort(-shap_values)
     diagnoses = list(map(int, d_order))
     rank = shap_values[d_order]
     return diagnoses, rank
 
 def get_prior_probs_node_shap(samples, model_rep, f="confident", tree_analysis=None):
+    data_x, prediction, labels = samples
+
     if tree_analysis is None:
         all_ans = calculate_tree_values(model_rep)
         tree_analysis = all_ans[0]
 
-    m = samples.shape[0]
+    m = 0
+    i = -1
     node_count = len(model_rep) - 2
     shap_values = np.zeros(node_count)
-    for index, sample in samples.iterrows():
+    for index, sample in data_x.iterrows():
+        i += 1
+        if prediction[i] == labels[index]:  # skip samples that classified correctly
+            continue
+        m += 1
         shap = calculate_shap_all_nodes(model_rep, tree_analysis, sample, f)
         shap_values += np.absolute(np.array(shap))
-    shap_values /= m
+
+    if m > 0:
+        shap_values /= m
+    else:  # no misclassified samples
+        shap_values = np.ones(node_count)
     return shap_values
 
 

@@ -87,19 +87,14 @@ def best_diagnosis(diagnoses, probabilities, spectra, error_vector, model_rep, b
     print("diagnoses: {}".format(diagnoses))
     print("probabilities: {}".format(probabilities))
     if best_method == "first":
-        best = -1
-        first_index = -1
-        # re-pick if best is a pruned node
-        while best not in model_rep:
-            first_index += 1
-            best = diagnoses[first_index]
-            if best == 26:
-                print(1)
+        # pick the first non-pruned node
+        for index in range(len(diagnoses)):
+            best = diagnoses[index]
+            if "parent" in model_rep[best]:  # not pruned
+                break
         best = [best]
-
     elif best_method == "first_multi":
         best = diagnoses[0]
-
     return best
 
 def barinel_single_node(diagnoses, probabilities, n_nodes):
@@ -154,7 +149,7 @@ def diagnose_single_node(orig_model, new_data, model_rep, methods, tree_analysis
     if prior_measure == "depth":
         priors = get_prior_probs_depth(model_rep, nodes)
     elif prior_measure == "node_shap":
-        priors = get_prior_probs_node_shap(new_data[0], model_rep, shap_measure, tree_analysis)
+        priors = get_prior_probs_node_shap(new_data, model_rep, shap_measure, tree_analysis)
     elif prior_measure == "left_right":
         priors = get_prior_probs_left_right(model_rep, spectra)
 

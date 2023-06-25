@@ -25,7 +25,7 @@ def write_to_excel(all_results, file_name):
             try:
                 worksheet.write(row_num, col_num, value)
             except TypeError:
-                print(f"{dict_res['dataset']} {dict_res['size']} - problem with key: '{key}', value: {value}")
+                print(f"problem with key: '{key}', value: {value}")
         row_num += 1
     
     workbook.close()

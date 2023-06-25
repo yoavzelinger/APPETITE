@@ -258,32 +258,48 @@ def print_tree_rules(tree, feature_names):
     tree_rules = export_text(tree, feature_names=feature_names)
     print(tree_rules)
 
+def build_tree_for_exp(dataset):
+    # build tree
+    concept_size = dataset.before_size
+    target = dataset.target
+    feature_types = dataset.feature_types
+    train = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
+    validation = dataset.data.iloc[int(0.9 * concept_size):concept_size].copy()
+    model = build_model(train, dataset.features, dataset.target, val_data=validation)
 
-if __name__ == '__main__':
-    sizes = (0.7, 0.1, 0.2)
-    all_datasets_build = [
-        DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
-        # DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
-        # DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
-        # DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"]*4, sizes, name="data_banknote_authentication", to_shuffle=True),
-        # DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
-    ]
-    for dataset in all_datasets_build:
-        concept_size = dataset.before_size
-        train = dataset.data.iloc[0:int(0.9 * concept_size)]
-        validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
-        model = build_model(train, dataset.features, dataset.target, val_data=validation)
-        tree_rep = map_tree(model)
-        print("TREE:")
-        print_tree_rules(model, dataset.features)
-        print(f"number of nodes: {model.tree_.node_count}")
+    tree_rep = map_tree(model)
+    print(f"Tree size before pruning: {model.tree_.node_count}")
+    model = prune_tree(model, tree_rep)
+    tree_rep = map_tree(model)
 
-        pruned_model = prune_tree(model, tree_rep)
-        print_tree_rules(model, dataset.features)
-        tree_rep = map_tree(model)
+    return model, tree_rep
 
-        errors = calculate_error(tree_rep)
-        print(errors)
 
-        ratio = calculate_left_right_ratio(tree_rep)
-        print(ratio)
+# if __name__ == '__main__':
+#     sizes = (0.7, 0.1, 0.2)
+#     all_datasets_build = [
+#         DataSet("data/real/iris.data", "diagnosis_check", "class", ["numeric"] * 4, sizes, name="iris", to_shuffle=True),
+#         # DataSet("data/real/winequality-white.csv", "diagnosis_check", "quality", ["numeric"]*11, sizes, name="winequality-white", to_shuffle=True),
+#         # DataSet("data/real/abalone.data", "diagnosis_check", "rings", ["categorical"] + ["numeric"]*7,  sizes, name="abalone", to_shuffle=True),
+#         # DataSet("data/real/data_banknote_authentication.txt", "diagnosis_check", "class", ["numeric"]*4, sizes, name="data_banknote_authentication", to_shuffle=True),
+#         # DataSet("data/real/pima-indians-diabetes.csv", "diagnosis_check", "class", ["numeric"]*8, sizes, name="pima-indians-diabetes", to_shuffle=True)
+#     ]
+#     for dataset in all_datasets_build:
+#         concept_size = dataset.before_size
+#         train = dataset.data.iloc[0:int(0.9 * concept_size)]
+#         validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
+#         model = build_model(train, dataset.features, dataset.target, val_data=validation)
+#         tree_rep = map_tree(model)
+#         print("TREE:")
+#         print_tree_rules(model, dataset.features)
+#         print(f"number of nodes: {model.tree_.node_count}")
+#
+#         pruned_model = prune_tree(model, tree_rep)
+#         print_tree_rules(model, dataset.features)
+#         tree_rep = map_tree(model)
+#
+#         errors = calculate_error(tree_rep)
+#         print(errors)
+#
+#         ratio = calculate_left_right_ratio(tree_rep)
+#         print(ratio)

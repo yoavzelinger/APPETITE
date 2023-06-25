@@ -220,7 +220,7 @@ all_sizes = [
 # ]
 
 if __name__ == '__main__':
-    similarity_measure = "faith"  # if prior so no sfl
+    similarity_measure = "prior"  # if prior so no sfl
     prior_measure = "node_shap"
     shap_measure = "confident"
 
@@ -246,10 +246,10 @@ if __name__ == '__main__':
     for index, row in all_datasets.iterrows():
         if row["name"] in big_trees:
             continue
-        # if index > 2:  # use for testing
-        #     break
-        # if row["name"] not in ["energy-y2"]:
-        #     continue
+        if index > 10:  # use for testing
+            break
+        if row["name"] not in ["acute-inflammation"]:
+            continue
 
         print(f'------------------DATASET: {row["name"]}------------------')
         data_size = row["dataset size"]
@@ -263,12 +263,22 @@ if __name__ == '__main__':
         train = dataset.data.iloc[0:int(0.9 * concept_size)].copy()
         validation = dataset.data.iloc[int(0.9 * concept_size):concept_size].copy()
         model = build_model(train, dataset.features, dataset.target, val_data=validation)
+
         tree_rep = map_tree(model)
         print(f"Tree size before pruning: {model.tree_.node_count}")
         model = prune_tree(model, tree_rep)
         # print("TREE:")
         # print_tree_rules(model, dataset.features)
         tree_rep = map_tree(model)
+
+        # filter experiments with accuracy < 0.75
+        test_data = dataset.data.iloc[int(0.9 * concept_size): concept_size].copy()
+        test_data_x = test_data[dataset.features]
+        prediction = model.predict(test_data_x)
+        test_data_y = test_data[dataset.target]
+        accuracy_b = metrics.accuracy_score(test_data_y, prediction)
+        if accuracy_b < 0.75:
+            continue
 
         # SHAP - create tree analysis
         pickle_path = f"tree_analysis\\{row['name']}.pickle"
@@ -336,6 +346,16 @@ if __name__ == '__main__':
                     assert data_after_manipulation.equals(data_before_manipulation.astype(data_after_manipulation.dtypes)), \
                         f"before:\n{data_before_manipulation}\n\nafter:\n{data_after_manipulation}"
 
+                    # filter out experiments with diff due to drift (b-a) less than 10%
+                    new_data = dataset_for_exp.data.iloc[concept_size: concept_size + dataset_for_exp.after_size].copy()
+                    new_data_x = new_data[dataset_for_exp.features]
+                    prediction = model.predict(new_data_x)
+                    new_data_y = new_data[dataset_for_exp.target]
+                    accuracy_a = metrics.accuracy_score(new_data_y, prediction)
+                    diff = accuracy_b - accuracy_a
+                    if diff < 0.0999999:
+                        continue
+
                     with HiddenPrints():
                         result = run_single_tree_experiment(dataset_for_exp, methods, model=copy.deepcopy(model), tree_analysis=tree_analysis,
                                                             check_diagnosis=False, faulty_nodes=[i])
@@ -353,6 +373,21 @@ if __name__ == '__main__':
                     result["model accuracy - no drift - after"] = performances[sizes]
                     result["model accuracy - no drift - test"] = accuracy_test_no_drift
                     all_results.append(result)
+
+        # with HiddenPrints():
+        #     result = run_single_tree_experiment(dataset, methods, model=copy.deepcopy(model),
+        #                                         tree_analysis=tree_analysis,
+        #                                         check_diagnosis=False, faulty_nodes=[i])
+        # result["size"] = -1
+        # result["dataset"] = dataset.name
+        # result["change severity"] = -1
+        # result["change type"] = -1
+        # result["feature type"] = -1
+        # result["f type"] = -1
+        # result["number of faulty nodes"] = -1
+        # result["model accuracy - no drift - after"] = -1
+        # result["model accuracy - no drift - test"] = accuracy_test_no_drift
+        # all_results.append(result)
 
     write_to_excel(all_results, f"{experiment_name}_result_run_{date_time}")
 

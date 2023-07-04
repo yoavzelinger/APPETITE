@@ -1,12 +1,14 @@
 import numpy as np
 
 epsilon = np.finfo(np.float64).eps
+binary_similarity_funcs = ["jaccard","dice", "intersection", "inner_product", "faith", "cosine", "prior"]
 
 def diagnose_single_fault(spectra,  # np array [number of tests, number of components] - binary
                           error_vector,  # np array [number of tests] - binary
                           similarity_method, prior=None):
 
     methods = {  # function(a,b,c,d) -> similarity
+        "non-binary": cosine_non_binary,
         "jaccard": jaccard_similarity,
         "dice": dice_similarity,
         "intersection": intersection_similarity,
@@ -16,9 +18,14 @@ def diagnose_single_fault(spectra,  # np array [number of tests, number of compo
         "prior": prior_only
     }
 
-    a, b, c, d = calc_a_b_c_d(spectra, error_vector)
-    similarity_func = methods[similarity_method]
-    similarity = similarity_func(a, b, c, d)
+    if similarity_method in binary_similarity_funcs:
+        a, b, c, d = calc_a_b_c_d(spectra, error_vector)
+        similarity_func = methods[similarity_method]
+        similarity = similarity_func(a, b, c, d)
+
+    else:
+        similarity_func = methods[similarity_method]
+        similarity = similarity_func(spectra, error_vector)
 
     probabilities = similarity.astype(np.float64)
     if prior is not None:
@@ -56,6 +63,14 @@ def cosine_similarity(a, b, c, d):
     epsilon_vec = np.ones(a.shape)*epsilon
     return a / (np.sqrt((a + b) * (a + c)) + epsilon_vec)
 
+def cosine_non_binary(spectra, error_vector):
+    mult = (spectra * error_vector.reshape(-1,1)).sum(axis=0)
+    e_size = error_vector.sum()
+    s_size = np.power(spectra, 2).sum(axis=0)
+
+    epsilon_vec = np.ones(spectra.shape[1]) * epsilon
+    return mult / (np.sqrt(e_size * s_size) + epsilon_vec)
+
 
 def calc_a_b_c_d(spectra, error_vector):
     error_vector = error_vector.reshape(-1, 1)  # column
@@ -64,15 +79,24 @@ def calc_a_b_c_d(spectra, error_vector):
     same_filter = spectra == error_vector
     different_filter = np.logical_not(same_filter)
 
-    a = (same_filter & failed_filter).sum(axis=0)
-    b = (different_filter & failed_filter).sum(axis=0)
-    c = (different_filter & pass_filter).sum(axis=0)
-    d = (same_filter & pass_filter).sum(axis=0)
+    a = (same_filter & failed_filter).sum(axis=0)  # failed and participated
+    b = (different_filter & failed_filter).sum(axis=0)  # failed and NOT participated
+    c = (different_filter & pass_filter).sum(axis=0)  # passed and participated
+    d = (same_filter & pass_filter).sum(axis=0)   # passed and NOT participated
 
     return a, b, c, d
 
 
 if __name__ == '__main__':
+    spectra = np.array([[3, 5, 1],
+                        [0, 1, 0.4],
+                        [0.5, 0, 1.3],
+                        [0, 3, 2],
+                        [1.6, 3, 0]])
+    error_vector = np.array([1, 0, 1, 1, 0])
+    d, p = diagnose_single_fault(spectra, error_vector, "non-binary")
+    print(f"diagnoses: {d}\n probs: {p}")
+
     spectra = np.array([[1, 0, 1],
                         [0, 1, 1],
                         [1, 0, 0],
@@ -95,14 +119,15 @@ if __name__ == '__main__':
     d,p = diagnose_single_fault(spectra, error_vector, "dice")
     assert (d == np.array([2,0,1])).sum() == 3
 
-    spectra = np.array([[1, 0, 1, 1, 1],
-                        [0, 1, 1, 1, 1],
-                        [1, 0, 0, 1, 0],
-                        [0, 1, 0, 1, 1],
-                        [1, 1, 0, 1, 1]])
+    spectra = np.array([[1, 0, 1, 1],
+                        [0, 1, 1, 1],
+                        [1, 0, 0, 1],
+                        [0, 1, 0, 1],
+                        [1, 1, 0, 1]])
     error_vector = np.array([1, 1, 0, 1, 0])
 
     sim_methods = ["jaccard","dice", "intersection", "inner_product", "faith", "cosine"]
     for method in sim_methods:
         print(f"method: {method} similarity")
         print(diagnose_single_fault(spectra, error_vector, method))
+

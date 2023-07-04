@@ -139,19 +139,26 @@ def diagnose_Nodes(orig_model, new_data, model_rep):
 #     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def diagnose_single_node(orig_model, new_data, model_rep, methods, tree_analysis=None):
+    SFL_method = methods["matrix"]
     similarity_measure = methods["SFL"]
     prior_measure = methods["prior"]
     shap_measure = methods["SHAP"]
 
     nodes = orig_model.tree_.node_count
-    BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
+    # check SFL building method
+    if SFL_method == "path":
+        BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
+    elif SFL_method == "shapNode":
+        BAD_SAMPLES, spectra, error_vector, conflicts = shap_nodes_to_SFL(new_data, model_rep, shap_measure, tree_analysis)
 
+    # check prior method
     if prior_measure == "depth":
         priors = get_prior_probs_depth(model_rep, nodes)
     elif prior_measure == "node_shap":
         priors = get_prior_probs_node_shap(new_data, model_rep, shap_measure, tree_analysis)
     elif prior_measure == "left_right":
         priors = get_prior_probs_left_right(model_rep, spectra)
+    else: priors = None
 
     diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, similarity_measure, priors=priors)
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts

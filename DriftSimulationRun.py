@@ -220,13 +220,15 @@ all_sizes = [
 # ]
 
 if __name__ == '__main__':
-    similarity_measure = "prior"  # if prior so no sfl
-    prior_measure = "node_shap"
+    matrix_entries = "shapNode"  # options: path \ shapNode
+    similarity_measure = "non-binary"
+    prior_measure = "None"  # options: depth \ node_shap \ left_right
     shap_measure = "confident"
 
-    experiment_name = f"SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}_Only_misclassified_samples"
+    experiment_name = f"matrix-{matrix_entries}_SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}_Only_misclassified_samples"
 
     methods = {
+        "matrix": matrix_entries,
         "SFL": similarity_measure,
         "prior": prior_measure,
         "SHAP": shap_measure
@@ -246,10 +248,10 @@ if __name__ == '__main__':
     for index, row in all_datasets.iterrows():
         if row["name"] in big_trees:
             continue
-        if index > 10:  # use for testing
-            break
-        if row["name"] not in ["acute-inflammation"]:
-            continue
+        # if index > 10:  # use for testing
+        #     break
+        # if row["name"] not in ["acute-inflammation"]:
+        #     continue
 
         print(f'------------------DATASET: {row["name"]}------------------')
         data_size = row["dataset size"]
@@ -289,8 +291,9 @@ if __name__ == '__main__':
 
         # if no pickle - calculate and save as pickle
         else:
-            all_ans = calculate_tree_values(tree_rep)
-            tree_analysis = all_ans[0]
+            # all_ans = calculate_tree_values(tree_rep)
+            # tree_analysis = all_ans[0]
+            tree_analysis = calculate_tree_values(tree_rep)
             with open(pickle_path, "wb") as file:
                 pickle.dump(tree_analysis, file, pickle.HIGHEST_PROTOCOL)
 

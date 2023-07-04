@@ -132,7 +132,7 @@ def calculate_tree_values(tree):
 
                 results[node][p][opt] = ans
 
-    return results
+    return results[0]
 
 def sample_left_right(tree, sample):
     left_right_dict = {}
@@ -245,12 +245,13 @@ if __name__ == '__main__':
     print_tree_rules(model, dataset.features)
     tree_rep = map_tree(model)
 
-    all_ans = calculate_tree_values(tree_rep)
-    print(all_ans[0])
+    tree_analysis = calculate_tree_values(tree_rep)
+    # all_ans = calculate_tree_values(tree_rep)
+    # print(all_ans[0])
 
     sample = dataset.data.loc[300]
 
-    shap = calculate_shap_all_nodes(tree_rep, all_ans[0], sample, f="entropy")
+    shap = calculate_shap_all_nodes(tree_rep, tree_analysis, sample, f="entropy")
     print(shap)
 
     # permutes = get_all_permutations(tree_rep)

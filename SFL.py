@@ -254,8 +254,9 @@ def get_prior_probs_node_shap(samples, model_rep, f="confident", tree_analysis=N
     data_x, prediction, labels = samples
 
     if tree_analysis is None:
-        all_ans = calculate_tree_values(model_rep)
-        tree_analysis = all_ans[0]
+        # all_ans = calculate_tree_values(model_rep)
+        # tree_analysis = all_ans[0]
+        tree_analysis = calculate_tree_values(model_rep)
 
     m = 0
     i = -1
@@ -274,6 +275,37 @@ def get_prior_probs_node_shap(samples, model_rep, f="confident", tree_analysis=N
     else:  # no misclassified samples
         shap_values = np.ones(node_count)
     return shap_values
+
+
+def shap_nodes_to_SFL(samples, model_rep, f="confident", tree_analysis=None):
+    data_x, prediction, labels = samples
+    n_samples = len(data_x)
+    node_count = len(model_rep) - 2
+
+    if tree_analysis is None:
+        tree_analysis = calculate_tree_values(model_rep)
+
+    # initialize spectra and error vector
+    error_vector = np.zeros(n_samples)
+    spectra = np.zeros((n_samples, node_count))
+    BAD_SAMPLES = list()
+    conflicts = set()
+
+    errors = 0
+    i = -1
+    for index, sample in data_x.iterrows():
+        i += 1
+        # add mistakes to error vector
+        if prediction[i] != labels[index]:  # skip samples that classified correctly
+            error_vector[i] = 1
+            errors += 1
+            BAD_SAMPLES.append(i)
+
+        # add shap to the SFL
+        shap = calculate_shap_all_nodes(model_rep, tree_analysis, sample, f)
+        spectra[i,:] = np.absolute(np.array(shap)) #TODO: think if we need negative values
+
+    return BAD_SAMPLES, spectra, error_vector, conflicts
 
 
 

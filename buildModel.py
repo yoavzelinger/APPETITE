@@ -1,3 +1,5 @@
+import pickle
+
 import pandas as pd
 import numpy as np
 from sklearn import metrics
@@ -303,3 +305,31 @@ def build_tree_for_exp(dataset):
 #
 #         ratio = calculate_left_right_ratio(tree_rep)
 #         print(ratio)
+
+
+if __name__ == '__main__':
+    name = "cardiotocography3clases"
+    dataset = DataSet(f"data/Classification_Datasets/{name}.csv", "diagnosis_check", None, None,
+                      (0.7, 0.1, 0.2), name=name, to_shuffle=True)
+
+    concept_size = dataset.before_size
+    train = dataset.data.iloc[0:int(0.9 * concept_size)]
+    validation = dataset.data.iloc[int(0.9 * concept_size):concept_size]
+    model = build_model(train, dataset.features, dataset.target, val_data=validation)
+    tree_rep = map_tree(model)
+    print("TREE:")
+    print_tree_rules(model, dataset.features)
+    print(f"number of nodes: {model.tree_.node_count}")
+
+    pruned_model = prune_tree(model, tree_rep)
+    print_tree_rules(pruned_model, dataset.features)
+    tree_rep = map_tree(pruned_model)
+
+    pickle_path = f"{name}_TREE"
+    with open(pickle_path, "wb") as file:
+        pickle.dump(pruned_model, file, pickle.HIGHEST_PROTOCOL)
+
+    before = dataset.data.iloc[0:concept_size]
+    min_f = before
+
+    after = dataset.data.iloc[concept_size:concept_size+dataset.after_size]

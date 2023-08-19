@@ -221,9 +221,9 @@ all_sizes = [
 
 if __name__ == '__main__':
     matrix_entries = "shapNode"  # options: path \ shapNode
-    similarity_measure = "non-binary"
-    prior_measure = "None"  # options: depth \ node_shap \ left_right
-    shap_measure = "confident"
+    similarity_measure = "non-binary"  # options: faith \ non-binary \ prior
+    prior_measure = "left_right"  # options: depth \ node_shap \ left_right
+    shap_measure = "confident"  # options: confident \ prediction \ entropy \ gini \ criterion \ None
 
     experiment_name = f"matrix-{matrix_entries}_SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}_Only_misclassified_samples"
 
@@ -248,9 +248,9 @@ if __name__ == '__main__':
     for index, row in all_datasets.iterrows():
         if row["name"] in big_trees:
             continue
-        # if index > 10:  # use for testing
+        # if index > 15:  # use for testing
         #     break
-        # if row["name"] not in ["acute-inflammation"]:
+        # if row["name"] not in ["acute-nephritis"]:
         #     continue
 
         print(f'------------------DATASET: {row["name"]}------------------')
@@ -325,6 +325,8 @@ if __name__ == '__main__':
 
         # manipulate data & run experiment
         for i in range(len(dataset.features)):
+            # if i == 2:
+            #     print(1)
             feature = dataset.features[i]
             feature_type = dataset.feature_types[i]
             if feature_type == "categorical":

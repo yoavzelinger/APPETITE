@@ -141,7 +141,8 @@ def get_SFL_for_diagnosis_nodes(model, samples, model_rep):
 def get_prior_probs_depth(model_rep, number_of_nodes):
     # define prior vector
     priors = np.ones(number_of_nodes) * 0.99
-    depth = [model_rep[node]["depth"] if node in model_rep else 0 for node in range(number_of_nodes)]
+    depth = [model_rep[node]["depth"] if "parent" in model_rep[node] else 0 for node in range(number_of_nodes)]
+    # depth = [model_rep[node]["depth"] if node in model_rep else 0 for node in range(number_of_nodes)]
     max_depth = max(depth)
     # priors = [
     #     0.99**(max_depth - depth[node])

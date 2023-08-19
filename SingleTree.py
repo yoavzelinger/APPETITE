@@ -157,7 +157,8 @@ def diagnose_single_node(orig_model, new_data, model_rep, methods, tree_analysis
     elif prior_measure == "node_shap":
         priors = get_prior_probs_node_shap(new_data, model_rep, shap_measure, tree_analysis)
     elif prior_measure == "left_right":
-        priors = get_prior_probs_left_right(model_rep, spectra)
+        _, spectra_1, _, _ = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
+        priors = get_prior_probs_left_right(model_rep, spectra_1)
     else: priors = None
 
     diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, similarity_measure, priors=priors)

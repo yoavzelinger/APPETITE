@@ -143,13 +143,18 @@ def diagnose_single_node(orig_model, new_data, model_rep, methods, tree_analysis
     similarity_measure = methods["SFL"]
     prior_measure = methods["prior"]
     shap_measure = methods["SHAP"]
+    error_vec_method = methods["error_vec"]
 
     nodes = orig_model.tree_.node_count
     # check SFL building method
-    if SFL_method == "path":
+    if SFL_method in ["path", "both2"]:
         BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
-    elif SFL_method == "shapNode":
-        BAD_SAMPLES, spectra, error_vector, conflicts = shap_nodes_to_SFL(new_data, model_rep, shap_measure, tree_analysis)
+    elif SFL_method in ["shapNode", "both"]:
+        BAD_SAMPLES, spectra, error_vector, conflicts = \
+            shap_nodes_to_SFL(new_data, model_rep, shap_measure, tree_analysis, error_vec_method, orig_model)
+    elif SFL_method in ["shapNode2"]:
+        BAD_SAMPLES, spectra, error_vector, conflicts = \
+            shap_nodes2_to_SFL(new_data, model_rep, orig_model, error_vec_method)
 
     # check prior method
     if prior_measure == "depth":
@@ -157,11 +162,34 @@ def diagnose_single_node(orig_model, new_data, model_rep, methods, tree_analysis
     elif prior_measure == "node_shap":
         priors = get_prior_probs_node_shap(new_data, model_rep, shap_measure, tree_analysis)
     elif prior_measure == "left_right":
-        _, spectra_1, _, _ = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
+        if SFL_method == "path":
+            spectra_1 = spectra
+        else:
+            _, spectra_1, _, _ = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
         priors = get_prior_probs_left_right(model_rep, spectra_1)
     else: priors = None
 
-    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, similarity_measure, priors=priors)
+    # get diagnosis
+    to_norm = SFL_method != "both"  # normalize only if there is one method (AKA - SFL_method is not both)
+    diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, similarity_measure, priors=priors, to_normalize=to_norm)
+
+    if SFL_method == "both":  # apply faith on SHAP
+        # re-order probs by node order
+        node_order = np.argsort(np.array(diagnoses))
+        shap_priors = np.array(probabilities)[node_order]
+        # run FAITH
+        BAD_SAMPLES, spectra, error_vector, conflicts = get_SFL_for_diagnosis_nodes(orig_model, new_data, model_rep)
+        diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "faith", priors=shap_priors)
+
+    if SFL_method == "both2":  # apply SHAP on faith
+        # re-order probs by node order
+        node_order = np.argsort(np.array(diagnoses))
+        faith_priors = np.array(probabilities)[node_order]
+        # run SHAP
+        BAD_SAMPLES, spectra, error_vector, conflicts = \
+            shap_nodes_to_SFL(new_data, model_rep, shap_measure, tree_analysis, error_vec_method, orig_model)
+        diagnoses, probabilities = get_diagnosis_single_fault(spectra, error_vector, "non-binary", priors=faith_priors)
+
     return (diagnoses, probabilities), BAD_SAMPLES, spectra, error_vector, conflicts
 
 def diagnose_by_error(orig_model, new_data, model_rep):

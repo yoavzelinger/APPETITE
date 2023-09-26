@@ -220,18 +220,20 @@ all_sizes = [
 # ]
 
 if __name__ == '__main__':
-    matrix_entries = "shapNode"  # options: path \ shapNode
-    similarity_measure = "non-binary"  # options: faith \ non-binary \ prior
-    prior_measure = "left_right"  # options: depth \ node_shap \ left_right
+    matrix_entries = "both2"  # options: path \ shapNode \ both \ both2
+    similarity_measure = "faith"  # options: faith \ non-binary \ prior
+    prior_measure = "left_right"  # options: depth \ node_shap \ left_right \ None
     shap_measure = "confident"  # options: confident \ prediction \ entropy \ gini \ criterion \ None
+    error_vec_method = "confidence"  # options (relevant only for shapNode\both): binary \ confidence
 
-    experiment_name = f"matrix-{matrix_entries}_SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}_Only_misclassified_samples"
+    experiment_name = f"3_ALL_POS_matrix-{matrix_entries}_Error-{error_vec_method}_SFL-{similarity_measure}_Prior-{prior_measure}_SHAP-{shap_measure}"
 
     methods = {
         "matrix": matrix_entries,
         "SFL": similarity_measure,
         "prior": prior_measure,
-        "SHAP": shap_measure
+        "SHAP": shap_measure,
+        "error_vec": error_vec_method
     }
 
     all_results = []
@@ -248,7 +250,7 @@ if __name__ == '__main__':
     for index, row in all_datasets.iterrows():
         if row["name"] in big_trees:
             continue
-        # if index > 15:  # use for testing
+        # if index > 5:  # use for testing
         #     break
         # if row["name"] not in ["acute-nephritis"]:
         #     continue

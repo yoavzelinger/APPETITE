@@ -179,8 +179,8 @@ def get_diagnosis_barinel(spectra, error_vector, priors):
     diagnoses, probabilities = calculate_diagnoses_and_probabilities_barinel_shaked(spectra, error_vector, priors)
     return diagnoses, probabilities
 
-def get_diagnosis_single_fault(spectra, error_vector, similarity_method,priors=None):
-    diagnoses, probabilities = diagnose_single_fault(spectra, error_vector, similarity_method, priors)
+def get_diagnosis_single_fault(spectra, error_vector, similarity_method,priors=None,to_normalize=True):
+    diagnoses, probabilities = diagnose_single_fault(spectra, error_vector, similarity_method, priors,to_normalize)
     return diagnoses, probabilities
 
 def calculate_nodes_error(spectra, error_vector):
@@ -278,7 +278,7 @@ def get_prior_probs_node_shap(samples, model_rep, f="confident", tree_analysis=N
     return shap_values
 
 
-def shap_nodes_to_SFL(samples, model_rep, f="confident", tree_analysis=None):
+def shap_nodes_to_SFL(samples, model_rep, f="confident", tree_analysis=None, error_vec="binary", model=None):
     data_x, prediction, labels = samples
     n_samples = len(data_x)
     node_count = len(model_rep) - 2
@@ -292,21 +292,51 @@ def shap_nodes_to_SFL(samples, model_rep, f="confident", tree_analysis=None):
     BAD_SAMPLES = list()
     conflicts = set()
 
+    if error_vec != "binary":
+        node_indicator = model.decision_path(data_x)  # get paths for all samples
+
     errors = 0
     i = -1
     for index, sample in data_x.iterrows():
         i += 1
-        # add mistakes to error vector
-        if prediction[i] != labels[index]:  # skip samples that classified correctly
-            error_vector[i] = 1
-            errors += 1
-            BAD_SAMPLES.append(i)
+
+        if error_vec == "binary":
+            # add mistakes to error vector
+            if prediction[i] != labels[index]:  # skip samples that classified correctly
+                error_vector[i] = 1
+                errors += 1
+                BAD_SAMPLES.append(i)
+
+        elif error_vec == "confidence":
+            node_index = node_indicator.indices[  # extract the relevant path for sample_id
+                         node_indicator.indptr[i]: node_indicator.indptr[i + 1]
+                         ].tolist()
+            leaf = node_index[-1]  # last node in path
+            values = model.tree_.value[leaf]
+            class_num = np.argmax(values)
+            n = values[0, class_num]
+            conf = n / values.sum()
+
+            if prediction[i] == labels[index]:  # correct classification
+                error_vector[i] = conf
+            else:  # wrong classification
+                error_vector[i] = conf
 
         # add shap to the SFL
         shap = calculate_shap_all_nodes(model_rep, tree_analysis, sample, f)
         spectra[i,:] = np.absolute(np.array(shap)) #TODO: think if we need negative values
 
     return BAD_SAMPLES, spectra, error_vector, conflicts
+
+
+def shap_nodes2_to_SFL(samples, model_rep, moddel, error_vec="binary"):
+    data_x, prediction, labels = samples
+    n_samples = len(data_x)
+    node_count = len(model_rep) - 2
+
+
+
+
 
 
 

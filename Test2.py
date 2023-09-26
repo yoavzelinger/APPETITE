@@ -22,7 +22,7 @@ def map_nodes_to_feature(model):
             features.add(f)
     return node_features, features
 
-def filter_features(FI_shap):  # remove from FI features that are not on the tree
+def filter_features(FI_shap, model):  # remove from FI features that are not on the tree
     _, features = map_nodes_to_feature(model)
     filtered_FI = []
     for f in FI_shap:
@@ -54,7 +54,7 @@ def feature_order_from_node(shap_vals, model, n_features, to_sum=True):
         #         feature_order.append(f)
         feature_order.remove(-2)  # remove leaf indicator -2
 
-    feature_order = filter_features(feature_order)
+    feature_order = filter_features(feature_order, model)
     return feature_order
 
 def calculate_kendalls_tau(shap_original_order, node_shap_order):
@@ -129,13 +129,13 @@ def get_result_dict(db_name, index, node_shap, FI_nodes, regular_shap, FI_shap):
 #     return rank
 
 if __name__ == '__main__':
-    size = (0.7, 0.1, 0.2)
-    shap_measure = "confident"
+    size = (0.7, 0, 0.3)
+    shap_measure = "criterion"  # options: confident \ prediction \ entropy \ gini \ criterion
     time_stamp = datetime.now()
-    to_sum = True
+    to_sum = False
 
     date_time = time_stamp.strftime("%d-%m-%Y__%H-%M-%S")
-    excel_name = f"explainabilityCheck_toSum-{to_sum}_{date_time}"
+    excel_name = f"explainabilityCheck_toSum-{to_sum}_SHAP-{shap_measure}_{date_time}"
 
     all_datasets = pd.read_csv('data/all_datasets.csv', index_col=0)
 
@@ -191,7 +191,7 @@ if __name__ == '__main__':
             regular_shap = shap_values[int(prediction[j])][j]  # takes shap value for the predicted
             total_regular_shap += np.abs(regular_shap)
             FI_shap = np.argsort(-np.array(np.abs(regular_shap)))
-            FI_shap = filter_features(FI_shap)
+            FI_shap = filter_features(FI_shap, model)
             # FI_shap = sort_rank(np.abs(regular_shap))
 
             results = get_result_dict(row['name'], index, node_shap.tolist(), FI_nodes, regular_shap.tolist(), FI_shap)
@@ -204,7 +204,7 @@ if __name__ == '__main__':
         global_regular_shap = total_regular_shap / n_samples
         # FI_shap = sort_rank(np.abs(global_regular_shap))
         FI_shap = np.argsort(-np.array(np.abs(global_regular_shap)))
-        FI_shap = filter_features(FI_shap)
+        FI_shap = filter_features(FI_shap, model)
 
         results = get_result_dict(row['name'], -1, global_node_shap.tolist(), FI_nodes, global_regular_shap.tolist(),
                                   FI_shap)

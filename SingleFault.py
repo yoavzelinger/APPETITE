@@ -5,7 +5,7 @@ binary_similarity_funcs = ["jaccard","dice", "intersection", "inner_product", "f
 
 def diagnose_single_fault(spectra,  # np array [number of tests, number of components] - binary
                           error_vector,  # np array [number of tests] - binary
-                          similarity_method, prior=None):
+                          similarity_method, prior=None, to_normalize=True):
 
     methods = {  # function(a,b,c,d) -> similarity
         "non-binary": cosine_non_binary,
@@ -32,7 +32,8 @@ def diagnose_single_fault(spectra,  # np array [number of tests, number of compo
         probabilities *= prior
 
     # normalize probabilities
-    probabilities = probabilities / (probabilities.sum() + epsilon)
+    if to_normalize:
+        probabilities = probabilities / (probabilities.sum() + epsilon)
 
     # order diagnoses by probability
     d_order = np.argsort(-probabilities)  # highest prob first
@@ -65,7 +66,7 @@ def cosine_similarity(a, b, c, d):
 
 def cosine_non_binary(spectra, error_vector):
     mult = (spectra * error_vector.reshape(-1,1)).sum(axis=0)
-    e_size = error_vector.sum()
+    e_size = np.power(error_vector, 2).sum(axis=0)
     s_size = np.power(spectra, 2).sum(axis=0)
 
     epsilon_vec = np.ones(spectra.shape[1]) * epsilon

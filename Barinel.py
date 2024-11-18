@@ -4,7 +4,7 @@ import numpy as np
 from functools import reduce
 import operator
 
-from pysat.examples.hitman import Hitman
+# from pysat.examples.hitman import Hitman    # Unknown import
 
 def calculate_diagnoses_and_probabilities_barinel_shaked(spectra,  # np array [number of tests, number of components] - binary
                                                       error_vector,  # np array [number of tests] - binary

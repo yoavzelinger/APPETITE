@@ -1,7 +1,7 @@
 import pandas as pd
 import warnings
 from datetime import datetime
-from pandas.core.common import SettingWithCopyWarning
+from pandas.errors import SettingWithCopyWarning
 import numpy as np
 from sklearn import metrics
 
@@ -159,7 +159,7 @@ def manipulate_feature(feature, feature_type, dataset):
         change_name = feature_changes_names[i]
         to_save = to_change_data.copy()
         to_save.loc[indexes_to_change, feature] = data_change
-        to_save = not_changed_data.append(to_save, ignore_index=True)
+        to_save = not_changed_data._append(to_save, ignore_index=True)
         yield to_save, change_name
 
 def simulate_drift(feature, feature_type, dataset):

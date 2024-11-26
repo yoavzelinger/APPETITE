@@ -13,7 +13,8 @@ class Dataset:
                  feature_types: list = None, 
                  size: int | tuple | list = PROPORTIONS_TUPLE, 
                  name: str = None, 
-                 to_shuffle: bool = False):
+                 to_shuffle: bool = False
+    ):
         """
         source: str or pd.DataFrame
             If str, the path to the dataset file

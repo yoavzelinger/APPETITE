@@ -3,22 +3,44 @@ from sklearn.tree import DecisionTreeClassifier
 class MappedDecisionTree:
     class DecisionTreeNode:
         def __init__(self, 
-                    parent: 'MappedDecisionTree.DecisionTreeNode' | None = None, 
-                    left_child: 'MappedDecisionTree.DecisionTreeNode' | None = None, 
-                    right_child: 'MappedDecisionTree.DecisionTreeNode' | None = None,
-                    condition: dict | None = None,
-                    label: str | None = None
-                    ):
+                     index: int = 0,
+                     parent: 'MappedDecisionTree.DecisionTreeNode' | None = None, 
+                     left_child: 'MappedDecisionTree.DecisionTreeNode' | None = None, 
+                     right_child: 'MappedDecisionTree.DecisionTreeNode' | None = None,
+                     feature: str | None = None,
+                     threshold: int | None = None, # TODO - Verify Type
+                     label: str | None = None
+        ):
+            self.index = index
             self.parent = parent
             self.update_children(left_child, right_child)
-            assert self.is_terminal() or condition is not None
+            if self.is_terminal():
+                assert label is not None
             self.label = label
-            self.condition = condition
+            self.feature = feature
+            self.threshold = threshold
+            self.condition = []
+            self._calculate_condition()
+            self.label = label
             self.depth = 0 if parent is None else parent.depth + 1
+
+        def _calculate_condition(self):
+            if self.parent in None:
+                return
+            self.condition += self.parent.condition
+            current_condition = {
+                "feature": self.parent.feature,
+                "threshold": self.parent.threshold,
+                "sign": "<=" if self.is_left_child() else ">"
+            }
+            self.condition += [current_condition]
+
+            
 
         def update_children(self, 
                             left_child: 'MappedDecisionTree.DecisionTreeNode', 
-                            right_child: 'MappedDecisionTree.DecisionTreeNode') -> None:
+                            right_child: 'MappedDecisionTree.DecisionTreeNode'
+        ) -> None:
             # A node can be either a terminal node (two children) or a non-terminal node (a leaf - no children)
             assert (left_child is None) == (right_child is None)
             self.left_child = left_child
@@ -37,7 +59,9 @@ class MappedDecisionTree:
                 return False
             return not self.is_left_child()
 
-    def __init__(self, sklearn_tree: DecisionTreeClassifier):
+    def __init__(self, 
+                 sklearn_tree: DecisionTreeClassifier
+    ):
         assert sklearn_tree is not None
         self.node_count = sklearn_tree.tree_.node_count
         self.max_depth = sklearn_tree.tree_.max_depth
@@ -45,7 +69,9 @@ class MappedDecisionTree:
 
         self.tree_dict = self.map_tree(sklearn_tree)
 
-    def map_tree(self, sklearn_tree: DecisionTreeClassifier) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
+    def map_tree(self, 
+                 sklearn_tree: DecisionTreeClassifier
+    ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
         threshold = sklearn_tree.tree_.threshold
         feature = sklearn_tree.tree_.feature
         children_left = sklearn_tree.tree_.children_left

@@ -3,13 +3,28 @@ import random
 
 FILE_PATHES = (
     "white-clover.csv",
-    )
+)
 DIRECTORY = "data\\Classification_Datasets"
 
-NUMERIC_DRIFT_SIZES = (-2, -1, -0.5, 0.5, 1, 2)
-CATEGORICAL_PROPORTIONS = (0.3, 0.5, 0.7, 0.9)
+NUMERIC_DRIFT_SIZES = (
+    -2, 
+    -1, 
+    -0.5, 
+    0.5, 
+    1, 
+    2
+)
+CATEGORICAL_PROPORTIONS = (
+    0.3, 
+    0.5, 
+    0.7, 
+    0.9
+)
 
-def _simulate_numeric_drift(df: pd.DataFrame, feature: str) -> list[tuple[pd.DataFrame, str]]:
+def _simulate_numeric_drift(
+        df: pd.DataFrame, 
+        feature: str
+ ) -> list[tuple[pd.DataFrame, str]]:
     """
     Simulate all type of concept drifts in a numeric feature.
 
@@ -20,13 +35,14 @@ def _simulate_numeric_drift(df: pd.DataFrame, feature: str) -> list[tuple[pd.Dat
     Return:
         list[pd.DataFrame]: list of all generated concept drifts.
     """
-    # print(df.columns)
     assert pd.api.types.is_numeric_dtype(df[feature])
     
     feature_std = df[feature].std()
 
     #   Nested function
-    def simulate_numeric_drift_of_size_k(k: int) -> tuple[pd.DataFrame, str]:
+    def simulate_numeric_drift_of_size_k(
+            k: int
+     ) -> tuple[pd.DataFrame, str]:
         """
         Simulate concept drift in a specific numeric feature of size k.
 
@@ -47,7 +63,10 @@ def _simulate_numeric_drift(df: pd.DataFrame, feature: str) -> list[tuple[pd.Dat
 
 
 
-def _simulate_categorical_drift(df: pd.DataFrame, feature: str) -> list[tuple[pd.DataFrame, str]]:
+def _simulate_categorical_drift(
+        df: pd.DataFrame, 
+        feature: str
+ ) -> list[tuple[pd.DataFrame, str]]:
     """
     Simulate concept drift in a specific categorical feature.
     The drift is simulated in every feature value in every relevant proportion size.
@@ -64,7 +83,9 @@ def _simulate_categorical_drift(df: pd.DataFrame, feature: str) -> list[tuple[pd
     unique_values = df[feature].unique()
     
     # Nested function
-    def simulate_categorical_drift_in_value(fixed_value: str) -> list[tuple[pd.DataFrame, str]]:
+    def simulate_categorical_drift_in_value(
+            fixed_value: str
+     ) -> list[tuple[pd.DataFrame, str]]:
         """
         Simulate concept drift in a specific value of a feature (for all proportions).
 
@@ -77,7 +98,9 @@ def _simulate_categorical_drift(df: pd.DataFrame, feature: str) -> list[tuple[pd
         assert fixed_value in unique_values
 
         #   Double nested function
-        def simulate_categorical_drift_in_value_proportion(p: float) -> tuple[pd.DataFrame, str]:
+        def simulate_categorical_drift_in_value_proportion(
+                p: float
+         ) -> tuple[pd.DataFrame, str]:
             """
             Simulate concept drift in a specific value of a feature for a given proportion.
             The Drift is done by fixing a given value for a proportion of the data.
@@ -112,7 +135,10 @@ def _simulate_categorical_drift(df: pd.DataFrame, feature: str) -> list[tuple[pd
     return drifted_dfs
 
 # Now the magic happens
-def simulate_concept_drifts(original_df: pd.DataFrame, drifting_features: list[str]) -> list[pd.DataFrame]:
+def simulate_concept_drifts(
+        original_df: pd.DataFrame, 
+        drifting_features: list[str]
+ ) -> list[pd.DataFrame]:
     """
     Simulate concept drift in a given list of features.
     Generate all types of drifts relevant to the features.
@@ -144,7 +170,10 @@ def simulate_concept_drifts(original_df: pd.DataFrame, drifting_features: list[s
     
     return result_drifts
 
-def save_all_possible_drifts(file_path, path_prefix=""):
+def save_all_possible_drifts(
+        file_path, 
+        path_prefix=""
+ ) -> None:
     full_path = path_prefix + '\\' + file_path
     df = pd.read_csv(full_path)
     

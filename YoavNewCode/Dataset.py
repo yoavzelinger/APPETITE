@@ -116,7 +116,7 @@ class Dataset:
 
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
-def get_ds():
+def get_ds() -> Dataset:
     directory = ""
     file_name = ""
     relative_path = directory + file_name

@@ -31,7 +31,7 @@ class MappedDecisionTree:
             self.left_child = left_child
             self.right_child = right_child
 
-        def update_condition(self):
+        def update_condition(self) -> None:
             if self.parent in None:
                 return
             self.condition += self.parent.condition

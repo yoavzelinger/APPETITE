@@ -5,9 +5,9 @@ class MappedDecisionTree:
     class DecisionTreeNode:
         def __init__(self, 
                      index: int = 0,
-                     parent: 'MappedDecisionTree.DecisionTreeNode' | None = None, 
-                     left_child: 'MappedDecisionTree.DecisionTreeNode' | None = None, 
-                     right_child: 'MappedDecisionTree.DecisionTreeNode' | None = None,
+                     parent = None, 
+                     left_child = None, 
+                     right_child = None,
                      feature: str | None = None,
                      threshold: int | None = None, # TODO - Verify Type
                      class_name: str | None = None
@@ -20,7 +20,6 @@ class MappedDecisionTree:
             self.class_name = class_name
             self.condition = []
             self.depth = 0 if parent is None else parent.depth + 1
-            self.update_condition()
 
         def update_children(self, 
                             left_child: 'MappedDecisionTree.DecisionTreeNode', 
@@ -32,13 +31,13 @@ class MappedDecisionTree:
             self.right_child = right_child
 
         def update_condition(self) -> None:
-            if self.parent in None:
+            if self.parent is None:
                 return
             self.condition += self.parent.condition
             current_condition = {
                 "feature": self.parent.feature,
-                "threshold": self.parent.threshold,
-                "sign": "<=" if self.is_left_child() else ">"
+                "sign": "<=" if self.is_left_child() else ">",
+                "threshold": self.parent.threshold
             }
             self.condition += [current_condition]
 
@@ -81,6 +80,7 @@ class MappedDecisionTree:
 
         while len(nodes_to_check):
             current_node = nodes_to_check.pop(0)
+            current_node.update_condition()
             current_index = current_node.index
             tree_representation[current_index] = current_node
             left_child_index = sk_children_left[current_index]
@@ -93,7 +93,7 @@ class MappedDecisionTree:
                 continue
 
             current_node.feature, current_node.threshold = sk_features[current_index], sk_thresholds[current_index]
-            right_child_index = sk_children_right[current_node]
+            right_child_index = sk_children_right[current_index]
             for child_index in (left_child_index, right_child_index):
                 child_node = self.DecisionTreeNode(index=child_index, parent=current_node)
                 nodes_to_check.append(child_node)

@@ -63,16 +63,19 @@ class MappedDecisionTree:
             return str(self.index)
 
     def __init__(self, 
-                 sklearn_tree: DecisionTreeClassifier
+                 sklearn_tree: DecisionTreeClassifier,
+                 prune: bool = True
     ):
         assert sklearn_tree is not None
         self.sklearn_tree = sklearn_tree
         self.node_count = sklearn_tree.tree_.node_count
-        self.max_depth = sklearn_tree.tree_.max_depth
-        self.n_classes = sklearn_tree.n_classes_
 
         self.tree_dict = self.map_tree()
         self.root = self.tree_dict[0]
+        if prune:
+            self.prune_tree()
+        else:
+            self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
 
     def map_tree(self, 
     ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
@@ -109,3 +112,41 @@ class MappedDecisionTree:
             current_node.update_children(*(nodes_to_check[-2: ]))
 
         return tree_representation
+    
+    def get_node(self, 
+                 index: int
+    ):
+        return self.tree_dict.get(index, None)
+    
+    def prune_tree(self) -> None:
+        leaf_nodes = filter(lambda node: node.is_terminal(), self.tree_dict.values())
+        pruned_indicies = []
+        while len(leaf_nodes):
+            current_leaf = leaf_nodes.pop(0)
+            sibling = current_leaf.get_sibling()
+
+            if sibling is None: # Root
+                continue
+            if not sibling.is_terminal():
+                continue
+            if current_leaf.class_name != sibling.class_name:
+                continue
+            # Prune
+            pruned_indicies += [current_leaf.index, sibling.index]
+            self.tree_dict.pop(current_leaf.index)
+            self.tree_dict.pop(sibling.index)
+            # Make parent a leaf
+            parent = current_leaf.parent
+            parent.update_children(None, None)
+            current_class = current_leaf.class_name
+            parent.feature, parent.threshold, parent.class_name = None, None, current_class
+            leaf_nodes += [parent]
+            # Adapt the tree
+            parent_index = parent.index
+            self.sklearn_tree.tree_.children_left[parent_index] = -1
+            self.sklearn_tree.tree_.children_right[parent_index] = -1
+            self.sklearn_tree.tree_.feature[parent_index] = -2
+        self.node_count = len(self.tree_dict)
+        self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
+        print(f"Pruned {len(pruned_indicies)} nodes from the tree. Pruned nodes: {pruned_indicies}")
+

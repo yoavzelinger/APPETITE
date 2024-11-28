@@ -53,6 +53,14 @@ class MappedDecisionTree:
             if self.parent is None:
                 return False
             return not self.is_left_child()
+        
+        def get_sibling(self):
+            if self.parent is None:
+                return None
+            return self.parent.left_child if self.is_right_child() else self.parent.right_child
+        
+        def __repr__(self):
+            return str(self.index)
 
     def __init__(self, 
                  sklearn_tree: DecisionTreeClassifier

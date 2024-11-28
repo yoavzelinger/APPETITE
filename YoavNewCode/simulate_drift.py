@@ -167,13 +167,16 @@ def simulate_concept_drifts(
     
     return result_drifts
 
+def get_dataframe(file_path, 
+        path_prefix=""
+ ) -> pd.DataFrame:
+    full_path = path_prefix + '\\' + file_path
+    return pd.read_csv(full_path)
 def save_all_possible_drifts(
         file_path, 
         path_prefix=""
  ) -> None:
-    full_path = path_prefix + '\\' + file_path
-    df = pd.read_csv(full_path)
-    
+    df = get_dataframe(file_path, path_prefix)
     
     generated_drifts = simulate_concept_drifts(df, df.columns[: -1])  # TODO - Make possible of dynamically select features to drift
 
@@ -181,7 +184,7 @@ def save_all_possible_drifts(
 
     for generated_drift, drift_description in generated_drifts:
         new_path = path_prefix + "\\results\\" + file_prefix + drift_description + ".csv"
-        generated_drift.to_csv(new_path)
+        generated_drift.to_csv(new_path, index=False)
     
 if __name__ == "__main__":
     for file_path in FILE_PATHES:

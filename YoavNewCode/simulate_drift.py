@@ -157,8 +157,6 @@ def simulate_concept_drifts(
         # Get relevant drift function (by the feature type)
         drift_function = _numeric_drift_generator if pd.api.types.is_numeric_dtype(original_df[feature]) else _categorical_drift_generator
         
-        if drift_function == _simulate_numeric_drift: # TODO - Fix error in numeric
-            continue
         # Create new drift list
         generating_drifts = []
         for result_drift, result_description in result_drifts:

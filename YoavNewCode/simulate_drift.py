@@ -167,11 +167,28 @@ def simulate_concept_drifts(
     
     return result_drifts
 
+def concept_drifts_generator(
+        original_df: pd.DataFrame, 
+        drifting_features: list[str]
+ ) -> Generator[tuple[pd.DataFrame, str], None, None]:
+    """
+    Generate all possible concept drifts in a given list of features.
+    TODO - Make the generator lazy (not use simulate_concept_drifts that returns a complete list of all drifts).
+    Parameters:
+        original_df (pd.DataFrame): The original DataFrame.
+        drifting_features (list[str]): List of features to drift.
+        
+    Returns:
+        Generator[tuple[pd.DataFrame, str], None, None]: A generator of all possible drifts in the features and the description of the drift.
+    """
+    return ((drifted_df, drift_description) for drifted_df, drift_description in simulate_concept_drifts(original_df, drifting_features))
+
 def get_dataframe(file_path, 
         path_prefix=""
  ) -> pd.DataFrame:
     full_path = path_prefix + '\\' + file_path
     return pd.read_csv(full_path)
+
 def save_all_possible_drifts(
         file_path, 
         path_prefix=""

@@ -9,7 +9,7 @@ class MappedDecisionTree:
                      left_child = None, 
                      right_child = None,
                      feature: str | None = None,
-                     threshold: int | None = None, # TODO - Verify Type
+                     threshold: float | None = None,
                      class_name: str | None = None
         ):
             self.index = index
@@ -18,7 +18,7 @@ class MappedDecisionTree:
             self.feature = feature
             self.threshold = threshold
             self.class_name = class_name
-            self.condition = []
+            self.conditions_path = []
             self.depth = 0 if parent is None else parent.depth + 1
 
         def update_children(self, 
@@ -33,13 +33,13 @@ class MappedDecisionTree:
         def update_condition(self) -> None:
             if self.parent is None:
                 return
-            self.condition += self.parent.condition
+            self.conditions_path = self.parent.conditions_path
             current_condition = {
                 "feature": self.parent.feature,
                 "sign": "<=" if self.is_left_child() else ">",
                 "threshold": self.parent.threshold
             }
-            self.condition += [current_condition]
+            self.conditions_path += [current_condition]
 
         def is_terminal(self) -> bool:
             return self.left_child is None

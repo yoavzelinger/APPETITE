@@ -1,4 +1,5 @@
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree._tree import TREE_LEAF
 import numpy as np
 
 class MappedDecisionTree:
@@ -143,8 +144,8 @@ class MappedDecisionTree:
             leaf_nodes += [parent]
             # Adapt the tree
             parent_index = parent.index
-            self.sklearn_tree.tree_.children_left[parent_index] = -1
-            self.sklearn_tree.tree_.children_right[parent_index] = -1
+            self.sklearn_tree.tree_.children_left[parent_index] = TREE_LEAF
+            self.sklearn_tree.tree_.children_right[parent_index] = TREE_LEAF
             self.sklearn_tree.tree_.feature[parent_index] = -2
         self.node_count = len(self.tree_dict)
         self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))

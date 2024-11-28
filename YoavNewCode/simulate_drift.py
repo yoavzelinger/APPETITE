@@ -52,8 +52,9 @@ def _simulate_numeric_drift(
         Returns:
             tuple[pd.DataFrame, str]: The new DataFrame with the concept drift and a description of the drift (in the format of "NumericFeature[feature{+,-}kstd]").
         """
-        return (df[feature] + k * feature_std, f"NumericFeature[{feature}{'+' if k >= 0 else '-'}{k}std]")
-    
+        drifted_df = df.copy()
+        drifted_df[feature] = drifted_df[feature] + k * feature_std
+        return (drifted_df, f"NumericFeature[{feature}{'+' if k >= 0 else '-'}{k}std]")
     
     #   Using it in iterations
     return [

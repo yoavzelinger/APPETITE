@@ -1,5 +1,6 @@
 import pandas as pd
 import random
+from typing import Generator
 
 FILE_PATHES = (
     "white-clover.csv",
@@ -21,19 +22,19 @@ CATEGORICAL_PROPORTIONS = (
     0.9
 )
 
-def _simulate_numeric_drift(
+def _numeric_drift_generator(
         df: pd.DataFrame, 
         feature: str
- ) -> list[tuple[pd.DataFrame, str]]:
+ ) -> Generator[tuple[pd.DataFrame, str], None, None]:
     """
-    Simulate all type of concept drifts in a numeric feature.
+    Generator for all type of concept drifts in a numeric feature.
 
     Parameters:
         df (pd.DataFrame): The input DataFrame.
         feature (str): The column in which to insert the concept drift.
 
     Return:
-        list[pd.DataFrame]: list of all generated concept drifts.
+        Generator[tuple[pd.DataFrame, str], None, None]: A generator of all drifts in the feature and the description of the drift.
     """
     assert pd.api.types.is_numeric_dtype(df[feature])
     
@@ -57,17 +58,15 @@ def _simulate_numeric_drift(
         return (drifted_df, f"NumericFeature[{feature}{'+' if k >= 0 else '-'}{k}std]")
     
     #   Using it in iterations
-    return [
-        simulate_numeric_drift_of_size_k(k)
-        for k in NUMERIC_DRIFT_SIZES
-    ]
+    for k in NUMERIC_DRIFT_SIZES:
+        yield simulate_numeric_drift_of_size_k(k)
 
 
 
-def _simulate_categorical_drift(
+def _categorical_drift_generator(
         df: pd.DataFrame, 
         feature: str
- ) -> list[tuple[pd.DataFrame, str]]:
+ ) -> Generator[tuple[pd.DataFrame, str], None, None]:
     """
     Simulate concept drift in a specific categorical feature.
     The drift is simulated in every feature value in every relevant proportion size.
@@ -77,14 +76,14 @@ def _simulate_categorical_drift(
         feature (str): The column in which to insert concept drift.
     
     Returns:
-        list[pd.DataFrame]: All types of drifts in the feature.
+        Generator[tuple[pd.DataFrame, str], None, None]: A generator of all drifts in the feature and the description of the drift.
     """
     assert not pd.api.types.is_numeric_dtype(df[feature])
     
     unique_values = df[feature].unique()
     
     # Nested function
-    def simulate_categorical_drift_in_value(
+    def categorical_drift_in_value_generator(
             fixed_value: str
      ) -> list[tuple[pd.DataFrame, str]]:
         """
@@ -124,16 +123,15 @@ def _simulate_categorical_drift(
             return (drifted_df, f"CategoricalFeature[{feature}={fixed_value};p={str(p).replace('.',',')}]")
         
         #   Using the doubly nested function
-        return [
+        return (
             simulate_categorical_drift_in_value_proportion(p)
             for p in CATEGORICAL_PROPORTIONS
-        ]
+        )
     
-    # Using the intermediate function
-    drifted_dfs = []
+    # Using the intermediate generator
     for feature_value in unique_values:
-        drifted_dfs += simulate_categorical_drift_in_value(feature_value)
-    return drifted_dfs
+        for drifted_df in categorical_drift_in_value_generator(feature_value):
+            yield drifted_df
 
 # Now the magic happens
 def simulate_concept_drifts(
@@ -157,7 +155,7 @@ def simulate_concept_drifts(
         assert feature in original_df.columns
 
         # Get relevant drift function (by the feature type)
-        drift_function = _simulate_numeric_drift if pd.api.types.is_numeric_dtype(original_df[feature]) else _simulate_categorical_drift
+        drift_function = _numeric_drift_generator if pd.api.types.is_numeric_dtype(original_df[feature]) else _categorical_drift_generator
         
         if drift_function == _simulate_numeric_drift: # TODO - Fix error in numeric
             continue

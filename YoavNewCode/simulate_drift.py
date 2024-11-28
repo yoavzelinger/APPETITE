@@ -50,7 +50,7 @@ def _simulate_numeric_drift(
             k (int): The value to add to all entries in the specified column.
 
         Returns:
-            pd.DataFrame: A new DataFrame with the concept drift applied.
+            tuple[pd.DataFrame, str]: The new DataFrame with the concept drift and a description of the drift (in the format of "NumericFeature[feature{+,-}kstd]").
         """
         return (df[feature] + k * feature_std, f"NumericFeature[{feature}{'+' if k >= 0 else '-'}{k}std]")
     
@@ -93,7 +93,7 @@ def _simulate_categorical_drift(
             fixed_value (str): The value that the drift is fixed to.
 
         Returns:
-            list[pd.DataFrame]: a list of all drifts (in all proportions of the given value).
+            list[tuple[pd.DataFrame, str]]: A list of all drifts in the feature (in all proportions of the given value) and the description of the drift.
         """
         assert fixed_value in unique_values
 
@@ -109,7 +109,7 @@ def _simulate_categorical_drift(
                 p (float): the proportion of the samples (out of the remaining samples - do not contains the value) that the fixed value will be inserted.
 
             Returns:
-                pd.DataFrame: A new DataFrame with the concept drift applied.    
+                tuple[pd.DataFrame, str]: The new DataFrame with the concept drift and a description of the drift (in the format of "CategoricalFeature[feature=value;p=proportion]"). 
             """
 
             drifted_df = df.copy()
@@ -138,7 +138,7 @@ def _simulate_categorical_drift(
 def simulate_concept_drifts(
         original_df: pd.DataFrame, 
         drifting_features: list[str]
- ) -> list[pd.DataFrame]:
+        ) -> list[tuple[pd.DataFrame, str]]:
     """
     Simulate concept drift in a given list of features.
     Generate all types of drifts relevant to the features.
@@ -148,7 +148,7 @@ def simulate_concept_drifts(
         drifting_features (list[str]): List of features to drift.
 
     Returns:
-        list[pd.DataFrame]: List of all generated drifts.
+        list[tuple[pd.DataFrame, str]]: A list of all possible drifts in the features and the description of the drift.
     """
     result_drifts = [(original_df.copy(), "")]
     

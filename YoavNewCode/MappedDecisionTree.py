@@ -96,7 +96,7 @@ class MappedDecisionTree:
             current_index = current_node.index
             tree_representation[current_index] = current_node
             left_child_index = sk_children_left[current_index]
-            right_child_index = sk_children_right[current_node]
+            right_child_index = sk_children_right[current_index]
 
             if left_child_index == right_child_index:  # Leaf
                 current_node_value = sk_values[current_index]
@@ -120,7 +120,7 @@ class MappedDecisionTree:
         return self.tree_dict.get(index, None)
     
     def prune_tree(self) -> None:
-        leaf_nodes = filter(lambda node: node.is_terminal(), self.tree_dict.values())
+        leaf_nodes = [node for node in self.tree_dict.values() if node.is_terminal()]
         pruned_indicies = []
         while len(leaf_nodes):
             current_leaf = leaf_nodes.pop(0)

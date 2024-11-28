@@ -151,3 +151,14 @@ class MappedDecisionTree:
         self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
         print(f"Pruned {len(pruned_indicies)} nodes from the tree. Pruned nodes: {pruned_indicies}")
 
+def get_example_tree():
+    from sklearn.datasets import load_iris
+    from sklearn.tree import DecisionTreeClassifier
+    iris = load_iris()
+    clf = DecisionTreeClassifier()
+    clf = clf.fit(iris.data, iris.target)
+    return clf
+
+def get_example_mapped_tree(prune: bool = True) -> MappedDecisionTree:
+    clf = get_example_tree()
+    return MappedDecisionTree(clf, prune)

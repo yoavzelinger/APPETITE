@@ -69,14 +69,20 @@ class MappedDecisionTree:
     ):
         assert sklearn_tree is not None
         self.sklearn_tree = sklearn_tree
-        self.node_count = sklearn_tree.tree_.node_count
 
         self.tree_dict = self.map_tree()
         self.root = self.tree_dict[0]
+        self.update_tree_attributes()
         if prune:
             self.prune_tree()
-        else:
-            self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
+
+    def update_tree_attributes(self):
+        self.node_count = len(self.tree_dict)
+        self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
+        self.features_set = set(map(lambda node: node.feature, self.tree_dict.values()))
+        self.classes_set = set(map(lambda node: node.class_name, self.tree_dict.values()))
+        self.features_set.discard(None)
+        self.classes_set.discard(None)
 
     def map_tree(self, 
     ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
@@ -147,9 +153,9 @@ class MappedDecisionTree:
             self.sklearn_tree.tree_.children_left[parent_index] = TREE_LEAF
             self.sklearn_tree.tree_.children_right[parent_index] = TREE_LEAF
             self.sklearn_tree.tree_.feature[parent_index] = -2
-        self.node_count = len(self.tree_dict)
-        self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
-        print(f"Pruned {len(pruned_indicies)} nodes from the tree. Pruned nodes: {pruned_indicies}")
+        if len(pruned_indicies): # Attributes changed
+            self.update_tree_attributes()
+            print(f"Pruned {len(pruned_indicies)} nodes from the tree. Pruned nodes: {pruned_indicies}")
 
 def get_example_tree():
     from sklearn.datasets import load_iris

@@ -66,22 +66,22 @@ class MappedDecisionTree:
                  sklearn_tree: DecisionTreeClassifier
     ):
         assert sklearn_tree is not None
+        self.sklearn_tree = sklearn_tree
         self.node_count = sklearn_tree.tree_.node_count
         self.max_depth = sklearn_tree.tree_.max_depth
         self.n_classes = sklearn_tree.n_classes_
 
-        self.tree_dict = self.map_tree(sklearn_tree)
+        self.tree_dict = self.map_tree()
         self.root = self.tree_dict[0]
 
     def map_tree(self, 
-                 sklearn_tree: DecisionTreeClassifier
     ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
-        sk_features = sklearn_tree.tree_.feature
-        sk_thresholds = sklearn_tree.tree_.threshold
-        sk_children_left = sklearn_tree.tree_.children_left
-        sk_children_right = sklearn_tree.tree_.children_right
-        sk_values = sklearn_tree.tree_.value
-        sk_class_names = sklearn_tree.classes_
+        sk_features = self.sklearn_tree.tree_.feature
+        sk_thresholds = self.sklearn_tree.tree_.threshold
+        sk_children_left = self.sklearn_tree.tree_.children_left
+        sk_children_right = self.sklearn_tree.tree_.children_right
+        sk_values = self.sklearn_tree.tree_.value
+        sk_class_names = self.sklearn_tree.classes_
         
         tree_representation = {}
         nodes_to_check = [self.DecisionTreeNode(index=0)]
@@ -92,8 +92,9 @@ class MappedDecisionTree:
             current_index = current_node.index
             tree_representation[current_index] = current_node
             left_child_index = sk_children_left[current_index]
+            right_child_index = sk_children_right[current_node]
 
-            if left_child_index == -1:  # Leaf
+            if left_child_index == right_child_index:  # Leaf
                 current_node_value = sk_values[current_index]
                 class_name = np.argmax(current_node_value)
                 class_name = sk_class_names[class_name]

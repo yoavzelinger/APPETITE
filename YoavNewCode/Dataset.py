@@ -116,6 +116,15 @@ class Dataset:
 
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
+    def get_before_concept(self) -> pd.DataFrame:
+        return self.data.iloc[:self.before_size]
+    
+    def get_after_concept(self) -> pd.DataFrame:
+        return self.data.iloc[self.before_size: self.before_size+self.after_size]
+    
+    def get_test_concept(self) -> pd.DataFrame:
+        return self.data.iloc[-self.test_size:]
+
 def get_ds() -> Dataset:
     directory = ""
     file_name = ""

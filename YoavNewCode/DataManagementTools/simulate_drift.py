@@ -129,19 +129,19 @@ def _categorical_drift_generator(
         for drifted_column in categorical_drift_in_value_generator(feature_value):
             yield drifted_column
 
-def get_single_feature_drift_generator(
+def _get_feature_generator_function(
         column: pd.Series,
         type: str = None
- ) -> Callable[[], Generator[object, object, None]]:
+ ) -> Callable[[], Generator[tuple[pd.Series, str], pd.Series, None]]:
     """
-    Get the relevant drift generator for a given feature.
+    Get the relevant drift generator function for a given feature.
     
     Parameters:
         column (pd.Series): The input column.
         type (str): The type of the feature.
         
     Returns:
-        Callable[[], Generator[object, object, None]]: The relevant drift generator for the feature.
+        Callable[[], Generator[pd.Series, pd.Series, None]]: The relevant drift generator function for the feature.
     """
     if type:
         return _numeric_drift_generator if type == "numeric" else _categorical_drift_generator
@@ -165,7 +165,7 @@ def concept_drifts_generator(
     """
     # Get features concept drift generators
     features_columns = [original_df[feature] for feature in drifting_features]
-    generator_functions = [get_single_feature_drift_generator(column, feature_type) if feature_type else get_single_feature_drift_generator(column) 
+    generator_functions = [_get_feature_generator_function(column, feature_type) if feature_type else _get_feature_generator_function(column) 
                            for column, feature_type in zip(features_columns, drifting_features.values())]
 
     # Get the cartesian product of all drifts

@@ -2,7 +2,7 @@ import pandas as pd
 import random
 from typing import Callable, Generator
 
-from YoavNewCode.DataHandler.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
+from YoavNewCode.DataManagementTools.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
 
 FILE_PATHES = (
     "white-clover.csv",
@@ -151,7 +151,7 @@ def _get_feature_generator_function(
         return _numeric_drift_generator
     return _categorical_drift_generator
 
-# Now the magic happens
+# The magic starts here
 def concept_drifts_generator(
         original_df: pd.DataFrame, 
         drifting_features: dict[str, str]
@@ -174,8 +174,9 @@ def concept_drifts_generator(
     cartesian_products = lazy_product(generator_functions, args_lists=features_columns, args_type=SINGLE_ARGUMENT_EACH_GENERATOR)
     for drifts in cartesian_products:
         drifted_df = original_df.copy()
-        drift_description = ""
+        drift_description = original_df.attrs.get("name", "")
         for drifted_column, current_description in drifts:
             drifted_df[drifted_column.name] = drifted_column
             drift_description += "_" + current_description
+        yield (drifted_df, drift_description)            drift_description += '_' + current_description
         yield (drifted_df, drift_description)

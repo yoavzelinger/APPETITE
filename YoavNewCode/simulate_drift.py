@@ -127,23 +127,25 @@ def _categorical_drift_generator(
         for drifted_column in categorical_drift_in_value_generator(feature_value):
             yield drifted_column
 
-# Now the magic happens
-def simulate_concept_drifts(
-        original_df: pd.DataFrame, 
-        drifting_features: list[str]
-        ) -> list[tuple[pd.DataFrame, str]]:
+def get_single_feature_drift_generator(
+        column: pd.Series,
+        type: str = None
+ ) -> Callable[[], Generator[object, object, None]]:
     """
-    Simulate concept drift in a given list of features.
-    Generate all types of drifts relevant to the features.
-
+    Get the relevant drift generator for a given feature.
+    
     Parameters:
-        df (pd.DataFrame): The input DataFrame.
-        drifting_features (list[str]): List of features to drift.
-
+        column (pd.Series): The input column.
+        type (str): The type of the feature.
+        
     Returns:
         list[tuple[pd.DataFrame, str]]: A list of all possible drifts in the features and the description of the drift.
     """
-    result_drifts = [(original_df.copy(), "")]
+    if type:
+        return _numeric_drift_generator if type == "numeric" else _categorical_drift_generator
+    if pd.api.types.is_numeric_dtype(column):
+        return _numeric_drift_generator
+    return _categorical_drift_generator
     
     for feature in drifting_features:
         assert feature in original_df.columns

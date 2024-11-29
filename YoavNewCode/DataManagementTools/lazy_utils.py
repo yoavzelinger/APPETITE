@@ -1,5 +1,47 @@
 from typing import Generator, Callable
 
+"""
+This module contains the generic lazy_product function.
+The function generates the cartesian product of the given generators.
+The function is lazy and generates the product on the fly, compared to itertools.product which generates the product at once.
+
+Example:
+    def gen1():
+        for i in range(2):
+            print(i)
+            yield i
+
+    def gen2():
+        for i in range(2, 4):
+            print(i)
+            yield i
+
+    generators = [gen1, gen2]
+    for product in lazy_product(generators):
+        print(product)
+    # Output:
+    # 0
+    # 2
+    # [0, 2]
+    # 3
+    # [0, 3]
+    # 1
+    # 2
+    # [1, 2]
+    # 3
+    # [1, 3]
+    
+    # Compared output of itertools.product:
+    # 0
+    # 1
+    # 2
+    # 3
+    # (0, 2)
+    # (0, 3)
+    # (1, 2)
+    # (1, 3)
+"""
+
 SINGLE_ARGUMENT_ALL_GENERATORS = 0
 MULTIPLE_ARGUMENTS_ALL_GENERATORS = 1
 SINGLE_ARGUMENT_EACH_GENERATOR = 2

@@ -1,9 +1,9 @@
-from collections.abc import Iterable
 from typing import Generator, Callable
 
 def lazy_product(
         generators: list[Callable[[], Generator[object, object, None]]], 
-        args_list: object | list[object] = [],
+        args_lists: object | list[object] | list[list[object]] = [],
+        args_type: int = 1,
         current_product=[]
  ) -> Generator[list[object], None, None]:
     """
@@ -12,16 +12,27 @@ def lazy_product(
 
     Parameters:
         generators (list[Callable[[], Generator[object, object, None]]): List of generators.
-        args_list (object | list[object]): single argument or list of arguments for the generators.
-            The argument list is all of the arguments to be passed to each generator (not one argument per generator).
-            FOR NO ARGUMENTS DON'T PASS ANYTHING (NO NONE!).
+        args_list (object | list[object] | list[list[object]]): List of arguments for the generators.
+        args_type (int): The type of the args_list.
+            0 - Single object for ALL generators
+            1 - List of arguments for ALL generators
+            2 - List of single objects for EACH generator
+            3 - List of list of arguments for EACH generator
         current_product (list[object]): The current product.
     """
     if not generators:
         yield current_product
-    else:
-        if not isinstance(args_list, Iterable):
-            # Wrap with list so can be unpacked
-            args_list = [] if args_list is None else [args_list]
-        for item in generators[0](*args_list):
-            yield from lazy_product(generators[1:], args_list, current_product + [item])
+        return
+
+    args_manipulator = {
+        0: lambda x: [[x] for _ in range(len(generators))], #   Single object for ALL generators - wrap in list for unpacking
+        1: lambda x: [x for _ in range(len(generators))], # List of arguments for ALL generators - duplicate for each generator
+        2: lambda x: [[item] for item in x], # List of single objects for EACH generator, wrap each single in list for unpacking
+        3: lambda x: x, #   List of list of arguments for EACH generator, no need to manipulate
+    }
+
+    args_lists = args_manipulator[args_type](args_lists)
+    assert len(generators) == len(args_lists), "Generators and args_lists must have the same length"
+
+    for item in generators[0](*(args_lists[0])):
+        yield from lazy_product(generators[1:], args_lists[1: ], 3, current_product + [item])

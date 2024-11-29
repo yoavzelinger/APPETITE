@@ -23,6 +23,8 @@ CATEGORICAL_PROPORTIONS = (
     0.7, 
     0.9
 )
+RANDOM_STATE = 10
+random.seed(RANDOM_STATE)
 
 def _numeric_drift_generator(
         column: pd.Series,

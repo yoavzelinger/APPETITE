@@ -240,7 +240,7 @@ def example_preparation(single_drift = False):
         # For single drift only the first feature matters
         "WhiteClover-91": "numeric",
         "strata": "categorical",
-        "WhiteClover-94": None
+        "Weeds-94": None
     }
 
     df = pd.read_csv(f"{DIRECTORY}\\{FILE_PATH}")
@@ -252,9 +252,9 @@ def example_preparation(single_drift = False):
 def multiple_drifts_example():
     df, drifting_features = example_preparation()
     for drifted_df, drift_description in concept_drifts_generator(df, drifting_features):
-        print(drifted_df, df.attrs.get("name", "") + drift_description)
+        yield (drifted_df, drift_description)
 
 def single_drift_example():
     df, feature, feature_type = example_preparation(True)
     for drifted_df, drift_description in single_concept_drift_generator(df, feature, feature_type):
-        print(drifted_df, df.attrs.get("name", "") + drift_description)
+        yield (drifted_df, drift_description)

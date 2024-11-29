@@ -139,7 +139,7 @@ def get_single_feature_drift_generator(
         type (str): The type of the feature.
         
     Returns:
-        list[tuple[pd.DataFrame, str]]: A list of all possible drifts in the features and the description of the drift.
+        Callable[[], Generator[object, object, None]]: The relevant drift generator for the feature.
     """
     if type:
         return _numeric_drift_generator if type == "numeric" else _categorical_drift_generator

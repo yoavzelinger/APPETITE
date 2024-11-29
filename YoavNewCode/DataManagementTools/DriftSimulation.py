@@ -48,7 +48,6 @@ CATEGORICAL_PROPORTIONS = (
     0.9
 )
 RANDOM_STATE = 10
-random.seed(RANDOM_STATE)
 
 def _numeric_drift_generator(
         column: pd.Series,
@@ -138,6 +137,7 @@ def _categorical_drift_generator(
             remaining_indices = column != fixed_value
             remaining_count = remaining_indices.values.sum()
             remaining_indices = column[remaining_indices].index.values
+            random.seed(RANDOM_STATE)
             fixed_indicies = random.choices(remaining_indices, k=int(remaining_count * p))
             drifted_column[fixed_indicies] = fixed_value
 

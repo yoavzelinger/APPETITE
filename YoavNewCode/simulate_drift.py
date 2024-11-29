@@ -1,6 +1,8 @@
 import pandas as pd
 import random
-from typing import Generator
+from typing import Callable, Generator
+
+from YoavNewCode.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
 
 FILE_PATHES = (
     "white-clover.csv",
@@ -51,7 +53,7 @@ def _numeric_drift_generator(
         Returns:
             tuple[pd.Series, str]: The new Series with the concept drift and a description of the drift (in the format of "NumericFeature[feature{+/-}kstd]").
         """
-        return (column + k * feature_std, f"NumericFeature[{column.name}{'+' if k >= 0 else '-'}{k}std]")
+        return (column + k * feature_std, f"NumericFeature[{column.name}{'+' if k >= 0 else ''}{k}std]")
     
     #   Using it in iterations
     for k in NUMERIC_DRIFT_SIZES:
@@ -146,30 +148,14 @@ def get_single_feature_drift_generator(
     if pd.api.types.is_numeric_dtype(column):
         return _numeric_drift_generator
     return _categorical_drift_generator
-    
-    for feature in drifting_features:
-        assert feature in original_df.columns
 
-        # Get relevant drift function (by the feature type)
-        drift_function = _numeric_drift_generator if pd.api.types.is_numeric_dtype(original_df[feature]) else _categorical_drift_generator
-        
-        # Create new drift list
-        generating_drifts = []
-        for result_drift, result_description in result_drifts:
-            print(result_description)
-            for current_drift, current_description in drift_function(result_drift, feature):
-                generating_drifts += [(current_drift, result_description + "_" + current_description)]
-        result_drifts = generating_drifts
-    
-    return result_drifts
-
+# Now the magic happens
 def concept_drifts_generator(
         original_df: pd.DataFrame, 
-        drifting_features: list[str]
+        drifting_features: dict[str, str]
  ) -> Generator[tuple[pd.DataFrame, str], None, None]:
     """
     Generate all possible concept drifts in a given list of features.
-    TODO - Make the generator lazy (not use simulate_concept_drifts that returns a complete list of all drifts).
     Parameters:
         original_df (pd.DataFrame): The original DataFrame.
         drifting_features (list[str]): List of features to drift.
@@ -177,28 +163,17 @@ def concept_drifts_generator(
     Returns:
         Generator[tuple[pd.DataFrame, str], None, None]: A generator of all possible drifts in the features and the description of the drift.
     """
-    return ((drifted_df, drift_description) for drifted_df, drift_description in simulate_concept_drifts(original_df, drifting_features))
+    # Get features concept drift generators
+    features_columns = [original_df[feature] for feature in drifting_features]
+    generator_functions = [get_single_feature_drift_generator(column, feature_type) if feature_type else get_single_feature_drift_generator(column) 
+                           for column, feature_type in zip(features_columns, drifting_features.values())]
 
-def get_dataframe(file_path, 
-        path_prefix=""
- ) -> pd.DataFrame:
-    full_path = path_prefix + '\\' + file_path
-    return pd.read_csv(full_path)
-
-def save_all_possible_drifts(
-        file_path, 
-        path_prefix=""
- ) -> None:
-    df = get_dataframe(file_path, path_prefix)
-    
-    generated_drifts = simulate_concept_drifts(df, df.columns[: -1])  # TODO - Make possible of dynamically select features to drift
-
-    file_prefix = file_path.split('.')[0]
-
-    for generated_drift, drift_description in generated_drifts:
-        new_path = path_prefix + "\\results\\" + file_prefix + drift_description + ".csv"
-        generated_drift.to_csv(new_path, index=False)
-    
-if __name__ == "__main__":
-    for file_path in FILE_PATHES:
-        save_all_possible_drifts(file_path, DIRECTORY)
+    # Get the cartesian product of all drifts
+    cartesian_products = lazy_product(generator_functions, args_lists=features_columns, args_type=SINGLE_ARGUMENT_EACH_GENERATOR)
+    for drifts in cartesian_products:
+        drifted_df = original_df.copy()
+        drift_description = ""
+        for drifted_column, current_description in drifts:
+            drifted_df[drifted_column.name] = drifted_column
+            drift_description += "_" + current_description
+        yield (drifted_df, drift_description)

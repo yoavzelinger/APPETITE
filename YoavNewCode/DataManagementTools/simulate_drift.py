@@ -177,6 +177,35 @@ def concept_drifts_generator(
         drift_description = original_df.attrs.get("name", "")
         for drifted_column, current_description in drifts:
             drifted_df[drifted_column.name] = drifted_column
-            drift_description += "_" + current_description
-        yield (drifted_df, drift_description)            drift_description += '_' + current_description
+            drift_description += '_' + current_description
         yield (drifted_df, drift_description)
+
+def single_concept_drift_generator(
+        data: pd.DataFrame | pd.Series, 
+        feature: str = "",
+        feature_type: str = None
+ ) -> Generator[tuple[pd.DataFrame, str], None, None]:
+    """
+    Generate all possible concept drifts in a given feature.
+    Parameters:
+        data (pd.DataFrame | pd.Series): The original DataFrame or the column from the DataFrame.
+        feature (str): The feature to drift.
+        feature_type (str): The type of the feature.
+        
+    Returns:
+        Generator[tuple[pd.DataFrame, str], None, None]: A generator of all possible drifts in the feature and the description of the drift.
+    """
+    column, is_data_df = data, False
+    if isinstance(data, pd.DataFrame):
+        assert feature is not None and feature in data.columns
+        column, is_data_df = data[feature], True
+    assert isinstance(column, pd.Series)
+
+    generator_function = _get_feature_generator_function(column, feature_type)
+    for drifted_column, drift_description in generator_function(column):
+        if not is_data_df:
+            yield (drifted_column, drift_description)
+        else:
+            drifted_df = data.copy()
+            drifted_df[feature] = drifted_column
+            yield (drifted_df, data.attrs.get("name", "") + '_' + drift_description)

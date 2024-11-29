@@ -12,7 +12,7 @@ class Dataset:
                  target_class: str = "", 
                  feature_types: dict[str, str] = None, 
                  size: int | tuple | list = PROPORTIONS_TUPLE, 
-                 name: str = None, 
+                 name: str = "", 
                  to_shuffle: bool = False
     ):
         """
@@ -88,6 +88,7 @@ class Dataset:
         if to_shuffle:  # shuffle data, same shuffle always
             source = source.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
         self.data = source
+        self.data.attrs["name"] = self.name
 
         n_samples = len(source)
         if type(size) == list:

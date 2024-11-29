@@ -10,7 +10,7 @@ class Dataset:
                  source: str | pd.DataFrame, 
                  dataset_type: str = "", 
                  target_class: str = "", 
-                 feature_types: list = None, 
+                 feature_types: dict[str, str] = None, 
                  size: int | tuple | list = PROPORTIONS_TUPLE, 
                  name: str = None, 
                  to_shuffle: bool = False
@@ -24,7 +24,7 @@ class Dataset:
         target_class: str
             The target class column name
             If not provided the last column is used as the target
-        feature_types: list
+        feature_types: dict
             The types of the features
             If not provided then interpreted from the data
         size: int or tuple
@@ -55,7 +55,7 @@ class Dataset:
         self.dataset_type = dataset_type
         
         self.feature_types = feature_types
-        feature_types = [] # Trying to fill from the data
+        feature_types = {} # Trying to fill from the data
 
         for col in source:
             column_type = source[col].dtype
@@ -72,7 +72,7 @@ class Dataset:
             else:   # Numeric
                 source[col] = source[col].fillna(source[col].mean())    # Fill NaN values
                 column_type = "numeric"
-            feature_types.append(column_type)
+            feature_types[col] = column_type
         
         if not target_class:
             # Taking last column as the target

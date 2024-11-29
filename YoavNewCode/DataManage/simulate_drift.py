@@ -2,7 +2,7 @@ import pandas as pd
 import random
 from typing import Callable, Generator
 
-from YoavNewCode.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
+from YoavNewCode.DataHandler.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
 
 FILE_PATHES = (
     "white-clover.csv",

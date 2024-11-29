@@ -1,5 +1,10 @@
 from typing import Generator, Callable
 
+SINGLE_ARGUMENT_ALL_GENERATORS = 0
+MULTIPLE_ARGUMENTS_ALL_GENERATORS = 1
+SINGLE_ARGUMENT_EACH_GENERATOR = 2
+MULTIPLE_ARGUMENTS_EACH_GENERATOR = 3
+
 def lazy_product(
         generators: list[Callable[[], Generator[object, object, None]]], 
         args_lists: object | list[object] | list[list[object]] = [],
@@ -25,10 +30,10 @@ def lazy_product(
         return
 
     args_manipulator = {
-        0: lambda x: [[x] for _ in range(len(generators))], #   Single object for ALL generators - wrap in list for unpacking
-        1: lambda x: [x for _ in range(len(generators))], # List of arguments for ALL generators - duplicate for each generator
-        2: lambda x: [[item] for item in x], # List of single objects for EACH generator, wrap each single in list for unpacking
-        3: lambda x: x, #   List of list of arguments for EACH generator, no need to manipulate
+        SINGLE_ARGUMENT_ALL_GENERATORS: lambda x: [[x] for _ in range(len(generators))], #   Single object for ALL generators - wrap in list for unpacking
+        MULTIPLE_ARGUMENTS_ALL_GENERATORS: lambda x: [x for _ in range(len(generators))], # List of arguments for ALL generators - duplicate for each generator
+        SINGLE_ARGUMENT_EACH_GENERATOR: lambda x: [[item] for item in x], # List of single objects for EACH generator, wrap each single in list for unpacking
+        MULTIPLE_ARGUMENTS_EACH_GENERATOR: lambda x: x, #   List of list of arguments for EACH generator, no need to manipulate
     }
 
     args_lists = args_manipulator[args_type](args_lists)

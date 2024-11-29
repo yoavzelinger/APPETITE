@@ -76,9 +76,9 @@ def _numeric_drift_generator(
             k (int): The value to add to all entries in the specified column.
 
         Returns:
-            tuple[pd.Series, str]: The new Series with the concept drift and a description of the drift (in the format of "NumericFeature[feature{+/-}kstd]").
+            tuple[pd.Series, str]: The new Series with the concept drift and a description of the drift (in the format of "NumericFeature[feature;{+/-}kstd]").
         """
-        return (column + k * feature_std, f"NumericFeature[{column.name}{'+' if k >= 0 else ''}{k}std]")
+        return (column + k * feature_std, f"NumericFeature[{column.name};{'+' if k >= 0 else ''}{k}std]")
     
     #   Using it in iterations
     for k in NUMERIC_DRIFT_SIZES:
@@ -197,7 +197,7 @@ def concept_drifts_generator(
     cartesian_products = lazy_product(generator_functions, args_lists=features_columns, args_type=SINGLE_ARGUMENT_EACH_GENERATOR)
     for drifts in cartesian_products:
         drifted_df = original_df.copy()
-        drift_description = original_df.attrs.get("name", "")
+        drift_description = original_df.attrs.get("name", "") + '_'
         for drifted_column, current_description in drifts:
             drifted_df[drifted_column.name] = drifted_column
             drift_description += '_' + current_description
@@ -231,7 +231,7 @@ def single_concept_drift_generator(
         else:
             drifted_df = data.copy()
             drifted_df[feature] = drifted_column
-            yield (drifted_df, data.attrs.get("name", "") + '_' + drift_description)
+            yield (drifted_df, data.attrs.get("name", "") + '__' + drift_description)
 
 def example_preparation(single_drift = False):
     DIRECTORY = "data\\Classification_Datasets"

@@ -4,10 +4,34 @@ from typing import Callable, Generator
 
 from YoavNewCode.DataManagementTools.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
 
-FILE_PATHES = (
-    "white-clover.csv",
-)
-DIRECTORY = "data\\Classification_Datasets"
+"""
+This module is responsible for simulating concept drifts in a given dataset.
+The module provides a generator that generates all possible concept drifts for a given list of features.
+The concept drifts are simulated in the following ways:
+    - Numeric features: The drift is simulated by adding a multiple of the standard deviation to all entries in the feature.
+        you can control the drift size by changing the NUMERIC_DRIFT_SIZES tuple.
+    - Categorical features: The drift is simulated by fixing a given value for a proportion of the data (which without the given value).
+        you can control the drift proportion by changing the CATEGORICAL_PROPORTIONS tuple.
+
+The module provides the following generators:
+    - concept_drifts_generator: Generate all possible concept drifts in a given list of features.
+    - single_concept_drift_generator: Generate all possible concept drifts in a given feature.
+    
+    * The functions are lazy and generate the drifts on the fly.
+    
+    Note that the original DataFrame is not changed, and the drifts are generated in new DataFrames\Series.
+
+Example functions:
+    - multiple_drifts_example: Generate all possible concept drifts in a given list of features.
+    - single_drift_example: Generate all possible concept drifts in a given feature.
+
+    All you need to do to run is to edit the constants in example_preparation:
+        - DIRECTORY: The directory of the dataset.
+        - FILE_PATH: The path of the dataset.
+        - DRIFTING_FEATURES: The features to drift and their types (numeric or categorical). Can be left with None for automatic detection.
+
+Good Luck!
+"""
 
 NUMERIC_DRIFT_SIZES = (
     -2, 
@@ -114,7 +138,6 @@ def _categorical_drift_generator(
             remaining_indices = column != fixed_value
             remaining_count = remaining_indices.values.sum()
             remaining_indices = column[remaining_indices].index.values
-            random.seed(10)
             fixed_indicies = random.choices(remaining_indices, k=int(remaining_count * p))
             drifted_column[fixed_indicies] = fixed_value
 
@@ -209,3 +232,29 @@ def single_concept_drift_generator(
             drifted_df = data.copy()
             drifted_df[feature] = drifted_column
             yield (drifted_df, data.attrs.get("name", "") + '_' + drift_description)
+
+def example_preparation(single_drift = False):
+    DIRECTORY = "data\\Classification_Datasets"
+    FILE_PATH = "white-clover.csv"
+    DRIFTING_FEATURES = {
+        # For single drift only the first feature matters
+        "WhiteClover-91": "numeric",
+        "strata": "categorical",
+        "WhiteClover-94": None
+    }
+
+    df = pd.read_csv(f"{DIRECTORY}\\{FILE_PATH}")
+    df.attrs['name'] = FILE_PATH.split("\\")[-1].split(".")[0]
+    if single_drift:
+        return df, *list(DRIFTING_FEATURES.items())[0]
+    return df, DRIFTING_FEATURES
+
+def multiple_drifts_example():
+    df, drifting_features = example_preparation()
+    for drifted_df, drift_description in concept_drifts_generator(df, drifting_features):
+        print(drifted_df, df.attrs.get("name", "") + drift_description)
+
+def single_drift_example():
+    df, feature, feature_type = example_preparation(True)
+    for drifted_df, drift_description in single_concept_drift_generator(df, feature, feature_type):
+        print(drifted_df, df.attrs.get("name", "") + drift_description)

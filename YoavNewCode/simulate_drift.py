@@ -23,27 +23,25 @@ CATEGORICAL_PROPORTIONS = (
 )
 
 def _numeric_drift_generator(
-        df: pd.DataFrame, 
-        feature: str
- ) -> Generator[tuple[pd.DataFrame, str], None, None]:
+        column: pd.Series,
+ ) -> Generator[tuple[pd.Series, str], None, None]:
     """
     Generator for all type of concept drifts in a numeric feature.
 
     Parameters:
-        df (pd.DataFrame): The input DataFrame.
-        feature (str): The column in which to insert the concept drift.
+        column (pd.Series): The input column.
 
     Return:
-        Generator[tuple[pd.DataFrame, str], None, None]: A generator of all drifts in the feature and the description of the drift.
+        Generator[tuple[pd.Series, str], None, None]: A generator of all drifts in the feature and the description of the drift.
     """
-    assert pd.api.types.is_numeric_dtype(df[feature])
+    assert pd.api.types.is_numeric_dtype(column)
     
-    feature_std = df[feature].std()
+    feature_std = column.std()
 
     #   Nested function
     def simulate_numeric_drift_of_size_k(
             k: int
-     ) -> tuple[pd.DataFrame, str]:
+     ) -> tuple[pd.Series, str]:
         """
         Simulate concept drift in a specific numeric feature of size k.
 
@@ -51,11 +49,9 @@ def _numeric_drift_generator(
             k (int): The value to add to all entries in the specified column.
 
         Returns:
-            tuple[pd.DataFrame, str]: The new DataFrame with the concept drift and a description of the drift (in the format of "NumericFeature[feature{+,-}kstd]").
+            tuple[pd.Series, str]: The new Series with the concept drift and a description of the drift (in the format of "NumericFeature[feature{+/-}kstd]").
         """
-        drifted_df = df.copy()
-        drifted_df[feature] = drifted_df[feature] + k * feature_std
-        return (drifted_df, f"NumericFeature[{feature}{'+' if k >= 0 else '-'}{k}std]")
+        return (column + k * feature_std, f"NumericFeature[{column.name}{'+' if k >= 0 else '-'}{k}std]")
     
     #   Using it in iterations
     for k in NUMERIC_DRIFT_SIZES:
@@ -64,28 +60,26 @@ def _numeric_drift_generator(
 
 
 def _categorical_drift_generator(
-        df: pd.DataFrame, 
-        feature: str
- ) -> Generator[tuple[pd.DataFrame, str], None, None]:
+        column: pd.Series
+ ) -> Generator[tuple[pd.Series, str], None, None]:
     """
     Simulate concept drift in a specific categorical feature.
     The drift is simulated in every feature value in every relevant proportion size.
 
     Parameters:
-        df (pd.DataFrame): The input DataFrame.
-        feature (str): The column in which to insert concept drift.
+        column (pd.Series): The input column.
     
     Returns:
-        Generator[tuple[pd.DataFrame, str], None, None]: A generator of all drifts in the feature and the description of the drift.
+        Generator[tuple[pd.Series, str], None, None]: A generator of all drifts in the feature and the description of the drift.
     """
-    assert not pd.api.types.is_numeric_dtype(df[feature])
+    assert not pd.api.types.is_numeric_dtype(column)
     
-    unique_values = df[feature].unique()
+    unique_values = column.unique()
     
     # Nested function
     def categorical_drift_in_value_generator(
             fixed_value: str
-     ) -> list[tuple[pd.DataFrame, str]]:
+     ) -> list[tuple[pd.Series, str]]:
         """
         Simulate concept drift in a specific value of a feature (for all proportions).
 
@@ -93,14 +87,14 @@ def _categorical_drift_generator(
             fixed_value (str): The value that the drift is fixed to.
 
         Returns:
-            list[tuple[pd.DataFrame, str]]: A list of all drifts in the feature (in all proportions of the given value) and the description of the drift.
+            list[tuple[pd.Series, str]]: A list of all drifts in the feature and the description of the drift.
         """
         assert fixed_value in unique_values
 
         #   Double nested function
         def simulate_categorical_drift_in_value_proportion(
                 p: float
-         ) -> tuple[pd.DataFrame, str]:
+         ) -> tuple[pd.Series, str]:
             """
             Simulate concept drift in a specific value of a feature for a given proportion.
             The Drift is done by fixing a given value for a proportion of the data.
@@ -109,18 +103,18 @@ def _categorical_drift_generator(
                 p (float): the proportion of the samples (out of the remaining samples - do not contains the value) that the fixed value will be inserted.
 
             Returns:
-                tuple[pd.DataFrame, str]: The new DataFrame with the concept drift and a description of the drift (in the format of "CategoricalFeature[feature=value;p=proportion]"). 
+                tuple[pd.Series, str]: The new Series with the concept drift and a description of the drift (in the format of "CategoricalFeature[feature=value;p=proportion]").
             """
 
-            drifted_df = df.copy()
-            remaining_indices = df[feature] != fixed_value
+            drifted_column = column.copy()
+            remaining_indices = column != fixed_value
             remaining_count = remaining_indices.values.sum()
-            remaining_indices = drifted_df[remaining_indices].index.values
+            remaining_indices = column[remaining_indices].index.values
             random.seed(10)
             fixed_indicies = random.choices(remaining_indices, k=int(remaining_count * p))
-            drifted_df.loc[fixed_indicies, feature] = fixed_value
+            drifted_column[fixed_indicies] = fixed_value
 
-            return (drifted_df, f"CategoricalFeature[{feature}={fixed_value};p={str(p).replace('.',',')}]")
+            return (drifted_column, f"CategoricalFeature[{column.name}={fixed_value};p={str(p).replace('.',',')}]")
         
         #   Using the doubly nested function
         return (
@@ -130,8 +124,8 @@ def _categorical_drift_generator(
     
     # Using the intermediate generator
     for feature_value in unique_values:
-        for drifted_df in categorical_drift_in_value_generator(feature_value):
-            yield drifted_df
+        for drifted_column in categorical_drift_in_value_generator(feature_value):
+            yield drifted_column
 
 # Now the magic happens
 def simulate_concept_drifts(

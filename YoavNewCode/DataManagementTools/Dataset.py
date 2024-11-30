@@ -119,14 +119,33 @@ class Dataset:
 
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
-    def get_before_concept(self) -> pd.DataFrame:
-        return self.data.iloc[:self.before_size]
+    def split_features_targets(self, 
+                               data: pd.DataFrame
+     ) -> tuple[pd.DataFrame, pd.Series]:
+        """
+        Split the data to X and y
+        
+        Parameters:
+            data (pd.DataFrame): The data to split
+        
+        Returns:
+            tuple[pd.DataFrame, pd.Series]: The X and y
+        """
+        X = data.drop(columns=[self.target])
+        y = data[self.target]
+        return X, y
+
+    def get_before_concept(self) -> tuple[pd.DataFrame, pd.Series]:
+        before_concept_data = self.data.iloc[:self.before_size]
+        return self.split_features_targets(before_concept_data)
     
-    def get_after_concept(self) -> pd.DataFrame:
-        return self.data.iloc[self.before_size: self.before_size+self.after_size]
+    def get_after_concept(self) -> tuple[pd.DataFrame, pd.Series]:
+        after_concept_data = self.data.iloc[self.before_size: self.before_size+self.after_size]
+        return self.split_features_targets(after_concept_data)
     
-    def get_test_concept(self) -> pd.DataFrame:
-        return self.data.iloc[-self.test_size:]
+    def get_test_concept(self) -> tuple[pd.DataFrame, pd.Series]:
+        test_concept_data = self.data.iloc[-self.test_size:]
+        return self.split_features_targets(test_concept_data)
     
     def drift_data_generator(self,
                    data: pd.DataFrame,
@@ -197,5 +216,6 @@ class Dataset:
             "after": self.get_after_concept,
             "test": self.get_test_concept
             }
-        for drifted_df, description in self._drift_data_generator(get_partion_dict[partition](), drift_features):
-            yield drifted_df, f"{partition.upper()}_{description}"
+        original_X, y = get_partion_dict[partition]()
+        for drifted_X, description in self._drift_data_generator(original_X, drift_features):
+            yield (drifted_X, y), f"{partition.upper()}_{description}"

@@ -73,7 +73,7 @@ class MappedDecisionTree:
         self.criterion = sklearn_tree.criterion
 
         self.tree_dict = self.map_tree()
-        self.root = self.tree_dict[0]
+        self.root = self.get_node(0)
         self.update_tree_attributes()
         if prune:
             self.prune_tree()

@@ -11,9 +11,10 @@ class MappedDecisionTree:
                      right_child = None,
                      feature: str | None = None,
                      threshold: float | None = None,
-                     class_name: str | None = None
+                     class_name: str | None = None,
+                     spectra_index: int = -1
         ):
-            self.index = index
+            self.index, self.spectra_index = index, spectra_index
             self.parent = parent
             self.update_children(left_child, right_child)
             self.feature = feature
@@ -80,10 +81,14 @@ class MappedDecisionTree:
     def update_tree_attributes(self):
         self.node_count = len(self.tree_dict)
         self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
-        self.features_set = set(map(lambda node: node.feature, self.tree_dict.values()))
-        self.classes_set = set(map(lambda node: node.class_name, self.tree_dict.values()))
-        self.features_set.discard(None)
-        self.classes_set.discard(None)
+        self.features_set, self.classes_set = set(), set()
+        for ordered_index, node in enumerate(self.tree_dict.values()):
+            node.update_condition()
+            node.spectra_index = ordered_index
+            if node.feature:
+                self.features_set.add(node.feature)
+            if node.class_name:
+                self.classes_set.add(node.class_name)
 
     def map_tree(self, 
     ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:

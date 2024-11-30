@@ -5,7 +5,7 @@ import numpy as np
 class MappedDecisionTree:
     class DecisionTreeNode:
         def __init__(self, 
-                     index: int = 0,
+                     sk_index: int = 0,
                      parent = None, 
                      left_child = None, 
                      right_child = None,
@@ -14,7 +14,7 @@ class MappedDecisionTree:
                      class_name: str | None = None,
                      spectra_index: int = -1
         ):
-            self.index, self.spectra_index = index, spectra_index
+            self.sk_index, self.spectra_index = sk_index, spectra_index
             self.parent = parent
             self.update_children(left_child, right_child)
             self.feature = feature
@@ -62,7 +62,7 @@ class MappedDecisionTree:
             return self.parent.left_child if self.is_right_child() else self.parent.right_child
         
         def __repr__(self):
-            return str(self.index)
+            return str(self.sk_index)
 
     def __init__(self, 
                  sklearn_tree: DecisionTreeClassifier,
@@ -105,7 +105,7 @@ class MappedDecisionTree:
         while len(nodes_to_check):
             current_node = nodes_to_check.pop(0)
             current_node.update_condition()
-            current_index = current_node.index
+            current_index = current_node.sk_index
             tree_representation[current_index] = current_node
             left_child_index = sk_children_left[current_index]
             right_child_index = sk_children_right[current_index]
@@ -145,9 +145,9 @@ class MappedDecisionTree:
             if current_leaf.class_name != sibling.class_name:
                 continue
             # Prune
-            pruned_indices += [current_leaf.index, sibling.index]
-            self.tree_dict.pop(current_leaf.index)
-            self.tree_dict.pop(sibling.index)
+            pruned_indices += [current_leaf.sk_index, sibling.sk_index]
+            self.tree_dict.pop(current_leaf.sk_index)
+            self.tree_dict.pop(sibling.sk_index)
             # Make parent a leaf
             parent = current_leaf.parent
             parent.update_children(None, None)
@@ -155,7 +155,7 @@ class MappedDecisionTree:
             parent.feature, parent.threshold, parent.class_name = None, None, current_class
             leaf_nodes += [parent]
             # Adapt the tree
-            parent_index = parent.index
+            parent_index = parent.sk_index
             self.sklearn_tree.tree_.children_left[parent_index] = TREE_LEAF
             self.sklearn_tree.tree_.children_right[parent_index] = TREE_LEAF
             self.sklearn_tree.tree_.feature[parent_index] = -2

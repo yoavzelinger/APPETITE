@@ -1,4 +1,4 @@
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.tree._tree import TREE_LEAF
 import numpy as np
 
@@ -158,14 +158,5 @@ class MappedDecisionTree:
             self.update_tree_attributes()
             print(f"Pruned {len(pruned_indicies)} nodes from the tree. Pruned nodes: {pruned_indicies}")
 
-def get_example_tree():
-    from sklearn.datasets import load_iris
-    from sklearn.tree import DecisionTreeClassifier
-    iris = load_iris()
-    clf = DecisionTreeClassifier()
-    clf = clf.fit(iris.data, iris.target)
-    return clf
-
-def get_example_mapped_tree(prune: bool = True) -> MappedDecisionTree:
-    clf = get_example_tree()
-    return MappedDecisionTree(clf, prune)
+    def __repr__(self):
+        return export_text(self.sklearn_tree)

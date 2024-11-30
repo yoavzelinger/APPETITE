@@ -14,8 +14,8 @@ The concept drifts are simulated in the following ways:
         you can control the drift proportion by changing the CATEGORICAL_PROPORTIONS tuple.
 
 The module provides the following generators:
-    - concept_drifts_generator: Generate all possible concept drifts in a given list of features.
-    - single_concept_drift_generator: Generate all possible concept drifts in a given feature.
+    - multiple_features_concept_drift_generator: Generate all possible concept drifts in a given list of features.
+    - single_feature_concept_drift_generator: Generate all possible concept drifts in a given feature.
     
     * The functions are lazy and generate the drifts on the fly.
     
@@ -175,7 +175,7 @@ def _get_feature_generator_function(
     return _categorical_drift_generator
 
 # The magic starts here
-def concept_drifts_generator(
+def multiple_features_concept_drift_generator(
         original_df: pd.DataFrame, 
         drifting_features: dict[str, str]
  ) -> Generator[tuple[pd.DataFrame, str], None, None]:
@@ -203,7 +203,7 @@ def concept_drifts_generator(
             drift_description += '_' + current_description
         yield (drifted_df, drift_description)
 
-def single_concept_drift_generator(
+def single_feature_concept_drift_generator(
         data: pd.DataFrame | pd.Series, 
         feature: str = "",
         feature_type: str = None
@@ -253,10 +253,10 @@ def example_preparation(
 
 def multiple_drifts_example() -> Generator[tuple[pd.DataFrame, str], None, None]:
     df, drifting_features = example_preparation()
-    for drifted_df, drift_description in concept_drifts_generator(df, drifting_features):
+    for drifted_df, drift_description in multiple_features_concept_drift_generator(df, drifting_features):
         yield (drifted_df, drift_description)
 
 def single_drift_example() -> Generator[tuple[pd.DataFrame, str], None, None]:
     df, feature, feature_type = example_preparation(True)
-    for drifted_df, drift_description in single_concept_drift_generator(df, feature, feature_type):
+    for drifted_df, drift_description in single_feature_concept_drift_generator(df, feature, feature_type):
         yield (drifted_df, drift_description)

@@ -89,6 +89,7 @@ class MappedDecisionTree:
                 self.features_set.add(node.feature)
             if node.class_name:
                 self.classes_set.add(node.class_name)
+        self.spectra_dict = {node.spectra_index: node for node in self.tree_dict.values()}
 
     def map_tree(self, 
     ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
@@ -127,7 +128,8 @@ class MappedDecisionTree:
         return tree_representation
     
     def get_node(self, 
-                 index: int
+                 index: int,
+                 use_spectra_index: bool = False
      ) -> 'MappedDecisionTree.DecisionTreeNode':
         return self.tree_dict.get(index, None)
     

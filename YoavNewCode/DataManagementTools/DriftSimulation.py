@@ -183,7 +183,7 @@ def multiple_features_concept_drift_generator(
     Generate all possible concept drifts in a given list of features.
     Parameters:
         original_df (pd.DataFrame): The original DataFrame.
-        drifting_features (list[str]): List of features to drift.
+        drifting_features (dict[str, str]): The features to drift and their types.
         
     Returns:
         Generator[tuple[pd.DataFrame, str], None, None]: A generator of all possible drifts in the features and the description of the drift.

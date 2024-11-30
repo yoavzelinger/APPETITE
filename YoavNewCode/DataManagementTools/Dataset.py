@@ -13,7 +13,7 @@ class Dataset:
                  feature_types: dict[str, str] = None, 
                  size: int | tuple | list = PROPORTIONS_TUPLE, 
                  name: str = "", 
-                 to_shuffle: bool = False
+                 to_shuffle: bool = True
     ):
         """
         source: str or pd.DataFrame

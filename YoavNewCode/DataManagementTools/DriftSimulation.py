@@ -138,8 +138,8 @@ def _categorical_drift_generator(
             remaining_count = remaining_indices.values.sum()
             remaining_indices = column[remaining_indices].index.values
             random.seed(RANDOM_STATE)
-            fixed_indicies = random.choices(remaining_indices, k=int(remaining_count * p))
-            drifted_column[fixed_indicies] = fixed_value
+            fixed_indices = random.choices(remaining_indices, k=int(remaining_count * p))
+            drifted_column[fixed_indices] = fixed_value
 
             return (drifted_column, f"CategoricalFeature[{column.name}={fixed_value};p={str(p).replace('.',',')}]")
         

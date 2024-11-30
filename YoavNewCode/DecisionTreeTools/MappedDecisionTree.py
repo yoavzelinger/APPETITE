@@ -133,7 +133,7 @@ class MappedDecisionTree:
     
     def prune_tree(self) -> None:
         leaf_nodes = [node for node in self.tree_dict.values() if node.is_terminal()]
-        pruned_indicies = []
+        pruned_indices = []
         while len(leaf_nodes):
             current_leaf = leaf_nodes.pop(0)
             sibling = current_leaf.get_sibling()
@@ -145,7 +145,7 @@ class MappedDecisionTree:
             if current_leaf.class_name != sibling.class_name:
                 continue
             # Prune
-            pruned_indicies += [current_leaf.index, sibling.index]
+            pruned_indices += [current_leaf.index, sibling.index]
             self.tree_dict.pop(current_leaf.index)
             self.tree_dict.pop(sibling.index)
             # Make parent a leaf
@@ -159,9 +159,9 @@ class MappedDecisionTree:
             self.sklearn_tree.tree_.children_left[parent_index] = TREE_LEAF
             self.sklearn_tree.tree_.children_right[parent_index] = TREE_LEAF
             self.sklearn_tree.tree_.feature[parent_index] = -2
-        if len(pruned_indicies): # Attributes changed
+        if len(pruned_indices): # Attributes changed
             self.update_tree_attributes()
-            print(f"Pruned {len(pruned_indicies)} nodes from the tree. Pruned nodes: {pruned_indicies}")
+            print(f"Pruned {len(pruned_indices)} nodes from the tree. Pruned nodes: {pruned_indices}")
 
     def __repr__(self):
         return export_text(self.sklearn_tree)

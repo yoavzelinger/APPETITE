@@ -157,7 +157,7 @@ def _categorical_drift_generator(
 def _get_feature_generator_function(
         column: pd.Series,
         type: str = None
- ) -> Callable[[], Generator[tuple[pd.Series, str], pd.Series, None]]:
+ ) -> Callable[[pd.Series], Generator[tuple[pd.Series, str], None, None]]:
     """
     Get the relevant drift generator function for a given feature.
     
@@ -166,7 +166,7 @@ def _get_feature_generator_function(
         type (str): The type of the feature.
         
     Returns:
-        Callable[[], Generator[pd.Series, pd.Series, None]]: The relevant drift generator function for the feature.
+        Callable[[pd.Series], Generator[tuple[pd.Series, str], None, None]]: The relevant drift generator function for the feature.
     """
     if type:
         return _numeric_drift_generator if type == "numeric" else _categorical_drift_generator

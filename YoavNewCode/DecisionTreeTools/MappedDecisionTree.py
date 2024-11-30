@@ -69,6 +69,7 @@ class MappedDecisionTree:
     ):
         assert sklearn_tree is not None
         self.sklearn_tree = sklearn_tree
+        self.criterion = sklearn_tree.criterion
 
         self.tree_dict = self.map_tree()
         self.root = self.tree_dict[0]

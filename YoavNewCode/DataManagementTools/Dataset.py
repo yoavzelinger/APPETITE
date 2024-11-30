@@ -1,5 +1,8 @@
 import pandas as pd
 from scipy.io import arff
+from typing import Generator
+
+from YoavNewCode.DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
 PROPORTIONS_TUPLE = (0.7, 0.1, 0.2)
 CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION = PROPORTIONS_TUPLE
@@ -124,3 +127,75 @@ class Dataset:
     
     def get_test_concept(self) -> pd.DataFrame:
         return self.data.iloc[-self.test_size:]
+    
+    def drift_data_generator(self,
+                   data: pd.DataFrame,
+                   drift_features: str | list[str]
+     ) -> Generator[pd.DataFrame, None, None]:
+        """
+        Create a drift in the data
+        
+        Parameters:
+            data (pd.DataFrame): The data to drift
+            drift_features (str or list): single feature or list of features to drift
+                
+        Returns:
+            pd.DataFrame: The drifted data
+        """
+        if type(drift_features) == str:
+            assert drift_features in data.columns, f"Feature {drift_features} not in the dataset"
+            feature_type = self.feature_types[drift_features]
+            return single_feature_concept_drift_generator(data, drift_features, feature_type)
+        assert all([feature in data for feature in drift_features]), "Not all features in the dataset"
+        # Get subset of the dictionary
+        drift_features_dict = {feature: self.feature_types[feature] for feature in drift_features}
+        return multiple_features_concept_drift_generator(data, drift_features_dict)
+
+    def _drift_data_generator(self,
+                   data: pd.DataFrame,
+                   drift_features: str | list[str]
+     ) -> Generator[pd.DataFrame, None, None]:
+        """
+        Create a drift in the data
+        
+        Parameters:
+            data (pd.DataFrame): The data to drift
+            drift_features (str or list): single feature or list of features to drift
+                
+        Returns:
+            pd.DataFrame: The drifted data
+        """
+        if type(drift_features) == str:
+            assert drift_features in data.columns, f"Feature {drift_features} not in the dataset"
+            feature_type = self.feature_types[drift_features]
+            return single_feature_concept_drift_generator(data, drift_features, feature_type)
+        assert all([feature in data for feature in drift_features]), "Not all features in the dataset"
+        # Get subset of the dictionary
+        drift_features_dict = {feature: self.feature_types[feature] for feature in drift_features}
+        return multiple_features_concept_drift_generator(data, drift_features_dict)
+    
+    partitions = ["before", "after", "test"]
+
+    def partition_drift_generator(self,
+                                  drift_features: str | list[str],
+                                  partition: str = "after"
+     ) -> Generator[tuple[pd.DataFrame, str], None, None]:
+        """
+        Drift generator for a specific partition
+        
+        Parameters:
+            drift_features (str or list): single feature or list of features to drift
+            partition (str): The partition to drift
+
+        Returns:
+            Generator[tuple[pd.DataFrame, str], None, None]: 
+                A generator of all possible drifts in the feature and the description of the drift in the given partion name.
+        """
+        assert partition in self.partitions, "Invalid partition name"
+        get_partion_dict = {
+            "before": self.get_before_concept,
+            "after": self.get_after_concept,
+            "test": self.get_test_concept
+            }
+        for drifted_df, description in self._drift_data_generator(get_partion_dict[partition](), drift_features):
+            yield drifted_df, f"{partition.upper()}_{description}"

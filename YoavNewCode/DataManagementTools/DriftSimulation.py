@@ -233,7 +233,9 @@ def single_concept_drift_generator(
             drifted_df[feature] = drifted_column
             yield (drifted_df, data.attrs.get("name", "") + '__' + drift_description)
 
-def example_preparation(single_drift = False):
+def example_preparation(
+        single_drift: bool = False
+ ) -> tuple[pd.DataFrame , dict[str, str]]:
     DIRECTORY = "data\\Classification_Datasets"
     FILE_PATH = "white-clover.csv"
     DRIFTING_FEATURES = {
@@ -249,12 +251,12 @@ def example_preparation(single_drift = False):
         return df, *list(DRIFTING_FEATURES.items())[0]
     return df, DRIFTING_FEATURES
 
-def multiple_drifts_example():
+def multiple_drifts_example() -> Generator[tuple[pd.DataFrame, str], None, None]:
     df, drifting_features = example_preparation()
     for drifted_df, drift_description in concept_drifts_generator(df, drifting_features):
         yield (drifted_df, drift_description)
 
-def single_drift_example():
+def single_drift_example() -> Generator[tuple[pd.DataFrame, str], None, None]:
     df, feature, feature_type = example_preparation(True)
     for drifted_df, drift_description in single_concept_drift_generator(df, feature, feature_type):
         yield (drifted_df, drift_description)

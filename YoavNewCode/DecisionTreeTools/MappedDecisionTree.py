@@ -123,7 +123,7 @@ class MappedDecisionTree:
     
     def get_node(self, 
                  index: int
-    ):
+     ) -> 'MappedDecisionTree.DecisionTreeNode':
         return self.tree_dict.get(index, None)
     
     def prune_tree(self) -> None:

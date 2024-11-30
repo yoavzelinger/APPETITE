@@ -81,8 +81,7 @@ class Dataset:
 
         if self.feature_types is None:
             # Removing the target column from the feature types
-            target_index = source.columns.get_loc(target_class)
-            feature_types.pop(target_index)
+            feature_types.pop(target_class)
             self.feature_types = feature_types
 
         if to_shuffle:  # shuffle data, same shuffle always

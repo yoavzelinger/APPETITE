@@ -125,9 +125,3 @@ class Dataset:
     
     def get_test_concept(self) -> pd.DataFrame:
         return self.data.iloc[-self.test_size:]
-
-def get_ds() -> Dataset:
-    directory = ""
-    file_name = ""
-    relative_path = directory + file_name
-    return Dataset(relative_path)

@@ -18,6 +18,13 @@ def get_example_tree():
 def get_mapped_tree():
     return MappedDecisionTree(get_example_tree())
 
+def get_partition_drift_generator():
+    dataset = get_dataset()
+    features = list(dataset.feature_types.keys())
+    drift_features = features[0: 2]
+    yield from dataset.partition_drift_generator(drift_features)
+
 get_dataset()
 get_example_tree()
 get_mapped_tree()
+get_partition_drift_generator()

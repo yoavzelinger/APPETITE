@@ -131,7 +131,9 @@ class MappedDecisionTree:
                  index: int,
                  use_spectra_index: bool = False
      ) -> 'MappedDecisionTree.DecisionTreeNode':
-        return self.tree_dict.get(index, None)
+        if use_spectra_index:
+            return self.spectra_dict[index]
+        return self.tree_dict[index]
     
     def convert_node_index_to_spectra_index(self,
                                             index: int

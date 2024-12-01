@@ -133,6 +133,16 @@ class MappedDecisionTree:
      ) -> 'MappedDecisionTree.DecisionTreeNode':
         return self.tree_dict.get(index, None)
     
+    def convert_node_index_to_spectra_index(self,
+                                            index: int
+    ) -> int:
+        return self.get_node(index).spectra_index
+    
+    def convert_spectra_index_to_node_index(self,
+                                            index: int
+    ) -> int:
+        return self.spectra_dict[index].sk_index
+    
     def prune_tree(self) -> None:
         leaf_nodes = [node for node in self.tree_dict.values() if node.is_terminal()]
         pruned_indices = []

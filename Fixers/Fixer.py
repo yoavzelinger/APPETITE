@@ -1,4 +1,4 @@
-from pandas import Dataframe, Series
+from pandas import DataFrame, Series
 from collections.abc import Iterable
 
 from DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
@@ -12,7 +12,7 @@ diagnosers_dict = {
 class Fixer:
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
-                 X: Dataframe,
+                 X: DataFrame,
                  y: Series,
                  diagnoser_name: str = "SFLDT",
                  diagnoser_parameters: tuple[object] = None
@@ -22,7 +22,7 @@ class Fixer:
         
         Parameters:
         mapped_tree (MappedDecisionTree): The mapped decision tree.
-        X (Dataframe): The data.
+        X (DataFrame): The data.
         y (Series): The target column.
         diagnoser_name (str): The diagnoser name.
         diagnoser_parameters (tuple[object]): The diagnoser parameters.

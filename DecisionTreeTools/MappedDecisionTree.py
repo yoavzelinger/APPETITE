@@ -38,6 +38,7 @@ class MappedDecisionTree:
             self.class_name = class_name
             self.conditions_path = []
             self.depth = 0 if parent is None else parent.depth + 1
+            self.feature_average_value = None
 
         def update_children(self, 
                             left_child: 'MappedDecisionTree.DecisionTreeNode', 
@@ -141,10 +142,25 @@ class MappedDecisionTree:
                 else:
                     data = data[data[feature] > threshold]
             return data
+        
+        def update_feature_average_value(self, 
+                                          data: DataFrame
+         ) -> None:
+            """
+            Update the average feature value of the node.
+            The average is calculated on the data that reached the node.
+
+            Parameters:
+                data (DataFrame): The data.
+            """
+            # Get the data that reached the node
+            data = self.get_data_reached_node(data)
+            self.feature_average_value = data[self.feature].mean()
 
     def __init__(self, 
-                 prune: bool = True
                  sklearn_tree_model: DecisionTreeClassifier,
+                 prune: bool = True,
+                 data: DataFrame = None,
                  feature_types: dict[str, str] = None
     ):
         """
@@ -165,6 +181,10 @@ class MappedDecisionTree:
         self.update_tree_attributes()
         if prune:
             self.prune_tree()
+        if data is not None:
+            for node in self.tree_dict.values():
+                if not node.is_terminal():
+                    node.update_feature_average_value(data)
 
     def update_tree_attributes(self) -> None:
         """

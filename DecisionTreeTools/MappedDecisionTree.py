@@ -119,11 +119,11 @@ class MappedDecisionTree:
             """
             return str(self.sk_index)
         
-        def filter_data_passing_through_node(self,
+        def get_data_reached_node(self,
                                              data: DataFrame
          ) -> DataFrame:
             """
-            Filter the data passing through the node.
+            Filter the data that reached the node.
 
             Parameters:
                 data (DataFrame): The data.

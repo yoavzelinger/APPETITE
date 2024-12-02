@@ -1,8 +1,8 @@
 from pandas import Dataframe, Series
 from collections.abc import Iterable
 
-from YoavNewCode.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
-from YoavNewCode.Diagnosers.SFLDT import SFLDT
+from DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from Diagnosers.SFLDT import SFLDT
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {

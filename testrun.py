@@ -1,7 +1,7 @@
-from YoavNewCode.DataManagementTools.Dataset import Dataset
-from YoavNewCode.DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
-from YoavNewCode.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
-from YoavNewCode.DecisionTreeTools import DecisionTreeClassifierBuilder
+from DataManagementTools.Dataset import Dataset
+from DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
+from DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from DecisionTreeTools import DecisionTreeClassifierBuilder
 
 DIRECTORY = "data\\real\\"
 FILE_NAME = "iris.data"

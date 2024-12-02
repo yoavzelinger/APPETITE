@@ -3,7 +3,7 @@ from pandas.api.types import is_numeric_dtype
 from random import seed, choices
 from typing import Callable, Generator
 
-from YoavNewCode.DataManagementTools.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
+from DataManagementTools.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
 
 """
 This module is responsible for simulating concept drifts in a given dataset.

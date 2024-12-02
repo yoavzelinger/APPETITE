@@ -1,7 +1,7 @@
 from pandas import DataFrame, Series
 from numpy import zeros
 
-from YoavNewCode.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
 class SFLDT:
     def __init__(self, 

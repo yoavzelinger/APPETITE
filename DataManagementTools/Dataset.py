@@ -2,7 +2,7 @@ from pandas import DataFrame, Series, Categorical, read_csv
 from scipy.io.arff import loadarff
 from typing import Generator
 
-from YoavNewCode.DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
+from DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
 PROPORTIONS_TUPLE = (0.7, 0.1, 0.2)
 CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION = PROPORTIONS_TUPLE

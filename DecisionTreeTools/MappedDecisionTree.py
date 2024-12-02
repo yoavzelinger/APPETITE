@@ -120,7 +120,7 @@ class MappedDecisionTree:
             return str(self.sk_index)
         
         def get_data_reached_node(self,
-                                             data: DataFrame
+                                  data: DataFrame
          ) -> DataFrame:
             """
             Filter the data that reached the node.
@@ -141,19 +141,19 @@ class MappedDecisionTree:
             return data
 
     def __init__(self, 
-                 sklearn_tree: DecisionTreeClassifier,
                  prune: bool = True
+                 sklearn_tree_model: DecisionTreeClassifier,
     ):
         """
         Initialize the MappedDecisionTree.
         
         Parameters:
-            sklearn_tree (DecisionTreeClassifier): The sklearn decision tree.
+            sklearn_tree_model (DecisionTreeClassifier): The sklearn decision tree.
             prune (bool): Whether to prune the tree.
         """
-        assert sklearn_tree is not None
-        self.sklearn_tree = sklearn_tree
-        self.criterion = sklearn_tree.criterion
+        assert sklearn_tree_model is not None
+        self.sklearn_tree_model = sklearn_tree_model
+        self.criterion = sklearn_tree_model.criterion
 
         self.tree_dict = self.map_tree()
         self.root = self.get_node(0)
@@ -179,12 +179,12 @@ class MappedDecisionTree:
 
     def map_tree(self, 
     ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
-        sk_features = self.sklearn_tree.tree_.feature
-        sk_thresholds = self.sklearn_tree.tree_.threshold
-        sk_children_left = self.sklearn_tree.tree_.children_left
-        sk_children_right = self.sklearn_tree.tree_.children_right
-        sk_values = self.sklearn_tree.tree_.value
-        sk_class_names = self.sklearn_tree.classes_
+        sk_features = self.sklearn_tree_model.tree_.feature
+        sk_thresholds = self.sklearn_tree_model.tree_.threshold
+        sk_children_left = self.sklearn_tree_model.tree_.children_left
+        sk_children_right = self.sklearn_tree_model.tree_.children_right
+        sk_values = self.sklearn_tree_model.tree_.value
+        sk_class_names = self.sklearn_tree_model.classes_
         
         tree_representation = {}
         nodes_to_check = [self.DecisionTreeNode(index=0)]
@@ -256,12 +256,12 @@ class MappedDecisionTree:
             leaf_nodes += [parent]
             # Adapt the tree
             parent_index = parent.sk_index
-            self.sklearn_tree.tree_.children_left[parent_index] = TREE_LEAF
-            self.sklearn_tree.tree_.children_right[parent_index] = TREE_LEAF
-            self.sklearn_tree.tree_.feature[parent_index] = -2
+            self.sklearn_tree_model.tree_.children_left[parent_index] = TREE_LEAF
+            self.sklearn_tree_model.tree_.children_right[parent_index] = TREE_LEAF
+            self.sklearn_tree_model.tree_.feature[parent_index] = -2
         if len(pruned_indices): # Attributes changed
             self.update_tree_attributes()
             print(f"Pruned {len(pruned_indices)} nodes from the tree. Pruned nodes: {pruned_indices}")
 
     def __repr__(self) -> str:
-        return export_text(self.sklearn_tree)
+        return export_text(self.sklearn_tree_model)

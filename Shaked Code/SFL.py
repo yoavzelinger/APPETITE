@@ -52,7 +52,7 @@ def build_SFL_matrix_SHAP(features, shap_values, prediction, labels, data_set_na
         result = 0 if prediction[i] == labels.values[i] else 1  # 1 if there is an error in prediction
         components = list()
         shap = shap_values[int(prediction[i])][i]  # takes shap value for the predicted
-        # TODO: calculate components using filters instead of for
+        # todo: calculate components using filters instead of for
         for j in range(len(shap)): # j is feature index
             value = shap[j]
             if ONLY_POSITIVE:
@@ -324,7 +324,7 @@ def shap_nodes_to_SFL(samples, model_rep, f="confident", tree_analysis=None, err
 
         # add shap to the SFL
         shap = calculate_shap_all_nodes(model_rep, tree_analysis, sample, f)
-        spectra[i,:] = np.absolute(np.array(shap)) #TODO: think if we need negative values
+        spectra[i,:] = np.absolute(np.array(shap)) #todo: think if we need negative values
 
     return BAD_SAMPLES, spectra, error_vector, conflicts
 

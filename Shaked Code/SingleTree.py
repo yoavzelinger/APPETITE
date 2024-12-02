@@ -79,7 +79,7 @@ def diagnose_SHAP(model, dataset, new_data, prediction):
     build_SFL_matrix_SHAP(dataset.features, shap_values, prediction, new_data_y, dataset.name)
     diagnosis = get_diagnosis()
     print("diagnosis: {}".format(diagnosis))
-    # TODO: rate diagnosis
+    # todo: rate diagnosis
     first_diagnosis = diagnosis[0].diagnosis
     return first_diagnosis
 
@@ -216,12 +216,12 @@ def fix_nodes_numeric(orig_model, diagnosis, dataset1, indexes):
     fixed = change_nodes_threshold(to_fix, diagnosis, features_diff)
     return fixed
 
-# TODO
+# todo
 def fix_nodes_by_type(orig_model, diagnosis, dataset1, indexes, diff_type="all", tree_representation=None, leaf_fix_type="new_data"):
     before_indexes, new_data_indexes = indexes
     # fix model - Nodes, change selection or threshold
     to_fix = copy.deepcopy(orig_model)
-    features_diff = feature_diff_after_concept_drift(dataset1, before_indexes, new_data_indexes)  # TODO: change - method get two datasets
+    features_diff = feature_diff_after_concept_drift(dataset1, before_indexes, new_data_indexes)  # todo: change - method get two datasets
     # features_diff = feature_diff_after_concept_drift2(tree_representation, diagnosis[0], dataset1)
     fixed = change_nodes_by_type(to_fix, diagnosis, dataset1.feature_types, features_diff, diff_type, leaf_fix_type, tree_representation, dataset1)
     return fixed

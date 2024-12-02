@@ -1,5 +1,6 @@
 from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.tree._tree import TREE_LEAF
+from pandas import DataFrame
 from numpy import argmax
 
 class MappedDecisionTree:
@@ -63,6 +64,17 @@ class MappedDecisionTree:
         
         def __repr__(self):
             return str(self.sk_index)
+        
+        def filter_data_passing_through_node(self,
+                                             data: DataFrame
+         ) -> DataFrame:
+            for condition in self.conditions_path:
+                feature, sign, threshold = condition.values()
+                if sign == "<=":
+                    data = data[data[feature] <= threshold]
+                else:
+                    data = data[data[feature] > threshold]
+            return data
 
     def __init__(self, 
                  sklearn_tree: DecisionTreeClassifier,

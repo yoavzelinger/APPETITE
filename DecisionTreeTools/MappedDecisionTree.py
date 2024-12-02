@@ -11,6 +11,7 @@ class MappedDecisionTree:
                      left_child = None, 
                      right_child = None,
                      feature: str | None = None,
+                     feature_type: str | None = None,
                      threshold: float | None = None,
                      class_name: str | None = None,
                      spectra_index: int = -1
@@ -32,6 +33,7 @@ class MappedDecisionTree:
             self.parent = parent
             self.update_children(left_child, right_child)
             self.feature = feature
+            self.feature_type = feature_type
             self.threshold = threshold
             self.class_name = class_name
             self.conditions_path = []
@@ -143,6 +145,7 @@ class MappedDecisionTree:
     def __init__(self, 
                  prune: bool = True
                  sklearn_tree_model: DecisionTreeClassifier,
+                 feature_types: dict[str, str] = None
     ):
         """
         Initialize the MappedDecisionTree.
@@ -154,6 +157,8 @@ class MappedDecisionTree:
         assert sklearn_tree_model is not None
         self.sklearn_tree_model = sklearn_tree_model
         self.criterion = sklearn_tree_model.criterion
+        
+        self.feature_types = feature_types
 
         self.tree_dict = self.map_tree()
         self.root = self.get_node(0)
@@ -205,6 +210,7 @@ class MappedDecisionTree:
                 continue
 
             current_node.feature, current_node.threshold = sk_features[current_index], sk_thresholds[current_index]
+            current_node.feature_type = self.feature_types[current_node.feature]
             right_child_index = sk_children_right[current_index]
             for child_index in (left_child_index, right_child_index):
                 child_node = self.DecisionTreeNode(index=child_index, parent=current_node)
@@ -252,7 +258,7 @@ class MappedDecisionTree:
             parent = current_leaf.parent
             parent.update_children(None, None)
             current_class = current_leaf.class_name
-            parent.feature, parent.threshold, parent.class_name = None, None, current_class
+            parent.feature, parent.feature_type, parent.threshold, parent.class_name = None, None, None, current_class
             leaf_nodes += [parent]
             # Adapt the tree
             parent_index = parent.sk_index

@@ -1,6 +1,6 @@
 from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.tree._tree import TREE_LEAF
-import numpy as np
+from numpy import argmax
 
 class MappedDecisionTree:
     class DecisionTreeNode:
@@ -113,7 +113,7 @@ class MappedDecisionTree:
 
             if left_child_index == right_child_index:  # Leaf
                 current_node_value = sk_values[current_index]
-                class_name = np.argmax(current_node_value)
+                class_name = argmax(current_node_value)
                 class_name = sk_class_names[class_name]
                 current_node.class_name = class_name
                 continue

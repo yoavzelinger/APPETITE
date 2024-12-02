@@ -1,14 +1,14 @@
-import pandas as pd
-import numpy as np
+from pandas import DataFrame
+from numpy.random import seed as numpy_seed
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn import metrics
+from sklearn.metrics import accuracy_score
 
 VALIDATION_SIZE = 0.2
 DEFAULT_CROSS_VALIDATION_SPLIT_COUNT = 5
 RANDOM_STATE = 7
 NUMPY_RANDOM_STATE = 0
-np.random.seed(NUMPY_RANDOM_STATE) # TODO - Check if needed
+numpy_seed(NUMPY_RANDOM_STATE) # TODO - Check if needed
 
 PARAM_GRID = {
     "criterion": ["gini", "entropy"],
@@ -16,19 +16,19 @@ PARAM_GRID = {
 }
 
 def build(
-        training_data: pd.DataFrame,
+        training_data: DataFrame,
         features: list[str],
         target: str,
-        validation_data: pd.DataFrame = None
+        validation_data: DataFrame = None
         ) -> DecisionTreeClassifier:
     """
     Build a decision tree classifier based on the given data and features.
 
     Parameters:
-        training_data (pd.DataFrame): The training data.
+        training_data (DataFrame): The training data.
         features (list[str]): The features to use.
         target (str): The target column.
-        validation_data (pd.DataFrame): The validation data. 
+        validation_data (DataFrame): The validation data. 
             If not provided, will use part of the training data.
 
     Returns:
@@ -76,7 +76,7 @@ def build(
                                                       ccp_alpha=ccp_alpha)
         current_decision_tree.fit(X_train, y_train)
         current_predictions = current_decision_tree.predict(X_validation)
-        current_accuracy = metrics.accuracy_score(y_validation, current_predictions)
+        current_accuracy = accuracy_score(y_validation, current_predictions)
         if current_accuracy > best_accuracy:
             best_accuracy = current_accuracy
             best_decision_tree = current_decision_tree

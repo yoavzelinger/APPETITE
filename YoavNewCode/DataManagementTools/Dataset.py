@@ -1,5 +1,5 @@
-import pandas as pd
-from scipy.io import arff
+from pandas import DataFrame, Series, Categorical, read_csv
+from scipy.io.arff import loadarff
 from typing import Generator
 
 from YoavNewCode.DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
@@ -10,7 +10,7 @@ RANDOM_STATE = 42
 
 class Dataset:
     def __init__(self, 
-                 source: str | pd.DataFrame, 
+                 source: str | DataFrame, 
                  dataset_type: str = "", 
                  target_class: str = "", 
                  feature_types: dict[str, str] = None, 
@@ -19,9 +19,9 @@ class Dataset:
                  to_shuffle: bool = True
     ):
         """
-        source: str or pd.DataFrame
+        source: str or DataFrame
             If str, the path to the dataset file
-            If pd.DataFrame, the dataset itself
+            If DataFrame, the dataset itself
         dataset_type: str
             The type of the dataset
         target_class: str
@@ -46,11 +46,11 @@ class Dataset:
             file_name = source.split("\\")[-1]
             self.name, source_format = file_name.split(".")
             if source_format in ("csv", "data", "txt"):
-                source = pd.read_csv(source)
+                source = read_csv(source)
             elif source_format == "arff":
-                data, _ = arff.loadarff(source)
-                source = pd.DataFrame(data)
-        assert isinstance(source, pd.DataFrame)
+                data, _ = loadarff(source)
+                source = DataFrame(data)
+        assert isinstance(source, DataFrame)
         
         if name:
             self.name = name
@@ -66,7 +66,7 @@ class Dataset:
                 source[col] = source[col].fillna(source[col].mode().iloc[0])    # Fill NaN values
                 # Convert column to numeric
                 if column_type == object:
-                    source[col] = pd.Categorical(source[col])
+                    source[col] = Categorical(source[col])
                     source[col] = source[col].cat.codes
                     column_type ="categorical"
                 else:
@@ -120,46 +120,46 @@ class Dataset:
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
     def split_features_targets(self, 
-                               data: pd.DataFrame
-     ) -> tuple[pd.DataFrame, pd.Series]:
+                               data: DataFrame
+     ) -> tuple[DataFrame, Series]:
         """
         Split the data to X and y
         
         Parameters:
-            data (pd.DataFrame): The data to split
+            data (DataFrame): The data to split
         
         Returns:
-            tuple[pd.DataFrame, pd.Series]: The X and y
+            tuple[DataFrame, Series]: The X and y
         """
         X = data.drop(columns=[self.target])
         y = data[self.target]
         return X, y
 
-    def get_before_concept(self) -> tuple[pd.DataFrame, pd.Series]:
+    def get_before_concept(self) -> tuple[DataFrame, Series]:
         before_concept_data = self.data.iloc[:self.before_size]
         return self.split_features_targets(before_concept_data)
     
-    def get_after_concept(self) -> tuple[pd.DataFrame, pd.Series]:
+    def get_after_concept(self) -> tuple[DataFrame, Series]:
         after_concept_data = self.data.iloc[self.before_size: self.before_size+self.after_size]
         return self.split_features_targets(after_concept_data)
     
-    def get_test_concept(self) -> tuple[pd.DataFrame, pd.Series]:
+    def get_test_concept(self) -> tuple[DataFrame, Series]:
         test_concept_data = self.data.iloc[-self.test_size:]
         return self.split_features_targets(test_concept_data)
     
     def drift_data_generator(self,
-                   data: pd.DataFrame,
+                   data: DataFrame,
                    drift_features: str | list[str]
-     ) -> Generator[pd.DataFrame, None, None]:
+     ) -> Generator[DataFrame, None, None]:
         """
         Create a drift in the data
         
         Parameters:
-            data (pd.DataFrame): The data to drift
+            data (DataFrame): The data to drift
             drift_features (str or list): single feature or list of features to drift
                 
         Returns:
-            pd.DataFrame: The drifted data
+            DataFrame: The drifted data
         """
         if type(drift_features) == str:
             assert drift_features in data.columns, f"Feature {drift_features} not in the dataset"
@@ -171,18 +171,18 @@ class Dataset:
         return multiple_features_concept_drift_generator(data, drift_features_dict)
 
     def _drift_data_generator(self,
-                   data: pd.DataFrame,
+                   data: DataFrame,
                    drift_features: str | list[str]
-     ) -> Generator[pd.DataFrame, None, None]:
+     ) -> Generator[DataFrame, None, None]:
         """
         Create a drift in the data
         
         Parameters:
-            data (pd.DataFrame): The data to drift
+            data (DataFrame): The data to drift
             drift_features (str or list): single feature or list of features to drift
                 
         Returns:
-            pd.DataFrame: The drifted data
+            DataFrame: The drifted data
         """
         if type(drift_features) == str:
             assert drift_features in data.columns, f"Feature {drift_features} not in the dataset"
@@ -198,7 +198,7 @@ class Dataset:
     def partition_drift_generator(self,
                                   drift_features: str | list[str],
                                   partition: str = "after"
-     ) -> Generator[tuple[pd.DataFrame, str], None, None]:
+     ) -> Generator[tuple[DataFrame, str], None, None]:
         """
         Drift generator for a specific partition
         
@@ -207,7 +207,7 @@ class Dataset:
             partition (str): The partition to drift
 
         Returns:
-            Generator[tuple[pd.DataFrame, str], None, None]: 
+            Generator[tuple[DataFrame, str], None, None]: 
                 A generator of all possible drifts in the feature and the description of the drift in the given partion name.
         """
         assert partition in self.partitions, "Invalid partition name"

@@ -1,5 +1,4 @@
-import pandas as pd
-import numpy as np
+from pandas import Dataframe, Series
 from collections.abc import Iterable
 
 from YoavNewCode.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
@@ -13,8 +12,8 @@ diagnosers_dict = {
 class Fixer:
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
-                 X: pd.DataFrame,
-                 y: pd.Series,
+                 X: Dataframe,
+                 y: Series,
                  diagnoser_name: str = "SFLDT",
                  diagnoser_parameters: tuple[object] = None
     ):
@@ -23,8 +22,8 @@ class Fixer:
         
         Parameters:
         mapped_tree (MappedDecisionTree): The mapped decision tree.
-        X (pd.DataFrame): The data.
-        y (pd.Series): The target column.
+        X (Dataframe): The data.
+        y (Series): The target column.
         diagnoser_name (str): The diagnoser name.
         diagnoser_parameters (tuple[object]): The diagnoser parameters.
         """

@@ -1,13 +1,13 @@
-import pandas as pd
-import numpy as np
+from pandas import DataFrame, Series
+from numpy import zeros
 
 from YoavNewCode.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
 class SFLDT:
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
-                 X: pd.DataFrame,
-                 y: pd.Series,
+                 X: DataFrame,
+                 y: Series,
                  similarity_measure: str = "faith"
     ):
         """
@@ -15,15 +15,15 @@ class SFLDT:
         
         Parameters:
         mapped_tree (MappedDecisionTree): The mapped decision tree.
-        X (pd.DataFrame): The data.
-        y (pd.Series): The target column.
+        X (DataFrame): The data.
+        y (Series): The target column.
         similarity_measure (str): The similarity measure to use.
         """
         self.mapped_tree = mapped_tree
         self.node_count = mapped_tree.node_count
         self.sample_count = len(X)
-        self.spectra = np.zeros((self.node_count, self.sample_count))
-        self.error_vector = np.zeros(self.sample_count)
+        self.spectra = zeros((self.node_count, self.sample_count))
+        self.error_vector = zeros(self.sample_count)
         self.similarity_measure = similarity_measure
         self.fill_spectra_and_error_vector(X, y)
 
@@ -54,15 +54,15 @@ class SFLDT:
     }
 
     def fill_spectra_and_error_vector(self, 
-                                      X: pd.DataFrame, 
-                                      y: pd.Series
+                                      X: DataFrame, 
+                                      y: Series
      ) -> None:
         """
         Fill the spectra matrix and the error vector.
 
         Parameters:
-        X (pd.DataFrame): The data.
-        y (pd.Series): The target column.
+        X (DataFrame): The data.
+        y (Series): The target column.
         """
         # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
         node_indicator = self.mapped_tree.decision_path(X)

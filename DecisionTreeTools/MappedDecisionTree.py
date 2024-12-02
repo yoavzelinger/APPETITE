@@ -15,6 +15,19 @@ class MappedDecisionTree:
                      class_name: str | None = None,
                      spectra_index: int = -1
         ):
+            """
+            Initialize the DecisionTreeNode.
+
+            Parameters:
+                sk_index (int): The index of the node (in the sklearn tree).
+                parent (DecisionTreeNode): The parent node.
+                left_child (DecisionTreeNode): The left child node.
+                right_child (DecisionTreeNode): The right child node.
+                feature (str): The feature.
+                threshold (float): The threshold.
+                class_name (str): The class name.
+                spectra_index (int): The index of the node (in the spectra matrix).
+            """
             self.sk_index, self.spectra_index = sk_index, spectra_index
             self.parent = parent
             self.update_children(left_child, right_child)
@@ -28,12 +41,27 @@ class MappedDecisionTree:
                             left_child: 'MappedDecisionTree.DecisionTreeNode', 
                             right_child: 'MappedDecisionTree.DecisionTreeNode'
         ) -> None:
+            """
+            Update the children of the node.
+
+            Parameters:
+                left_child (DecisionTreeNode): The left child node.
+                right_child (DecisionTreeNode): The right child node.
+            """
             # A node can be either a terminal node (two children) or a non-terminal node (a leaf - no children)
             assert (left_child is None) == (right_child is None)
             self.left_child = left_child
             self.right_child = right_child
 
         def update_condition(self) -> None:
+            """
+            Update the conditions path of the node.
+            
+            The conditions path is the path from the root to the node. Each condition is a dictionary with the following items:
+                "feature" (str): The feature.
+                "sign" (str): The sign of the threshold.
+                "threshold" (float): The threshold.
+            """
             if self.parent is None:
                 return
             self.conditions_path = self.parent.conditions_path
@@ -45,31 +73,67 @@ class MappedDecisionTree:
             self.conditions_path += [current_condition]
 
         def is_terminal(self) -> bool:
+            """
+            Check if the node is a terminal node.
+            
+            Returns:
+                bool: True if the node is a terminal node, False otherwise.
+            """
             return self.left_child is None
         
         def is_left_child(self) -> bool:
+            """
+            Check if the node is a left child.
+            
+            Returns:
+                bool: True if the node is a left child, False otherwise."""
             if self.parent is None:
                 return False
             return self.parent.left_child == self
         
         def is_right_child(self) -> bool:
+            """
+            Check if the node is a right child.
+            
+            Returns:
+                bool: True if the node is a right child, False otherwise.
+            """
             if self.parent is None:
                 return False
             return not self.is_left_child()
         
-        def get_sibling(self):
+        def get_sibling(self) -> 'MappedDecisionTree.DecisionTreeNode':
+            """
+            Get the sibling of the node.
+            
+            Returns:
+                DecisionTreeNode: The sibling of the node.
+            """
             if self.parent is None:
                 return None
             return self.parent.left_child if self.is_right_child() else self.parent.right_child
         
-        def __repr__(self):
+        def __repr__(self) -> str:
+            """
+            Get the string representation of the node.
+            """
             return str(self.sk_index)
         
         def filter_data_passing_through_node(self,
                                              data: DataFrame
          ) -> DataFrame:
+            """
+            Filter the data passing through the node.
+
+            Parameters:
+                data (DataFrame): The data.
+
+            Returns:
+                DataFrame: The filtered data.
+            """
             for condition in self.conditions_path:
                 feature, sign, threshold = condition.values()
+                assert feature in data.columns, f"Feature {feature} not in the dataset"
                 if sign == "<=":
                     data = data[data[feature] <= threshold]
                 else:
@@ -80,6 +144,13 @@ class MappedDecisionTree:
                  sklearn_tree: DecisionTreeClassifier,
                  prune: bool = True
     ):
+        """
+        Initialize the MappedDecisionTree.
+        
+        Parameters:
+            sklearn_tree (DecisionTreeClassifier): The sklearn decision tree.
+            prune (bool): Whether to prune the tree.
+        """
         assert sklearn_tree is not None
         self.sklearn_tree = sklearn_tree
         self.criterion = sklearn_tree.criterion
@@ -90,7 +161,10 @@ class MappedDecisionTree:
         if prune:
             self.prune_tree()
 
-    def update_tree_attributes(self):
+    def update_tree_attributes(self) -> None:
+        """
+        Update the tree attributes. those attributes are aggregated from the nodes.
+        """
         self.node_count = len(self.tree_dict)
         self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
         self.features_set, self.classes_set = set(), set()
@@ -189,5 +263,5 @@ class MappedDecisionTree:
             self.update_tree_attributes()
             print(f"Pruned {len(pruned_indices)} nodes from the tree. Pruned nodes: {pruned_indices}")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return export_text(self.sklearn_tree)

@@ -146,29 +146,6 @@ class Dataset:
     def get_test_concept(self) -> tuple[DataFrame, Series]:
         test_concept_data = self.data.iloc[-self.test_size:]
         return self.split_features_targets(test_concept_data)
-    
-    def drift_data_generator(self,
-                   data: DataFrame,
-                   drift_features: str | list[str]
-     ) -> Generator[DataFrame, None, None]:
-        """
-        Create a drift in the data
-        
-        Parameters:
-            data (DataFrame): The data to drift
-            drift_features (str or list): single feature or list of features to drift
-                
-        Returns:
-            DataFrame: The drifted data
-        """
-        if type(drift_features) == str:
-            assert drift_features in data.columns, f"Feature {drift_features} not in the dataset"
-            feature_type = self.feature_types[drift_features]
-            return single_feature_concept_drift_generator(data, drift_features, feature_type)
-        assert all([feature in data for feature in drift_features]), "Not all features in the dataset"
-        # Get subset of the dictionary
-        drift_features_dict = {feature: self.feature_types[feature] for feature in drift_features}
-        return multiple_features_concept_drift_generator(data, drift_features_dict)
 
     def _drift_data_generator(self,
                    data: DataFrame,

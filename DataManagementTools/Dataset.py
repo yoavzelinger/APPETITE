@@ -9,6 +9,8 @@ CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION = PROPORTIONS_TUPLE
 RANDOM_STATE = 42
 
 class Dataset:
+    partitions = ["before", "after", "test"]
+
     def __init__(self, 
                  source: str | DataFrame, 
                  dataset_type: str = "", 
@@ -131,8 +133,8 @@ class Dataset:
         Returns:
             tuple[DataFrame, Series]: The X and y
         """
-        X = data.drop(columns=[self.target])
-        y = data[self.target]
+        X = data.drop(columns=[self.target]).reset_index(drop=True)
+        y = data[self.target].reset_index(drop=True)
         return X, y
 
     def get_before_concept(self) -> tuple[DataFrame, Series]:
@@ -169,13 +171,11 @@ class Dataset:
         # Get subset of the dictionary
         drift_features_dict = {feature: self.feature_types[feature] for feature in drift_features}
         return multiple_features_concept_drift_generator(data, drift_features_dict)
-    
-    partitions = ["before", "after", "test"]
 
     def partition_drift_generator(self,
                                   drift_features: str | list[str],
                                   partition: str = "after"
-     ) -> Generator[tuple[DataFrame, str], None, None]:
+     ) -> Generator[tuple[tuple[DataFrame, Series], str], None, None]:
         """
         Drift generator for a specific partition
         
@@ -184,15 +184,23 @@ class Dataset:
             partition (str): The partition to drift
 
         Returns:
-            Generator[tuple[DataFrame, str], None, None]: 
+            Generator[tuple[tuple[DataFrame, Series], str], None, None]: 
                 A generator of all possible drifts in the feature and the description of the drift in the given partion name.
+                Each drift represented by the (drifted dataset, original y) and the description of the drift. 
         """
-        assert partition in self.partitions, "Invalid partition name"
+        assert partition in Dataset.partitions, "Invalid partition name"
         get_partion_dict = {
             "before": self.get_before_concept,
             "after": self.get_after_concept,
             "test": self.get_test_concept
-            }
+        }
         original_X, y = get_partion_dict[partition]()
         for drifted_X, description in self._drift_data_generator(original_X, drift_features):
             yield (drifted_X, y), f"{partition.upper()}_{description}"
+
+    def get_feature_first_drift(self,
+                                  feature: str,
+                                  partition: str = "after"
+     ) -> Generator[tuple[tuple[DataFrame, Series], str], None, None]:
+        drift_generator = self.partition_drift_generator(feature, partition)
+        return next(drift_generator)

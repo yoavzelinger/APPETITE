@@ -1,4 +1,4 @@
-from pandas import DataFrame, Series
+from pandas import DataFrame, Series, concat
 from numpy.random import seed as numpy_seed
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -42,13 +42,14 @@ def build(
     # Grid search modification
     modified_X_train, modified_y_train = X_train, y_train
     classes_counts = y_train.value_counts()
+    # TODO - Manipulate to test
     if classes_counts.min() == 1:
         # Duplicate the rows with that one instance
         min_classes = classes_counts[classes_counts == 1].index
         for class_name in min_classes:
             sample_filter = y_train == class_name
-            modified_X_train = modified_X_train.append(X_train[sample_filter, features], ignore_index=True)
-            modified_y_train = modified_y_train.append(y_train[sample_filter], ignore_index=True)
+            modified_X_train = concat([modified_X_train, modified_X_train[sample_filter]], ignore_index=True)
+            modified_y_train = concat([modified_y_train, Series([class_name])], ignore_index=True)
     cross_validation_split_count = min(DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, y_train.value_counts().min())
 
     decision_tree_classifier = DecisionTreeClassifier()

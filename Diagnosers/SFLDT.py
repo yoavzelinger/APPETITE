@@ -3,7 +3,35 @@ from numpy import zeros
 
 from DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
+def get_faith_similarity(participation_vector: Series,
+                         error_vector: Series
+ ) -> float:
+    """
+    Get the faith similarity of the node to the error vector.
+
+    The similarity is calculated by
+        (errror_participation +  0.5 * accurate_nonparticipation) /
+        (errror_participation + accurate_participation + error_nonparticipation + accurate_nonparticipation)
+    Parameters:
+        participation_vector (Series): The participation vector, where 1 represent participation in the sample classification.
+        error_vector (Series): The error vector, where 1 represent that the sample classified incorrectly.
+
+    Returns:
+        float: The faith similarity between the vectors
+    """
+    n11 = participation_vector @ error_vector
+    n10 = participation_vector @ (1 - error_vector)
+    n01 = (1 - participation_vector) @ error_vector
+    n00 = (1 - participation_vector) @ (1 - error_vector)
+    
+    return (n11 +  0.5 * n00) / (n11 + n10 + n01 + n00)
+
 class SFLDT:
+
+    similarity_measure_functions_dict = {
+        "faith": get_faith_similarity
+    }
+
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
@@ -27,32 +55,6 @@ class SFLDT:
         self.similarity_measure = similarity_measure
         self.fill_spectra_and_error_vector(X, y)
 
-    def get_faith_similarity(self,
-                             index: int,
-                             spectra_index: bool = True
-     ) -> float:
-        """
-        Get the faith similarity of the node to the error vector.
-
-        Parameters:
-        index (int): The index of the node.
-        spectra_index (bool): Whether the index is the index of the node in the mapped tree or the index of the node in the spectra matrix.
-
-        Returns:
-        float: The faith similarity of the node to the error vector.
-        """
-        n11, n10, n01, n00 = (
-            self.get_errror_participation_count(index, spectra_index),
-            self.get_accurate_participation_count(index, spectra_index),
-            self.get_error_nonparticipation_count(index, spectra_index),
-            self.get_accurate_nonparticipation_count(index, spectra_index)
-        )
-        return (n11 +  0.5 * n00) / (n11 + n10 + n01 + n00)
-    
-    similarity_measure_functions_dict = {
-        "faith": get_faith_similarity
-    }
-
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
@@ -65,7 +67,7 @@ class SFLDT:
         y (Series): The target column.
         """
         # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
-        node_indicator = self.mapped_tree.decision_path(X)
+        node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))
         for sample_id in range(self.sample_count):
             participated_nodes = node_indicator.indices[
                 node_indicator.indptr[sample_id] : node_indicator.indptr[sample_id + 1]
@@ -91,85 +93,8 @@ class SFLDT:
         Returns:
         list[int]: The diagnosis of the nodes. For each node, the spectra/node index, ordered by their similarity to the error vector (DESC).
         """
-        similarity_measure_function = self.similarity_measure_functions_dict[self.similarity_measure]
-        sotred_spectra_indices = sorted(range(self.node_count), key=lambda spectra_index: similarity_measure_function(spectra_index), reverse=True)
+        similarity_measure_function = SFLDT.similarity_measure_functions_dict[self.similarity_measure]
+        sotred_fauly_spectra_indices = sorted(range(self.node_count), key=lambda spectra_index: similarity_measure_function(self.spectra[spectra_index], self.error_vector), reverse=True)
         if retrieve_spectra_indices:
-            return sotred_spectra_indices
-        return list(map(self.mapped_tree.get_node, sotred_spectra_indices))
-    
-    def get_errror_participation_count(self, 
-                                       index: int, 
-                                       spectra_index: bool = True
-     ) -> int: # n_1,1
-        """
-        Get n_1,1 - the number of samples that the node participated in and were misclassified.
-
-        Parameters:
-        index (int): The index of the node.
-        spectra_index (bool): Whether the index is the index of the node in the mapped tree or the index of the node in the spectra matrix.
-
-        Returns:
-        int: The number of samples that the node participated in and were misclassified.
-        """
-        if not spectra_index:
-            index = self.mapped_tree.get_node(index).spectra_index
-        
-        return self.error_vector @ self.spectra[index]
-    
-    def get_accurate_participation_count(self, 
-                                         index: int, 
-                                         spectra_index: bool = True
-     ) -> int: # n_1,0
-        """
-        Get n_1,0 - the number of samples that the node participated in and were classified correctly.
-        
-        Parameters:
-        index (int): The index of the node.
-        spectra_index (bool): Whether the index is the index of the node in the mapped tree or the index of the node in the spectra matrix.
-        
-        Returns:
-        int: The number of samples that the node participated in and were classified correctly.
-        """
-        if not spectra_index:
-            index = self.mapped_tree.get_node(index).spectra_index
-        
-        return (1 - self.error_vector) @ self.spectra[index]
-    
-    def get_error_nonparticipation_count(self, 
-                                         index: int, 
-                                         spectra_index: bool = True
-     ) -> int: # n_0,1
-        """
-        Get n_0,1 - the number of samples that the node did not participate in and were misclassified.
-
-        Parameters:
-        index (int): The index of the node.
-        spectra_index (bool): Whether the index is the index of the node in the mapped tree or the index of the node in the spectra matrix.
-
-        Returns:
-        int: The number of samples that the node did not participate in and were misclassified.
-        """
-        
-        if not spectra_index:
-            index = self.mapped_tree.get_node(index).spectra_index
-        
-        return self.error_vector @ (1 - self.spectra[index])
-    
-    def get_accurate_nonparticipation_count(self, 
-                                            index: int, 
-                                            spectra_index: bool = True
-     ) -> int: # n_0,0
-        """
-        Get n_0,0 - the number of samples that the node did not participate in and were classified correctly.
-
-        Parameters:
-        index (int): The index of the node.
-        spectra_index (bool): Whether the index is the index of the node in the mapped tree or the index of the node in the spectra matrix.
-
-        Returns:
-        int: The number of samples that the node did not participate in and were classified correctly.
-        """
-        if not spectra_index:
-            index = self.mapped_tree.get_node(index).spectra_index
-        
-        return (1 - self.error_vector) @ (1 - self.spectra[index])
+            return sotred_fauly_spectra_indices
+        return list(map(self.mapped_tree.get_node, sotred_fauly_spectra_indices))

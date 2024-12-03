@@ -1,4 +1,5 @@
-matrix_for_SFL
-tree_analysis/
-backup
 /__pycache__
+/DataManagementTools/__pycache__
+/DecisionTreeTools/__pycache__
+/Diagnosers/__pycache__
+/Fixers/__pycache__

@@ -25,11 +25,12 @@ def build(
     Build a decision tree classifier based on the given data and features.
 
     Parameters:
-        training_data (DataFrame): The training features.
-        features (list[str]): The features to use.
-        target (str): The target column.
-        validation_data (DataFrame): The validation data. 
-            If not provided, will use part of the training data.
+        X_train (DataFrame): The training features set.
+        y_train (Series): The training labels.
+        X_validation (DataFrame): Validation features set.
+        y_validation (Series): The validation labels.
+
+        If validation data not provided then it is taken from as 0.2 from the training data.
 
     Returns:
         DecisionTreeClassifier: The decision tree classifier.

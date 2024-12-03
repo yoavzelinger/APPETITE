@@ -1,4 +1,4 @@
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from numpy.random import seed as numpy_seed
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -16,16 +16,16 @@ PARAM_GRID = {
 }
 
 def build(
-        training_data: DataFrame,
-        features: list[str],
-        target: str,
-        validation_data: DataFrame = None
+        X_train: DataFrame,
+        y_train: Series,
+        X_validation: DataFrame = None,
+        y_validation: Series = None
         ) -> DecisionTreeClassifier:
     """
     Build a decision tree classifier based on the given data and features.
 
     Parameters:
-        training_data (DataFrame): The training data.
+        training_data (DataFrame): The training features.
         features (list[str]): The features to use.
         target (str): The target column.
         validation_data (DataFrame): The validation data. 
@@ -34,15 +34,9 @@ def build(
     Returns:
         DecisionTreeClassifier: The decision tree classifier.
     """
-    X_train = training_data[features]
-    y_train = training_data[target]
-    X_validation, y_validation = None, None
-    if validation_data is not None:
-        assert set(validation_data.columns) == set(training_data.columns), "Validation data must have the same columns as the training data"
-        X_validation = validation_data[features]
-        y_validation = validation_data[target]
-    else:
+    if X_validation is None:
         X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=VALIDATION_SIZE, random_state=RANDOM_STATE)
+    assert set(X_train.columns) == set(X_validation.columns), "Validation data must have the same columns as the training data"
 
     # Grid search modification
     modified_X_train, modified_y_train = X_train, y_train

@@ -212,7 +212,7 @@ class MappedDecisionTree:
         sk_class_names = self.sklearn_tree_model.classes_
         
         tree_representation = {}
-        nodes_to_check = [self.DecisionTreeNode(index=0)]
+        nodes_to_check = [self.DecisionTreeNode(sk_index=0)]
 
         while len(nodes_to_check):
             current_node = nodes_to_check.pop(0)
@@ -228,12 +228,14 @@ class MappedDecisionTree:
                 class_name = sk_class_names[class_name]
                 current_node.class_name = class_name
                 continue
-
-            current_node.feature, current_node.threshold = sk_features[current_index], sk_thresholds[current_index]
+            
+            current_node.threshold = sk_thresholds[current_index]
+            feature_index = sk_features[current_index]
+            current_node.feature = list(self.feature_types.keys())[feature_index]   # TODO - Validate this correct
             current_node.feature_type = self.feature_types[current_node.feature]
             right_child_index = sk_children_right[current_index]
             for child_index in (left_child_index, right_child_index):
-                child_node = self.DecisionTreeNode(index=child_index, parent=current_node)
+                child_node = self.DecisionTreeNode(sk_index=child_index, parent=current_node)
                 nodes_to_check.append(child_node)
             current_node.update_children(*(nodes_to_check[-2: ]))
 

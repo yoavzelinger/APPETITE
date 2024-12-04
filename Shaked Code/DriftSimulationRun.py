@@ -112,7 +112,7 @@ def change_data_binary(feature, all_data, filtered_data, indexes_filtered_data):
     return feature_changes, feature_changes_names
 
 def change_data_binary2(feature, all_data, filtered_data, indexes_filtered_data):
-    # todo: if run on nodes - check what to do with filtered indexes
+    # TO DO: if run on nodes - check what to do with filtered indexes
     values = all_data[feature].unique()
     feature_changes = []
     feature_changes_names = []

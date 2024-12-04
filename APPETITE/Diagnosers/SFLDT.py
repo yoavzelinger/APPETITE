@@ -97,4 +97,4 @@ class SFLDT:
         sotred_fauly_spectra_indices = sorted(range(self.node_count), key=lambda spectra_index: similarity_measure_function(self.spectra[spectra_index], self.error_vector), reverse=True)
         if retrieve_spectra_indices:
             return sotred_fauly_spectra_indices
-        return list(map(self.mapped_tree.get_node, sotred_fauly_spectra_indices))
+        return list(map(self.mapped_tree.convert_spectra_index_to_node_index, sotred_fauly_spectra_indices))

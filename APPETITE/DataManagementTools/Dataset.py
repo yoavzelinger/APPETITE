@@ -170,7 +170,7 @@ class Dataset:
         drift_features_dict = {feature: self.feature_types[feature] for feature in drift_features}
         return multiple_features_concept_drift_generator(data, drift_features_dict)
 
-    def partition_drift_generator(self,
+    def drift_generator(self,
                                   drift_features: str | list[str],
                                   partition: str = "after"
      ) -> Generator[tuple[tuple[DataFrame, Series], str], None, None]:
@@ -200,5 +200,5 @@ class Dataset:
                                   feature: str,
                                   partition: str = "after"
      ) -> Generator[tuple[tuple[DataFrame, Series], str], None, None]:
-        drift_generator = self.partition_drift_generator(feature, partition)
+        drift_generator = self.drift_generator(feature, partition)
         return next(drift_generator)

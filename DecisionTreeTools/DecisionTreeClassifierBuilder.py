@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score
 
 from Constants import VALIDATION_SIZE, CROSS_VALIDATION_SPLIT_COUNT as DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, RANDOM_STATE, PARAM_GRID
 
-def build(
+def build_tree(
         X_train: DataFrame,
         y_train: Series,
         X_validation: DataFrame = None,

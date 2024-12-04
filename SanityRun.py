@@ -1,6 +1,6 @@
 from DataManagementTools.Dataset import Dataset
 from DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
-from DecisionTreeTools.DecisionTreeClassifierBuilder import build as build_tree 
+from DecisionTreeTools.DecisionTreeClassifierBuilder import build_tree 
 from Diagnosers.SFLDT import SFLDT
 
 from sklearn.metrics import accuracy_score

@@ -4,16 +4,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score
 
-VALIDATION_SIZE = 0.2
-DEFAULT_CROSS_VALIDATION_SPLIT_COUNT = 5
-RANDOM_STATE = 7
-NUMPY_RANDOM_STATE = 0
-numpy_seed(NUMPY_RANDOM_STATE) # TODO - Check if needed
-
-PARAM_GRID = {
-    "criterion": ["gini", "entropy"],
-    "max_leaf_nodes": [10, 20, 30]
-}
+from Constants import VALIDATION_SIZE, CROSS_VALIDATION_SPLIT_COUNT as DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, RANDOM_STATE, PARAM_GRID
 
 def build(
         X_train: DataFrame,
@@ -35,8 +26,9 @@ def build(
     Returns:
         DecisionTreeClassifier: The decision tree classifier.
     """
+    numpy_seed(RANDOM_STATE)
     if X_validation is None:
-        X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=VALIDATION_SIZE, random_state=RANDOM_STATE)
+        X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=VALIDATION_SIZE)
     assert set(X_train.columns) == set(X_validation.columns), "Validation data must have the same columns as the training data"
 
     # Grid search modification

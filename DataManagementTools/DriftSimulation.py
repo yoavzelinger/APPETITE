@@ -3,6 +3,7 @@ from pandas.api.types import is_numeric_dtype
 from random import seed, choices
 from typing import Callable, Generator
 
+from Constants import NUMERIC_DRIFT_SEVERITIES as NUMERIC_DRIFT_SIZES, CATEGORICAL_DRIFT_SEVERITIES as CATEGORICAL_PROPORTIONS, RANDOM_STATE
 from DataManagementTools.lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
 
 """
@@ -33,22 +34,6 @@ Example functions:
 
 Good Luck!
 """
-
-NUMERIC_DRIFT_SIZES = (
-    -2, 
-    -1, 
-    -0.5, 
-    0.5, 
-    1, 
-    2
-)
-CATEGORICAL_PROPORTIONS = (
-    0.3, 
-    0.5, 
-    0.7, 
-    0.9
-)
-RANDOM_STATE = 10
 
 def _numeric_drift_generator(
         column: Series,

@@ -231,7 +231,7 @@ class MappedDecisionTree:
             
             current_node.threshold = sk_thresholds[current_index]
             feature_index = sk_features[current_index]
-            current_node.feature = list(self.feature_types.keys())[feature_index]   # TODO - Validate this correct
+            current_node.feature = list(self.feature_types.keys())[feature_index]
             current_node.feature_type = self.feature_types[current_node.feature]
             right_child_index = sk_children_right[current_index]
             for child_index in (left_child_index, right_child_index):

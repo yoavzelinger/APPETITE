@@ -100,7 +100,6 @@ class Fixer:
         faulty_node = self.mapped_tree.get_node(faulty_node_index)
         node_feature_average_before_drift = faulty_node.average_feature_value
         if node_feature_average_before_drift is None:
-            # TODO - Handle the case where we don't have the average feature value before the drift
             raise NotImplementedError("The average feature value before the drift is not available")
         node_feature_average_after_drift = data_reached_faulty_node[faulty_node.feature].mean()
         node_feature_average_differece = node_feature_average_after_drift - node_feature_average_before_drift

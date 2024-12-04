@@ -2,11 +2,9 @@ from pandas import DataFrame, Series, Categorical, read_csv
 from scipy.io.arff import loadarff
 from typing import Generator
 
-from DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
+from Constants import CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION, PROPORTIONS_TUPLE, RANDOM_STATE
 
-PROPORTIONS_TUPLE = (0.7, 0.1, 0.2)
-CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION = PROPORTIONS_TUPLE
-RANDOM_STATE = 42
+from DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
 class Dataset:
     partitions = ["before", "after", "test"]

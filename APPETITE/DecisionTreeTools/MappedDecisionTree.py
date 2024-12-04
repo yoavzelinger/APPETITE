@@ -174,7 +174,7 @@ class MappedDecisionTree:
         self.sklearn_tree_model = sklearn_tree_model
         self.criterion = sklearn_tree_model.criterion
         
-        self.feature_types = feature_types
+        self.data_feature_types = feature_types
 
         self.tree_dict = self.map_tree()
         self.root = self.get_node(0)
@@ -192,12 +192,12 @@ class MappedDecisionTree:
         """
         self.node_count = len(self.tree_dict)
         self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
-        self.features_set, self.classes_set = set(), set()
+        self.tree_features_set, self.classes_set = set(), set()
         for ordered_index, node in enumerate(self.tree_dict.values()):
             node.update_condition()
             node.spectra_index = ordered_index
             if node.feature:
-                self.features_set.add(node.feature)
+                self.tree_features_set.add(node.feature)
             if node.class_name:
                 self.classes_set.add(node.class_name)
         self.spectra_dict = {node.spectra_index: node for node in self.tree_dict.values()}
@@ -231,8 +231,8 @@ class MappedDecisionTree:
             
             current_node.threshold = sk_thresholds[current_index]
             feature_index = sk_features[current_index]
-            current_node.feature = list(self.feature_types.keys())[feature_index]
-            current_node.feature_type = self.feature_types[current_node.feature]
+            current_node.feature = list(self.data_feature_types.keys())[feature_index]
+            current_node.feature_type = self.data_feature_types[current_node.feature]
             right_child_index = sk_children_right[current_index]
             for child_index in (left_child_index, right_child_index):
                 child_node = self.DecisionTreeNode(sk_index=child_index, parent=current_node)
@@ -292,4 +292,4 @@ class MappedDecisionTree:
             print(f"Pruned {len(pruned_indices)} nodes from the tree. Pruned nodes: {pruned_indices}")
 
     def __repr__(self) -> str:
-        return export_text(self.sklearn_tree_model)
+        return export_text(self.sklearn_tree_model, feature_names=list(self.data_feature_types.keys()))

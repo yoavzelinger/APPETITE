@@ -2,9 +2,9 @@ from pandas import DataFrame, Series, Categorical, read_csv
 from scipy.io.arff import loadarff
 from typing import Generator
 
-from Constants import CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION, PROPORTIONS_TUPLE, RANDOM_STATE
+from APPETITE.Constants import CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION, PROPORTIONS_TUPLE, RANDOM_STATE
 
-from DataManagementTools.DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
+from .DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
 class Dataset:
     partitions = ["before", "after", "test"]

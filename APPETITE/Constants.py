@@ -1,4 +1,3 @@
-
 # Dataset partitions sizes
 CONCEPT_PROPORTION = 0.7
 DRIFT_PROPOTION = 0.1

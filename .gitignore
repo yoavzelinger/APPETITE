@@ -1,5 +1,6 @@
 /__pycache__
-/DataManagementTools/__pycache__
-/DecisionTreeTools/__pycache__
-/Diagnosers/__pycache__
-/Fixers/__pycache__
+APPETITE/__pycache__
+APPETITE/DataManagementTools/__pycache__
+APPETITE/DecisionTreeTools/__pycache__
+APPETITE/Diagnosers/__pycache__
+APPETITE/Fixers/__pycache__

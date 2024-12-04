@@ -4,7 +4,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score
 
-from Constants import VALIDATION_SIZE, CROSS_VALIDATION_SPLIT_COUNT as DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, RANDOM_STATE, PARAM_GRID
+from APPETITE.Constants import VALIDATION_SIZE, CROSS_VALIDATION_SPLIT_COUNT as DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, RANDOM_STATE, PARAM_GRID
 
 def build_tree(
         X_train: DataFrame,

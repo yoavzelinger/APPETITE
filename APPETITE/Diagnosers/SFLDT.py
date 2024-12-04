@@ -1,7 +1,7 @@
 from pandas import DataFrame, Series
 from numpy import zeros
 
-from DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
 def get_faith_similarity(participation_vector: Series,
                          error_vector: Series

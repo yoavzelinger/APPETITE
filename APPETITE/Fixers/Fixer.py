@@ -4,8 +4,8 @@ from numpy import max as numpy_max
 from collections.abc import Iterable
 from typing import Generator
 
-from DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
-from Diagnosers.SFLDT import SFLDT
+from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from APPETITE.Diagnosers.SFLDT import SFLDT
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {

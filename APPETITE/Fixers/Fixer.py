@@ -40,6 +40,7 @@ class Fixer:
             diagnoser_parameters = (diagnoser_parameters, )
         self.diagnoser = diagnoser_name(self.mapped_tree, self.X, self.y, *diagnoser_parameters)
         self.faulty_nodes = None    # List of sk_indices of the faulty nodes; Lazy evaluation
+        self.tree_already_fixed = False
 
     def _filter_data_reached_faults(self,
                                   faults_count: int = 1                           
@@ -158,7 +159,31 @@ class Fixer:
         # Create a new MappedDecisionTree object with the fixed sklearn tree model
         fixed_mapped_decision_tree = MappedDecisionTree(sklearn_tree_model)
         self.mapped_tree = fixed_mapped_decision_tree
+        self.tree_already_fixed = True
         return fixed_mapped_decision_tree
+
+    def fix_single_fault(self, 
+                         faulty_node: int = None
+     ) -> MappedDecisionTree:
+        """
+        Fix the decision tree under the assumption that there is a single faulty node in the tree.
+
+        Parameters:
+            faulty_node (int): The index of the faulty node. If None, the faulty node will be detected using the diagnoser.
+        Returns:
+            MappedDecisionTree: The fixed decision tree.
+        """
+        if self.tree_already_fixed:
+            return self.mapped_tree
+        if faulty_node is None:
+            self.faulty_nodes = self.diagnoser.get_diagnosis()
+        else:
+            self.faulty_nodes = [faulty_node]
+        data_reached_faulty_node = self._filter_data_reached_single_fault()
+        faulty_node_index = self.faulty_nodes[0]
+        self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
+        return self._create_fixed_mapped_tree()
+        return self.mapped_tree
 
     def fix_multiple_faults(self) -> MappedDecisionTree:
         """
@@ -167,4 +192,8 @@ class Fixer:
         Returns:
             MappedDecisionTree: The fixed decision tree.
         """
+        if self.tree_already_fixed:
+            return self.mapped_tree
         raise NotImplementedError
+        # TBC
+        return self._create_fixed_mapped_tree()

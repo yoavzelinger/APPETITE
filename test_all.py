@@ -13,6 +13,7 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
     open(f"{DATA_DIRECTORY}/raw_results.csv", "w") as results_file, \
         open(f"{DATA_DIRECTORY}/errors.csv", "w") as errors_file:
     aggregating_writer = csv.DictWriter(aggregating_file, fieldnames=["name", 
+                                                                      "drifts count",
                                                                       "average accuracy drop", 
                                                                       "average fix accuracy increase"
                                                                       ])
@@ -41,6 +42,7 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
                 total_fix_accuracy_increase += test_result["fix accuracy increase"]
                 results_writer.writerow(test_result)
             aggregating_writer.writerow({"name": dataset_name, 
+                                         "drifts count": drifts_count,
                                          "average accuracy drop": total_after_accuracy_drop / drifts_count, 
                                          "average fix accuracy increase": total_fix_accuracy_increase / drifts_count})
         except Exception as e:

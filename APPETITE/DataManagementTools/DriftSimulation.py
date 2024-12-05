@@ -48,7 +48,6 @@ def _numeric_drift_generator(
     Return:
         Generator[tuple[Series, str], None, None]: A generator of all drifts in the feature and the description of the drift.
     """
-    assert is_numeric_dtype(column)
     
     feature_std = column.std()
 
@@ -86,8 +85,6 @@ def _categorical_drift_generator(
     Returns:
         Generator[tuple[Series, str], None, None]: A generator of all drifts in the feature and the description of the drift.
     """
-    assert not is_numeric_dtype(column)
-    
     unique_values = column.unique()
     
     # Nested function

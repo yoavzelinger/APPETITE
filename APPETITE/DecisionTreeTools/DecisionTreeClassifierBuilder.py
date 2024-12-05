@@ -28,7 +28,7 @@ def build_tree(
     """
     numpy_seed(RANDOM_STATE)
     if X_validation is None:
-        X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=VALIDATION_SIZE)
+        X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=VALIDATION_SIZE, random_state=RANDOM_STATE)
     assert set(X_train.columns) == set(X_validation.columns), "Validation data must have the same columns as the training data"
 
     # Grid search modification
@@ -52,7 +52,9 @@ def build_tree(
     grid_search_classifier.fit(modified_X_train, modified_y_train)
     grid_search_best_params = grid_search_classifier.best_params_ # Hyperparameters
     decision_tree_classifier = DecisionTreeClassifier(criterion=grid_search_best_params["criterion"], 
-                                                      max_leaf_nodes=grid_search_best_params["max_leaf_nodes"])
+                                                      max_leaf_nodes=grid_search_best_params["max_leaf_nodes"],
+                                                      random_state=RANDOM_STATE
+                                                      )
     pruning_path = decision_tree_classifier.cost_complexity_pruning_path(X_train, y_train)
     ccp_alphas = set(pruning_path.ccp_alphas) # TODO - Understand what is it
     best_decision_tree, best_accuracy = None, -1
@@ -61,7 +63,9 @@ def build_tree(
             continue
         current_decision_tree = DecisionTreeClassifier(criterion=grid_search_best_params["criterion"], 
                                                       max_leaf_nodes=grid_search_best_params["max_leaf_nodes"], 
-                                                      ccp_alpha=ccp_alpha)
+                                                      ccp_alpha=ccp_alpha,
+                                                      random_state=RANDOM_STATE
+                                                      )
         current_decision_tree.fit(X_train, y_train)
         current_predictions = current_decision_tree.predict(X_validation)
         current_accuracy = accuracy_score(y_validation, current_predictions)

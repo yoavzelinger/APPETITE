@@ -18,10 +18,12 @@ def drift_single_tree_feature(mapped_tree, dataset):
     Generate a drifted in a single tree that is used in the tree structure.
     """
     tree_features_set = mapped_tree.tree_features_set
+    if(len([feature for feature in tree_features_set if dataset.feature_types[feature] == "categorical"])): # Skip datasets with categorical
+        return
     for drifting_feature in tree_features_set:
         after_drift_generator = dataset.drift_generator(drifting_feature, partition="after")
         test_drift_generator = dataset.drift_generator(drifting_feature, partition="test")
-        for ((X_after_drifted, y_after), after_drift_description), ((X_test_drifted, y_test), test_drift_description) in zip(after_drift_generator, test_drift_generator):
+        for ((X_after_drifted, y_after), after_drift_description), ((X_test_drifted, y_test), _) in zip(after_drift_generator, test_drift_generator):
             yield (X_after_drifted, y_after), (X_test_drifted, y_test), after_drift_description[6: ]
 
 def get_accuracy(model, X, y):

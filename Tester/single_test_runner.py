@@ -60,6 +60,7 @@ def run_test(directory, file_name):
             test_accuracy_bump = fixed_test_accuracy - test_accuracy
             yield {
                 "drift description": drift_description,
+                "tree size": mapped_tree.node_count,
                 "after accuracy decrease": after_accuracy_drop,
                 "faulty node index": faulty_node_index,
                 "faulty feature": faulty_feature,

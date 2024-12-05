@@ -1,4 +1,6 @@
-import csv
+import os
+from csv import DictReader
+from pandas import DataFrame
 
 from Tester.single_test_runner import run_test
 
@@ -6,45 +8,64 @@ DATA_DIRECTORY = "data"
 DATASET_DESCRIPTION_FILE = "all_datasets.csv"
 DATASETS_DIRECTORY = "Classification_Datasets"
 DATASETS_FULL_PATH = f"{DATA_DIRECTORY}\\{DATASETS_DIRECTORY}\\"
+RESULTS_DIRECTORY = "results"
+RESULTS_FULL_PATH = f"{DATA_DIRECTORY}\\{RESULTS_DIRECTORY}\\"
 
-# Get Description of all datasets
-with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_file, \
-    open(f"{DATA_DIRECTORY}/aggregated_results.csv", "w") as aggregating_file, \
-    open(f"{DATA_DIRECTORY}/raw_results.csv", "w") as results_file, \
-        open(f"{DATA_DIRECTORY}/errors.csv", "w") as errors_file:
-    aggregating_writer = csv.DictWriter(aggregating_file, fieldnames=["name", 
-                                                                      "drifts count",
-                                                                      "average accuracy drop", 
-                                                                      "average fix accuracy increase"
-                                                                      ])
-    results_writer = csv.DictWriter(results_file, fieldnames=["drift description", 
-                                                              "after accuracy decrease", 
-                                                              "faulty node index", 
-                                                              "faulty feature", 
-                                                              "fix accuracy increase"])
-    errors_writer = csv.DictWriter(errors_file, fieldnames=["name", "error"])
-    
-    aggregating_writer.writeheader()
-    results_writer.writeheader()
-    errors_writer.writeheader()
-    descriptions_reader = csv.DictReader(descriptions_file)
-    
+# Create DataFrame for the aggregated results
+aggregated_results = DataFrame(columns=["name", "tree size", "drifts count", "average accuracy drop", "average fix accuracy increase"])
+raw_results = DataFrame(columns=["drift description", "tree size", "after accuracy decrease", "faulty node index", "faulty feature", "fix accuracy increase"])
+errors = DataFrame(columns=["name", "error"])
+
+with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_file:
+    descriptions_reader = DictReader(descriptions_file)
     for dataset_description in descriptions_reader:
         dataset_name = dataset_description["name"]
         print(f"Running tests for {dataset_name}")
         drifts_count = 0
+        tree_size = - -1
         total_after_accuracy_drop = 0
         total_fix_accuracy_increase = 0
         try:
             for test_result in run_test(DATASETS_FULL_PATH, dataset_name + ".csv"):
                 drifts_count += 1
+                tree_size = test_result["tree size"]
                 total_after_accuracy_drop += test_result["after accuracy decrease"]
                 total_fix_accuracy_increase += test_result["fix accuracy increase"]
-                results_writer.writerow(test_result)
-            aggregating_writer.writerow({"name": dataset_name, 
-                                         "drifts count": drifts_count,
-                                         "average accuracy drop": total_after_accuracy_drop / drifts_count, 
-                                         "average fix accuracy increase": total_fix_accuracy_increase / drifts_count})
+                raw_results = raw_results._append(test_result, ignore_index=True)
+            aggregated_results = aggregated_results._append({"name": dataset_name, 
+                                                            "tree size": tree_size if tree_size != -1 else "N/A",
+                                                            "drifts count": drifts_count,
+                                                            "average accuracy drop": total_after_accuracy_drop / drifts_count if drifts_count != 0 else "N/A", 
+                                                            "average fix accuracy increase": total_fix_accuracy_increase / drifts_count if drifts_count != 0 else "N/A"
+                                                            }, ignore_index=True)
         except Exception as e:
-            errors_writer.writerow({"name": dataset_name, "error": str(e)})
+            errors = errors._append({"name": dataset_name, "error": str(e)}, ignore_index=True)
             continue
+
+average_tree_size = raw_results["tree size"].mean()
+average_drifts_count = aggregated_results["drifts count"].mean()
+after_accuracy_drop_precentage = raw_results["after accuracy decrease"].mean() * 100
+fix_accuracy_increase_precentage = raw_results["fix accuracy increase"].mean() * 100
+# Add average results to the aggregated results
+aggregated_results = aggregated_results._append({"name": "TOTAL", 
+                                                "tree size": average_tree_size,
+                                                "drifts count": average_drifts_count,
+                                                "average accuracy drop": after_accuracy_drop_precentage,
+                                                "average fix accuracy increase": fix_accuracy_increase_precentage
+                                                }, ignore_index=True)
+raw_results = raw_results._append({"drift description": "TOTAL", 
+                                    "tree size": average_tree_size,
+                                    "after accuracy decrease": after_accuracy_drop_precentage,
+                                    "faulty node index": "N/A",
+                                    "faulty feature": "N/A",
+                                    "fix accuracy increase": fix_accuracy_increase_precentage
+                                    }, ignore_index=True)
+
+# Save the results to CSV files
+
+
+if not os.path.exists(RESULTS_FULL_PATH):
+    os.mkdir(RESULTS_FULL_PATH)
+aggregated_results.to_csv(f"{RESULTS_FULL_PATH}/aggregated_results.csv", index=False)
+raw_results.to_csv(f"{RESULTS_FULL_PATH}/all_results.csv", index=False)
+errors.to_csv(f"{RESULTS_FULL_PATH}/errors.csv", index=False)

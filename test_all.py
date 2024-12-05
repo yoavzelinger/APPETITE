@@ -46,5 +46,3 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
         except Exception as e:
             errors_writer.writerow({"name": dataset_name, "error": str(e)})
             continue
-        if dataset_name == "ar4":
-            break

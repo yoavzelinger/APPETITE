@@ -3,6 +3,7 @@ from pandas.api.types import is_numeric_dtype
 from numpy import max as numpy_max
 from collections.abc import Iterable
 from typing import Generator
+from copy import deepcopy
 
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from APPETITE.Diagnosers.SFLDT import SFLDT

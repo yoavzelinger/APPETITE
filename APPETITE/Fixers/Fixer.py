@@ -30,7 +30,7 @@ class Fixer:
         diagnoser_name (str): The diagnoser name.
         diagnoser_parameters (tuple[object]): The diagnoser parameters.
         """
-        self.mapped_tree = mapped_tree
+        self.mapped_tree = deepcopy(mapped_tree)
         self.X = X
         self.y = y
         diagnoser_name, diagnoser_default_parameters = diagnosers_dict[diagnoser_name]

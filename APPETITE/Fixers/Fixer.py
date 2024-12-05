@@ -42,8 +42,8 @@ class Fixer:
         self.faulty_nodes = None    # List of sk_indices of the faulty nodes; Lazy evaluation
         self.tree_already_fixed = False
 
-    def _filter_data_reached_faults(self,
-                                  faults_count: int = 1                           
+    def _filter_data_reached_faults_generator(self,
+                                  faults_count: int                           
         ) -> DataFrame | Generator[DataFrame, None, None]:
         """
         Filter the data that reached the faulty nodes.
@@ -60,8 +60,6 @@ class Fixer:
         for faulty_node_index in self.faulty_nodes[: faults_count]:
             faulty_node = self.mapped_tree.get_node(faulty_node_index)
             filtered_data = faulty_node.get_data_reached_node(self.X)
-            if faults_count == 1:
-                return filtered_data
             yield filtered_data
 
     def _fix_terminal_faulty_node(self,

@@ -77,9 +77,15 @@ def run_test(directory, file_name):
             raise Exception(f"Error in {drift_description}: {e}")
 
 DIRECTORY = "data\\Classification_Datasets\\"
-FILE_NAME = "abalone.csv"
+def get_example_mapped_tree(file_name):
+    dataset = get_dataset(DIRECTORY, file_name + ".csv")
+    X_train, y_train = dataset.get_before_concept()
+    sklearn_tree_model = get_example_tree(X_train, y_train)
+    return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train)
+
+EXAMPLE_FILE_NAME = "Acute-Inflammation.csv"
 def sanity_run():
-    for result in run_test(DIRECTORY, FILE_NAME):
+    for result in run_test(DIRECTORY, EXAMPLE_FILE_NAME):
         print(result)
         
 if __name__ == "__main__":

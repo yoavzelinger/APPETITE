@@ -4,6 +4,8 @@ from APPETITE.Fixers import *
 
 from sklearn.metrics import accuracy_score
 
+MINIMUM_ORIGINAL_ACCURACY = 0.75
+
 def get_dataset(directory, file_name):
     return Dataset(directory + file_name)
 
@@ -41,15 +43,20 @@ def run_test(directory, file_name):
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_example_tree(X_train, y_train)
 
+    X_test, y_test = dataset.get_test_concept()
+    no_drift_test_accuracy = get_accuracy(sklearn_tree_model, X_test, y_test)
+    if no_drift_test_accuracy < MINIMUM_ORIGINAL_ACCURACY:
+        return
+
     X_after_original, y_after_original = dataset.get_after_concept()
-    no_drift_accuracy = get_accuracy(sklearn_tree_model, X_after_original, y_after_original)
+    no_drift_after_accuracy = get_accuracy(sklearn_tree_model, X_after_original, y_after_original)
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train)
 
     for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description in drift_single_tree_feature(mapped_tree, dataset):
         try:
             after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
-            after_accuracy_drop = no_drift_accuracy - after_accuracy
+            after_accuracy_drop = no_drift_after_accuracy - after_accuracy
             faulty_node_index = get_faulty_node(mapped_tree, X_after_drifted, y_after)
             faulty_feature = mapped_tree.get_node(faulty_node_index).feature
             fixer = Fixer(mapped_tree, X_after_drifted, y_after)
@@ -61,10 +68,10 @@ def run_test(directory, file_name):
             yield {
                 "drift description": drift_description,
                 "tree size": mapped_tree.node_count,
-                "after accuracy decrease": after_accuracy_drop,
+                "after accuracy decrease precentage": after_accuracy_drop * 100,
                 "faulty node index": faulty_node_index,
                 "faulty feature": faulty_feature,
-                "fix accuracy increase": test_accuracy_bump
+                "fix accuracy increase precentage": test_accuracy_bump * 100
             }
         except Exception as e:
             raise Exception(f"Error in {drift_description}: {e}")

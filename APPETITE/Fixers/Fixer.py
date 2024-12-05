@@ -161,9 +161,6 @@ class Fixer:
         Returns:
             MappedDecisionTree: The fixed decision tree.
         """
-        data_reached_faulty_node = self._filter_data_reached_faults(1)
-        faulty_node_index = self.faulty_nodes[0]
-        self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         sklearn_tree_model = self.mapped_tree.sklearn_tree_model
         feature_types = self.mapped_tree.data_feature_types
         # Create a new MappedDecisionTree object with the fixed sklearn tree model

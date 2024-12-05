@@ -1,5 +1,4 @@
 from pandas import DataFrame, Series
-from pandas.api.types import is_numeric_dtype
 from numpy import max as numpy_max
 from collections.abc import Iterable
 from typing import Generator
@@ -32,6 +31,7 @@ class Fixer:
         diagnoser_parameters (tuple[object]): The diagnoser parameters.
         """
         self.mapped_tree = deepcopy(mapped_tree)
+        self.feature_types = mapped_tree.data_feature_types
         self.X = X
         self.y = y
         diagnoser_name, diagnoser_default_parameters = diagnosers_dict[diagnoser_name]
@@ -162,7 +162,7 @@ class Fixer:
         faulty_node_feature_type = faulty_node.feature_type
         if faulty_node_feature_type is None:
             # Determine the type from the after drift dataset
-            faulty_node_feature_type = "numeric" if is_numeric_dtype(data_reached_faulty_node[faulty_node.feature]) else "categorical"
+            faulty_node_feature_type = self.feature_types[faulty_node.feature]
         if faulty_node_feature_type == "numeric":
             self._fix_numeric_faulty_node(faulty_node_index, data_reached_faulty_node)
         else:

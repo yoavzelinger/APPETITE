@@ -94,12 +94,12 @@ class Fixer:
         self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index] = values
 
 
-    def _fix_numerical_faulty_node(self, 
+    def _fix_numeric_faulty_node(self, 
                                   faulty_node_index: int,
                                   data_reached_faulty_node: DataFrame
      ) -> None:
         """
-        Fix a numerical faulty node.
+        Fix a numeric faulty node.
         The fix is done by replacing the threshold of the node
 
         Parameters:
@@ -148,9 +148,9 @@ class Fixer:
         faulty_node_feature_type = faulty_node.feature_type
         if faulty_node_feature_type is None:
             # Determine the type from the after drift dataset
-            faulty_node_feature_type = "numerical" if is_numeric_dtype(data_reached_faulty_node[faulty_node.feature]) else "categorical"
-        if faulty_node_feature_type == "numerical":
-            self._fix_numerical_faulty_node(faulty_node_index, data_reached_faulty_node)
+            faulty_node_feature_type = "numeric" if is_numeric_dtype(data_reached_faulty_node[faulty_node.feature]) else "categorical"
+        if faulty_node_feature_type == "numeric":
+            self._fix_numeric_faulty_node(faulty_node_index, data_reached_faulty_node)
         else:
             self._fix_categorical_faulty_node(faulty_node_index, data_reached_faulty_node)
     
@@ -190,7 +190,6 @@ class Fixer:
         faulty_node_index = self.faulty_nodes[0]
         self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         return self._create_fixed_mapped_tree()
-        return self.mapped_tree
 
     def fix_multiple_faults(self) -> MappedDecisionTree:
         """

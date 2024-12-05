@@ -20,8 +20,6 @@ def drift_single_tree_feature(mapped_tree, dataset):
     Generate a drifted in a single tree that is used in the tree structure.
     """
     tree_features_set = mapped_tree.tree_features_set
-    if(len([feature for feature in tree_features_set if dataset.feature_types[feature] == "categorical"])): # Skip datasets with categorical
-        return
     for drifting_feature in tree_features_set:
         after_drift_generator = dataset.drift_generator(drifting_feature, partition="after")
         test_drift_generator = dataset.drift_generator(drifting_feature, partition="test")

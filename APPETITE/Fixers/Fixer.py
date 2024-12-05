@@ -142,7 +142,12 @@ class Fixer:
                 faulty_node_index (int): The index of the faulty node.
                 data_reached_faulty_node (DataFrame): The data that reached the faulty node.
           """
-          raise NotImplementedError
+          faulty_node = self.mapped_tree.get_node(faulty_node_index)
+          left_child, right_child = faulty_node.left_child, faulty_node.right_child
+          left_child_index, right_child_index = left_child.index, right_child.index
+          sklearn_tree_model = self.mapped_tree.sklearn_tree_model
+          sklearn_tree_model.tree_.children_left[faulty_node_index] = right_child_index
+          sklearn_tree_model.tree_.children_right[faulty_node_index] = left_child_index
           
     def fix_faulty_node(self,
                         faulty_node_index: int,

@@ -4,49 +4,70 @@ from APPETITE.Fixers import *
 
 from sklearn.metrics import accuracy_score
 
-DIRECTORY = "data\\Classification_Datasets\\"
-FILE_NAME = "abalone.csv"
+def get_dataset(directory, file_name):
+    return Dataset(directory + file_name)
 
-def get_dataset():
-    return Dataset(DIRECTORY + FILE_NAME)
-
-def get_example_tree():
+def get_example_tree(X_train, y_train):
     return build_tree(X_train, y_train)
 
-def get_mapped_tree():
-    return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types)
+def get_mapped_tree(sklearn_tree_model, feature_types, X_train):
+    return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types, data=X_train)
 
-def drift_single_tree_feature():
+def drift_single_tree_feature(mapped_tree, dataset):
+    """
+    Generate a drifted in a single tree that is used in the tree structure.
+    """
     tree_features_set = mapped_tree.tree_features_set
     for drifting_feature in tree_features_set:
-        for (X_after_drifted, y_after), drift_description in dataset.drift_generator(drifting_feature):
-            yield (X_after_drifted, y_after), drift_description
+        after_drift_generator = dataset.drift_generator(drifting_feature, partition="after")
+        test_drift_generator = dataset.drift_generator(drifting_feature, partition="test")
+        for ((X_after_drifted, y_after), after_drift_description), ((X_test_drifted, y_test), test_drift_description) in zip(after_drift_generator, test_drift_generator):
+            yield (X_after_drifted, y_after), (X_test_drifted, y_test), after_drift_description[6: ]
 
-def print_single_tree_feature_drift_accuracy():
-    for (X_after_drifted, y_after), drift_description in drift_single_tree_feature():
-        y_after__drifted_predicted = sklearn_tree_model.predict(X_after_drifted)
-        print(f"After drift {drift_description} accuracy: ", accuracy_score(y_after, y_after__drifted_predicted))
+def get_accuracy(model, X, y):
+    y_predicted = model.predict(X)
+    return accuracy_score(y, y_predicted)
 
-def faulty_node_index_generator():
-    for (X_after_drifted, y_after), drift_description in drift_single_tree_feature():
-        diagnoser = SFLDT(mapped_tree, X_after_drifted, y_after)
-        diagnosis = diagnoser.get_diagnosis()
-        yield drift_description, diagnosis[0]
+def get_faulty_node(mapped_tree, X_drifted, y_original):
+    diagnoser = SFLDT(mapped_tree, X_drifted, y_original)
+    diagnosis = diagnoser.get_diagnosis()
+    return diagnosis[0]
 
-dataset = get_dataset()
-X_train, y_train = dataset.get_before_concept()
+def run_test(directory, file_name):
+    dataset = get_dataset(directory, file_name)
 
-sklearn_tree_model = get_example_tree()
+    X_train, y_train = dataset.get_before_concept()
+    sklearn_tree_model = get_example_tree(X_train, y_train)
 
-X_after_original, y_after_original = dataset.get_after_concept()
-y_after_original_predicted = sklearn_tree_model.predict(X_after_original)
-print("No drift accuracy: ", accuracy_score(y_after_original, y_after_original_predicted))
+    X_after_original, y_after_original = dataset.get_after_concept()
+    no_drift_accuracy = get_accuracy(sklearn_tree_model, X_after_original, y_after_original)
 
-feature_types = dataset.feature_types
-mapped_tree = get_mapped_tree()
+    mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train)
 
-print_single_tree_feature_drift_accuracy()
+    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description in drift_single_tree_feature(mapped_tree, dataset):
+        after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
+        after_accuracy_drop = no_drift_accuracy - after_accuracy
+        faulty_node_index = get_faulty_node(mapped_tree, X_after_drifted, y_after)
+        faulty_feature = mapped_tree.get_node(faulty_node_index).feature
+        fixer = Fixer(mapped_tree, X_after_drifted, y_after)
+        fixed_mapped_tree = fixer.fix_single_fault()
+        fixed_mapped_tree.update_tree_attributes(X_train)
+        test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
+        fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
+        test_accuracy_bump = fixed_test_accuracy - test_accuracy
+        yield {
+            "drift description": drift_description,
+            "after accuracy decrease": after_accuracy_drop,
+            "faulty node index": faulty_node_index,
+            "faulty feature": faulty_feature,
+            "fix accuracy increase": test_accuracy_bump
+        }
 
-for drift_description, faulty_node_index in faulty_node_index_generator():
-    faulty_feature = mapped_tree.get_node(faulty_node_index).feature
-    print(f"Drift {drift_description} detected faulty node in index {faulty_node_index}. The node's feature is {faulty_feature}.")
+DIRECTORY = "data\\Classification_Datasets\\"
+FILE_NAME = "abalone.csv"
+def sanity_run():
+    for result in run_test(DIRECTORY, FILE_NAME):
+        print(result)
+        
+if __name__ == "__main__":
+    sanity_run()

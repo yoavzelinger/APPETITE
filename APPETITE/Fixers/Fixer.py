@@ -133,7 +133,7 @@ class Fixer:
             data_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
         faulty_node = self.mapped_tree.get_node(faulty_node_index)
-        if faulty_node.is_terminal:
+        if faulty_node.is_terminal():
             self._fix_terminal_faulty_node(faulty_node_index, data_reached_faulty_node)
             return
         faulty_node_feature_type = faulty_node.feature_type

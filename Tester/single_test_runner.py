@@ -47,23 +47,26 @@ def run_test(directory, file_name):
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train)
 
     for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description in drift_single_tree_feature(mapped_tree, dataset):
-        after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
-        after_accuracy_drop = no_drift_accuracy - after_accuracy
-        faulty_node_index = get_faulty_node(mapped_tree, X_after_drifted, y_after)
-        faulty_feature = mapped_tree.get_node(faulty_node_index).feature
-        fixer = Fixer(mapped_tree, X_after_drifted, y_after)
-        fixed_mapped_tree = fixer.fix_single_fault()
-        fixed_mapped_tree.update_tree_attributes(X_train)
-        test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
-        fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
-        test_accuracy_bump = fixed_test_accuracy - test_accuracy
-        yield {
-            "drift description": drift_description,
-            "after accuracy decrease": after_accuracy_drop,
-            "faulty node index": faulty_node_index,
-            "faulty feature": faulty_feature,
-            "fix accuracy increase": test_accuracy_bump
-        }
+        try:
+            after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
+            after_accuracy_drop = no_drift_accuracy - after_accuracy
+            faulty_node_index = get_faulty_node(mapped_tree, X_after_drifted, y_after)
+            faulty_feature = mapped_tree.get_node(faulty_node_index).feature
+            fixer = Fixer(mapped_tree, X_after_drifted, y_after)
+            fixed_mapped_tree = fixer.fix_single_fault()
+            fixed_mapped_tree.update_tree_attributes(X_train)
+            test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
+            fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
+            test_accuracy_bump = fixed_test_accuracy - test_accuracy
+            yield {
+                "drift description": drift_description,
+                "after accuracy decrease": after_accuracy_drop,
+                "faulty node index": faulty_node_index,
+                "faulty feature": faulty_feature,
+                "fix accuracy increase": test_accuracy_bump
+            }
+        except Exception as e:
+            raise Exception(f"Error in {drift_description}: {e}")
 
 DIRECTORY = "data\\Classification_Datasets\\"
 FILE_NAME = "abalone.csv"

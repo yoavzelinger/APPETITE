@@ -43,7 +43,7 @@ def run_test(directory, file_name):
 
     X_test, y_test = dataset.get_test_concept()
     no_drift_test_accuracy = get_accuracy(sklearn_tree_model, X_test, y_test)
-    if no_drift_test_accuracy < TEST_MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
+    if no_drift_test_accuracy < MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
         return
 
     X_after_original, y_after_original = dataset.get_after_concept()
@@ -55,7 +55,7 @@ def run_test(directory, file_name):
         try:
             after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
-            if after_accuracy_drop < TEST_MINIMUM_DRIFT_ACCURACY_DROP:   # Insigificant drift
+            if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # Insigificant drift
                 continue
             faulty_node_index = get_faulty_node(mapped_tree, X_after_drifted, y_after)
             faulty_feature = mapped_tree.get_node(faulty_node_index).feature

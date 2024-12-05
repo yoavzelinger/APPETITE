@@ -286,7 +286,7 @@ class MappedDecisionTree:
             current_class = current_leaf.class_name
             parent.feature, parent.feature_type, parent.threshold, parent.class_name = None, None, None, current_class
             leaf_nodes += [parent]
-            # Adapt the tree
+            # Adjust the tree
             parent_index = parent.sk_index
             self.sklearn_tree_model.tree_.children_left[parent_index] = TREE_LEAF
             self.sklearn_tree_model.tree_.children_right[parent_index] = TREE_LEAF

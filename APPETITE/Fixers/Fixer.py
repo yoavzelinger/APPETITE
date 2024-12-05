@@ -55,8 +55,6 @@ class Fixer:
             DataFrame: The data that reached the faulty node if there is only one faulty node.
             Generator[DataFrame, None, None]: The data that reached each faulty node if there are more than one faulty node.
         """
-        if self.faulty_nodes is None:
-            self.faulty_nodes = self.diagnoser.get_diagnosis()
         for faulty_node_index in self.faulty_nodes[: faults_count]:
             faulty_node = self.mapped_tree.get_node(faulty_node_index)
             filtered_data = faulty_node.get_data_reached_node(self.X)

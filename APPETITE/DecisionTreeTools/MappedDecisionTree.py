@@ -171,23 +171,26 @@ class MappedDecisionTree:
         """
         assert sklearn_tree_model is not None and feature_types is not None
         self.sklearn_tree_model = sklearn_tree_model
-        self.criterion = sklearn_tree_model.criterion
-        
         self.data_feature_types = feature_types
+
+        self.criterion = sklearn_tree_model.criterion # TODO - make sure that needed
+        
 
         self.tree_dict = self.map_tree()
         self.root = self.get_node(0)
-        self.update_tree_attributes()
+        self.update_tree_attributes(data)
         if prune:
             self.prune_tree()
-        if data is not None:
-            for node in self.tree_dict.values():
-                if not node.is_terminal():
-                    node.update_feature_average_value(data)
+        self.update_tree_attributes(data)
 
-    def update_tree_attributes(self) -> None:
+    def update_tree_attributes(self,
+                               data: DataFrame = None
+     ) -> None:
         """
         Update the tree attributes. those attributes are aggregated from the nodes.
+
+        Parameters:
+            data (DataFrame): The data. If provided, the average feature value of the nodes will be updated.
         """
         self.node_count = len(self.tree_dict)
         self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
@@ -197,6 +200,8 @@ class MappedDecisionTree:
             node.spectra_index = ordered_index
             if node.feature:
                 self.tree_features_set.add(node.feature)
+                if self.data_feature_types[node.feature] == "numeric" and data is not None:
+                    node.update_feature_average_value(data)
             if node.class_name:
                 self.classes_set.add(node.class_name)
         self.spectra_dict = {node.spectra_index: node for node in self.tree_dict.values()}

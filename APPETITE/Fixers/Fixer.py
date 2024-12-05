@@ -77,20 +77,34 @@ class Fixer:
         """
         Fix a terminal faulty node.
         The fix is done by changing the class of the node to the most common class in the data that reached the node (after the drift).
+        If the data that reached the node is empty, the fix is done by switching between the top and second top classes.
         
         Parameters:
             faulty_node_index (int): The index of the faulty node.
             data_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
         reached_labels = self.y[data_reached_faulty_node.index]
-        most_common_class = reached_labels.value_counts().idxmax()
-
-        # Make the most common class the class with the max count in the node
+        
         values = self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index]
-        max_value_count = numpy_max(values)
-        old_values = values[0]
-        values[0][most_common_class] = max_value_count + 1
-        print(f"Faulty node {faulty_node_index} (terminal) class changed from {old_values} to {values}")
+        old_values = deepcopy(values)
+
+        if len(reached_labels):
+            # Get the most common class in the data that reached the faulty node
+            most_common_class_index = reached_labels.value_counts().idxmax()
+
+            # Make the most common class the class with the max count in the node
+            max_value_count = numpy_max(values)
+            values[0][most_common_class_index] = max_value_count + 1
+        else:
+            # Switch between top and second top classes
+            max_value_index = values.argmax()
+            max_value = values[0][max_value_index]
+            values[0][max_value_index] = 0
+            second_max_value_index = values.argmax()
+            values[0][max_value_index] = max_value
+            values[0][second_max_value_index] = max_value
+        
+        print(f"Faulty node {faulty_node_index} (terminal) class changed from {old_values[0]} to {values[0]}")
         self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index] = values
 
 

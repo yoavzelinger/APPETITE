@@ -156,8 +156,9 @@ class Fixer:
         faulty_node_index = self.faulty_nodes[0]
         self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         sklearn_tree_model = self.mapped_tree.sklearn_tree_model
+        feature_types = self.mapped_tree.data_feature_types
         # Create a new MappedDecisionTree object with the fixed sklearn tree model
-        fixed_mapped_decision_tree = MappedDecisionTree(sklearn_tree_model)
+        fixed_mapped_decision_tree = MappedDecisionTree(sklearn_tree_model, feature_types=feature_types)
         self.mapped_tree = fixed_mapped_decision_tree
         self.tree_already_fixed = True
         return fixed_mapped_decision_tree

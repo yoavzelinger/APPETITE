@@ -158,9 +158,9 @@ class MappedDecisionTree:
 
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,
+                 feature_types: dict[str, str] = None,
                  prune: bool = True,
-                 data: DataFrame = None,
-                 feature_types: dict[str, str] = None
+                 data: DataFrame = None
     ):
         """
         Initialize the MappedDecisionTree.
@@ -169,7 +169,7 @@ class MappedDecisionTree:
             sklearn_tree_model (DecisionTreeClassifier): The sklearn decision tree.
             prune (bool): Whether to prune the tree.
         """
-        assert sklearn_tree_model is not None
+        assert sklearn_tree_model is not None and feature_types is not None
         self.sklearn_tree_model = sklearn_tree_model
         self.criterion = sklearn_tree_model.criterion
         

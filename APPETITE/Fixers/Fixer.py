@@ -87,7 +87,9 @@ class Fixer:
         # Make the most common class the class with the max count in the node
         values = self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index]
         max_value_count = numpy_max(values)
+        old_values = values[0]
         values[0][most_common_class] = max_value_count + 1
+        print(f"Faulty node {faulty_node_index} (terminal) class changed from {old_values} to {values}")
         self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index] = values
 
 
@@ -110,6 +112,7 @@ class Fixer:
         node_feature_average_after_drift = data_reached_faulty_node[faulty_node.feature].mean()
         node_feature_average_differece = node_feature_average_after_drift - node_feature_average_before_drift
         new_threshold = faulty_node.threshold + node_feature_average_differece
+        print(f"Faulty node {faulty_node_index} (Numeric) threshold changed from {faulty_node.threshold} to {new_threshold}")
         self.mapped_tree.sklearn_tree_model.tree_.threshold[faulty_node_index] = new_threshold
 
     def _fix_categorical_faulty_node(self,

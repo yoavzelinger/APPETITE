@@ -59,6 +59,15 @@ class Fixer:
             faulty_node = self.mapped_tree.get_node(faulty_node_index)
             filtered_data = faulty_node.get_data_reached_node(self.X)
             yield filtered_data
+    
+    def _filter_data_reached_single_fault(self) -> DataFrame:
+        """
+        Filter the data that reached a single faulty node.
+
+        Returns:
+            DataFrame: The data that reached the faulty node.
+        """
+        return next(self._filter_data_reached_faults_generator(1))
 
     def _fix_terminal_faulty_node(self,
                                  faulty_node_index: int,

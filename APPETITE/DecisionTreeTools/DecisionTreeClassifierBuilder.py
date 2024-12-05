@@ -39,10 +39,10 @@ def build_tree(
         # Duplicate the rows with that one instance
         min_classes = classes_counts[classes_counts == 1].index
         for class_name in min_classes:
-            sample_filter = y_train == class_name
+            sample_filter = (modified_y_train == class_name)
             modified_X_train = concat([modified_X_train, modified_X_train[sample_filter]], ignore_index=True)
             modified_y_train = concat([modified_y_train, Series([class_name])], ignore_index=True)
-    cross_validation_split_count = min(DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, y_train.value_counts().min())
+    cross_validation_split_count = min(DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, modified_y_train.value_counts().min())
 
     decision_tree_classifier = DecisionTreeClassifier()
     # Find best parameters using grid search cross validation (on training data)

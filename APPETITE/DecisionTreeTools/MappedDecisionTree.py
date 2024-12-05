@@ -67,13 +67,12 @@ class MappedDecisionTree:
             """
             if self.parent is None:
                 return
-            self.conditions_path = self.parent.conditions_path
             current_condition = {
                 "feature": self.parent.feature,
                 "sign": "<=" if self.is_left_child() else ">",
                 "threshold": self.parent.threshold
             }
-            self.conditions_path += [current_condition]
+            self.conditions_path = self.parent.conditions_path + [current_condition]
 
         def is_terminal(self) -> bool:
             """

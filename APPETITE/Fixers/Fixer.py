@@ -144,10 +144,10 @@ class Fixer:
             self._fix_numerical_faulty_node(faulty_node_index, data_reached_faulty_node)
         else:
             self._fix_categorical_faulty_node(faulty_node_index, data_reached_faulty_node)
-
-    def fix_single_fault(self) -> MappedDecisionTree:
+    
+    def _create_fixed_mapped_tree(self) -> MappedDecisionTree:
         """
-        Fix the decision tree under the assumption that there is a single faulty node in the tree.
+        Create new mapped decision tree after the fix.
 
         Returns:
             MappedDecisionTree: The fixed decision tree.

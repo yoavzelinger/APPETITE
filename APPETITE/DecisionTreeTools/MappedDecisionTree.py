@@ -1,6 +1,6 @@
 from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.tree._tree import TREE_LEAF
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from numpy import argmax
 
 class MappedDecisionTree:
@@ -122,45 +122,60 @@ class MappedDecisionTree:
             return str(self.sk_index)
         
         def get_data_reached_node(self,
-                                  data: DataFrame
-         ) -> DataFrame:
+                                  X: DataFrame,
+                                  y: Series = None
+         ) -> DataFrame | tuple[DataFrame, Series]:
             """
             Filter the data that reached the node.
 
             Parameters:
-                data (DataFrame): The data.
+                X (DataFrame): The data.
+                y (Series): The target column.
 
             Returns:
-                DataFrame: The filtered data.
+                DataFrame | tuple[DataFrame, Series]: The data that reached the node.
             """
             for condition in self.conditions_path:
                 feature, sign, threshold = condition.values()
-                assert feature in data.columns, f"Feature {feature} not in the dataset"
+                assert feature in X.columns, f"Feature {feature} not in the dataset"
                 if sign == "<=":
-                    data = data[data[feature] <= threshold]
+                    X = X[X[feature] <= threshold]
                 else:
-                    data = data[data[feature] > threshold]
-            return data
+                    X = X[X[feature] > threshold]
+                if y is not None:
+                    y = y[X.index]
+            return X if y is None else (X, y)
         
-        def update_feature_average_value(self, 
-                                          data: DataFrame
+        def update_node_data_attributes(self, 
+                                        X: DataFrame,
+                                        y: Series = None
          ) -> None:
             """
             Update the average feature value of the node.
             The average is calculated on the data that reached the node.
 
             Parameters:
-                data (DataFrame): The data.
+                X (DataFrame): The data.
+                y (Series): The target column
             """
             # Get the data that reached the node
-            data = self.get_data_reached_node(data)
-            self.feature_average_value = data[self.feature].mean()
+            X = self.get_data_reached_node(X, y)
+            if y is not None:
+                X, y = X
+            self.reached_samples_count = len(X)
+            if self.feature_type == "numeric":
+                self.feature_average_value = X[self.feature].mean()
+            if self.is_terminal() and y is not None:
+                # count currect classifications
+                self.correct_classifications_count = (y == self.class_name).sum()
+                self.misclassifications_count = (y != self.class_name).sum()
 
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,
                  feature_types: dict[str, str] = None,
                  prune: bool = True,
-                 data: DataFrame = None
+                 X: DataFrame = None,
+                 y: Series = None
     ):
         """
         Initialize the MappedDecisionTree.
@@ -168,6 +183,8 @@ class MappedDecisionTree:
         Parameters:
             sklearn_tree_model (DecisionTreeClassifier): The sklearn decision tree.
             prune (bool): Whether to prune the tree.
+            X (DataFrame): The data.
+            y (Series): The target column.
         """
         assert sklearn_tree_model is not None and feature_types is not None
         self.sklearn_tree_model = sklearn_tree_model
@@ -178,19 +195,21 @@ class MappedDecisionTree:
 
         self.tree_dict = self.map_tree()
         self.root = self.get_node(0)
-        self.update_tree_attributes(data)
+        self.update_tree_attributes(X, y)
         if prune:
             self.prune_tree()
-        self.update_tree_attributes(data)
+        self.update_tree_attributes(X, y)
 
     def update_tree_attributes(self,
-                               data: DataFrame = None
+                               X: DataFrame = None,
+                               y: Series = None
      ) -> None:
         """
         Update the tree attributes. those attributes are aggregated from the nodes.
 
         Parameters:
-            data (DataFrame): The data. If provided, the average feature value of the nodes will be updated.
+            X (DataFrame): The data. If provided - calculatig the data reached each node and the average feature value.
+            y (Series): The target column. If provided - calculating the correct classifications count.
         """
         self.node_count = len(self.tree_dict)
         self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
@@ -200,10 +219,10 @@ class MappedDecisionTree:
             node.spectra_index = ordered_index
             if node.feature:
                 self.tree_features_set.add(node.feature)
-                if self.data_feature_types[node.feature] == "numeric" and data is not None:
-                    node.update_feature_average_value(data)
             if node.class_name:
                 self.classes_set.add(node.class_name)
+            if X is not None:
+                node.update_node_data_attributes(X, y)
         self.spectra_dict = {node.spectra_index: node for node in self.tree_dict.values()}
 
     def map_tree(self, 

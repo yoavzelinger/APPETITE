@@ -52,6 +52,10 @@ class Fixer:
         for faulty_node_index in self.faulty_nodes[: faults_count]:
             faulty_node = self.mapped_tree.get_node(faulty_node_index)
             filtered_data = faulty_node.get_data_reached_node(self.X)
+            while filtered_data.empty and faulty_node.parent is not None:
+                # Get the data that reached the parent node
+                faulty_node = faulty_node.parent
+                filtered_data = faulty_node.get_data_reached_node(self.X)
             yield filtered_data
     
     def _filter_data_reached_single_fault(self) -> DataFrame:
@@ -125,7 +129,6 @@ class Fixer:
 
     def _fix_categorical_faulty_node(self,
                                     faulty_node_index: int,
-                                    data_reached_faulty_node: DataFrame
      ) -> None:
           """
           Fix a categorical faulty node.
@@ -164,7 +167,7 @@ class Fixer:
         if faulty_node_feature_type == "numeric":
             self._fix_numeric_faulty_node(faulty_node_index, data_reached_faulty_node)
         else:
-            self._fix_categorical_faulty_node(faulty_node_index, data_reached_faulty_node)
+            self._fix_categorical_faulty_node(faulty_node_index)
     
     def _create_fixed_mapped_tree(self) -> MappedDecisionTree:
         """

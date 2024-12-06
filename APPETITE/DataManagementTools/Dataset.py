@@ -41,41 +41,39 @@ class Dataset:
         assert isinstance(source, DataFrame)
 
         self.target_name = source.columns[-1]
-        source, y = self.split_features_targets(source)
+        self.data, y = self.split_features_targets(source)
 
         self.feature_types = {}
         one_hot_encoded_dict = {}
-        for column_name in source.columns:
-            column_type = source[column_name].dtype
+        for column_name in self.data.columns:
+            column_type = self.data[column_name].dtype
             if column_type not in [object, bool]:   # Numeric
-                source[column_name] = source[column_name].fillna(source[column_name].mean())    # Fill NaN values
+                self.data[column_name] = self.data[column_name].fillna(self.data[column_name].mean())    # Fill NaN values
                 self.feature_types[column_name] = "numeric"
                 continue
             # Categorical or Binary
-            source[column_name] = source[column_name].fillna(source[column_name].mode().iloc[0])    # Fill NaN values
-            if len(source[column_name].unique()) <= 2: # Consider as binary
+            self.data[column_name] = self.data[column_name].fillna(self.data[column_name].mode().iloc[0])    # Fill NaN values
+            if len(self.data[column_name].unique()) <= 2: # Consider as binary
                 column_type = bool
             if column_type == bool or not one_hot_encoding:
-                source[column_name] = Categorical(source[column_name])
-                source[column_name] = source[column_name].cat.codes
+                self.data[column_name] = Categorical(self.data[column_name])
+                self.data[column_name] = self.data[column_name].cat.codes
                 self.feature_types[column_name] = "binary" if column_type == bool else "categorical" 
                 continue
             # One hot encoding with multiple values
-            # Get all unique values
-            one_hot_encoded_dict.update({f"{column_name}_{value}": "binary" for value in source[column_name].unique()})
-            source = get_dummies(source[column_name], columns=[column_name])
+            one_hot_encoded_dict.update({f"{column_name}_{value}": "binary" for value in self.data[column_name].unique()})
+            self.data = get_dummies(self.data[column_name], columns=[column_name])
         self.feature_types.update(one_hot_encoded_dict)
 
-        source[self.target_name] = Categorical(y.fillna(y.mode().iloc[0]))
-        source[self.target_name] = source[self.target_name].cat.codes
+        self.data[self.target_name] = Categorical(y.fillna(y.mode().iloc[0]))
+        self.data[self.target_name] = self.data[self.target_name].cat.codes
 
-        if to_shuffle:  # shuffle data, same shuffle always
-            source = source.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
-        self.data = source
-        
+        if to_shuffle:  # shuffle data - same shuffle always
+            self.data = self.data.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
+
         self.data.attrs["name"] = self.name
 
-        n_samples = len(source)
+        n_samples = len(self.data)
         if type(size) == list:
             if len(size) == 4:
                 concept_size, window, n_used, test = size

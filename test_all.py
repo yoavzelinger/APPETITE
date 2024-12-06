@@ -48,7 +48,7 @@ average_tree_size = raw_results["tree size"].mean()
 average_drifts_count = aggregated_results["drifts count"].mean()
 after_accuracy_drop_precentage = raw_results["after accuracy decrease precentage"].mean()
 fix_accuracy_increase_precentage = raw_results["fix accuracy increase precentage"].mean()
-# Add average results to the aggregated results
+
 aggregated_results = aggregated_results._append({"name": "TOTAL", 
                                                 "tree size": average_tree_size,
                                                 "drifts count": average_drifts_count,
@@ -63,11 +63,11 @@ raw_results = raw_results._append({"drift description": "TOTAL",
                                     "fix accuracy increase precentage": fix_accuracy_increase_precentage
                                     }, ignore_index=True)
 
-# Save the results to CSV files
-
-
 if not os.path.exists(RESULTS_FULL_PATH):
     os.mkdir(RESULTS_FULL_PATH)
 aggregated_results.to_csv(f"{RESULTS_FULL_PATH}/aggregated_results.csv", index=False)
 raw_results.to_csv(f"{RESULTS_FULL_PATH}/all_results.csv", index=False)
-errors.to_csv(f"{RESULTS_FULL_PATH}/errors.csv", index=False)
+if not errors.empty:
+    errors.to_csv(f"{RESULTS_FULL_PATH}/errors.csv", index=False)
+
+print("All tests are done!, average accuracy increased by", fix_accuracy_increase_precentage, "%")

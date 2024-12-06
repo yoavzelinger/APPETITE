@@ -1,4 +1,4 @@
-from pandas import DataFrame, Series, Categorical, read_csv
+from pandas import read_csv, DataFrame, Series, Categorical, get_dummies
 from scipy.io.arff import loadarff
 from typing import Generator
 
@@ -10,36 +10,24 @@ class Dataset:
     partitions = ["before", "after", "test"]
 
     def __init__(self, 
-                 source: str | DataFrame, 
-                 dataset_type: str = "", 
-                 target_class: str = "", 
-                 feature_types: dict[str, str] = None, 
-                 size: int | tuple | list = PROPORTIONS_TUPLE, 
-                 name: str = "", 
-                 to_shuffle: bool = True
+                 source: str | DataFrame,
+                 size: int | tuple | list = PROPORTIONS_TUPLE,
+                 to_shuffle: bool = True,
+                 one_hot_encoding: bool = True
     ):
         """
         source: str or DataFrame
             If str, the path to the dataset file
             If DataFrame, the dataset itself
-        dataset_type: str
-            The type of the dataset
-        target_class: str
-            The target class column name
-            If not provided the last column is used as the target
-        feature_types: dict
-            The types of the features
-            If not provided then interpreted from the data
         size: int or tuple
             The size of the dataset
             If int, the size of the before concept
             If tuple, the size of the before concept, the size of the after concept, the size of the test concept
             If list, the size of the concept, the window size, the number of windows used, the test size and the slot size (Optional)
-        name: str
-            The name of the dataset
-            If not provided then trying to interpret from the source (if it's a path)
         to_shuffle: bool
             Whether to shuffle the data
+        one_hot_encoding: bool
+            Whether to use one hot encoding for the categorical
         """
         # Get data
         if type(source) == str:    # Path to the file
@@ -51,45 +39,40 @@ class Dataset:
                 data, _ = loadarff(source)
                 source = DataFrame(data)
         assert isinstance(source, DataFrame)
-        
-        if name:
-            self.name = name
-        
-        self.dataset_type = dataset_type
-        
-        self.feature_types = feature_types
-        feature_types = {} # Trying to fill from the data
 
-        for col in source:
-            column_type = source[col].dtype
-            if column_type in [object, bool]:   # Categorical or Binary
-                source[col] = source[col].fillna(source[col].mode().iloc[0])    # Fill NaN values
-                # Convert column to numeric
-                if column_type == object:
-                    source[col] = Categorical(source[col])
-                    source[col] = source[col].cat.codes
-                    column_type ="categorical"
-                else:
-                    source[col] = source[col].replace({True: 1, False: 0})
-                    column_type = "binary"
-            else:   # Numeric
-                source[col] = source[col].fillna(source[col].mean())    # Fill NaN values
-                column_type = "numeric"
-            feature_types[col] = column_type
-        
-        if not target_class:
-            # Taking last column as the target
-            target_class = source.columns[-1]
-        self.target = target_class
+        self.target_name = source.columns[-1]
+        source, y = self.split_features_targets(source)
 
-        if self.feature_types is None:
-            # Removing the target column from the feature types
-            feature_types.pop(target_class)
-            self.feature_types = feature_types
+        feature_types = {}
+        one_hot_encoded_dict = {}
+        for column_name in source.columns:
+            column_type = source[column_name].dtype
+            if column_type not in [object, bool]:   # Numeric
+                source[column_name] = source[column_name].fillna(source[column_name].mean())    # Fill NaN values
+                feature_types[column_name] = "numeric"
+                continue
+            # Categorical or Binary
+            source[column_name] = source[column_name].fillna(source[column_name].mode().iloc[0])    # Fill NaN values
+            if len(source[column_name].unique()) <= 2: # Consider as binary
+                column_type = bool
+            if column_type == bool or not one_hot_encoding:
+                source[column_name] = Categorical(source[column_name])
+                source[column_name] = source[column_name].cat.codes
+                feature_types[column_name] = "binary" if column_type == bool else "categorical" 
+                continue
+            # One hot encoding with multiple values
+            # Get all unique values
+            one_hot_encoded_dict.update({f"{column_name}_{value}": "binary" for value in source[column_name].unique()})
+            source = get_dummies(source[column_name], columns=[column_name])
+        feature_types.update(one_hot_encoded_dict)
+
+        source[self.target_name] = Categorical(y.fillna(y.mode().iloc[0]))
+        source[self.target_name] = source[self.target_name].cat.codes
 
         if to_shuffle:  # shuffle data, same shuffle always
             source = source.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
         self.data = source
+        
         self.data.attrs["name"] = self.name
 
         n_samples = len(source)
@@ -131,8 +114,8 @@ class Dataset:
         Returns:
             tuple[DataFrame, Series]: The X and y
         """
-        X = data.drop(columns=[self.target]).reset_index(drop=True)
-        y = data[self.target].reset_index(drop=True)
+        X = data.drop(columns=[self.target_name]).reset_index(drop=True)
+        y = data[self.target_name].reset_index(drop=True)
         return X, y
 
     def get_before_concept(self) -> tuple[DataFrame, Series]:

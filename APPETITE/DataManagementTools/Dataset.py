@@ -43,13 +43,13 @@ class Dataset:
         self.target_name = source.columns[-1]
         source, y = self.split_features_targets(source)
 
-        feature_types = {}
+        self.feature_types = {}
         one_hot_encoded_dict = {}
         for column_name in source.columns:
             column_type = source[column_name].dtype
             if column_type not in [object, bool]:   # Numeric
                 source[column_name] = source[column_name].fillna(source[column_name].mean())    # Fill NaN values
-                feature_types[column_name] = "numeric"
+                self.feature_types[column_name] = "numeric"
                 continue
             # Categorical or Binary
             source[column_name] = source[column_name].fillna(source[column_name].mode().iloc[0])    # Fill NaN values
@@ -58,13 +58,13 @@ class Dataset:
             if column_type == bool or not one_hot_encoding:
                 source[column_name] = Categorical(source[column_name])
                 source[column_name] = source[column_name].cat.codes
-                feature_types[column_name] = "binary" if column_type == bool else "categorical" 
+                self.feature_types[column_name] = "binary" if column_type == bool else "categorical" 
                 continue
             # One hot encoding with multiple values
             # Get all unique values
             one_hot_encoded_dict.update({f"{column_name}_{value}": "binary" for value in source[column_name].unique()})
             source = get_dummies(source[column_name], columns=[column_name])
-        feature_types.update(one_hot_encoded_dict)
+        self.feature_types.update(one_hot_encoded_dict)
 
         source[self.target_name] = Categorical(y.fillna(y.mode().iloc[0]))
         source[self.target_name] = source[self.target_name].cat.codes

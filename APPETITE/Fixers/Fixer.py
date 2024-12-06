@@ -1,6 +1,5 @@
 from pandas import DataFrame, Series
 from numpy import max as numpy_max
-from collections.abc import Iterable
 from typing import Generator
 from copy import deepcopy
 

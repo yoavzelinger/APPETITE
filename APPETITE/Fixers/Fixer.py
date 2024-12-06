@@ -5,20 +5,17 @@ from typing import Generator
 from copy import deepcopy
 
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
-from APPETITE.Diagnosers.SFLDT import SFLDT
+from APPETITE.Diagnosers import *
 
-# The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
-diagnosers_dict = {
-    "SFLDT": (SFLDT, ("faith", ))
-}
+from APPETITE.Constants import DEFAULT_FIXING_DIAGNOSER
 
 class Fixer:
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 diagnoser_name: str = "SFLDT",
-                 diagnoser_parameters: tuple[object] = None
+                 diagnoser_name: str = DEFAULT_FIXING_DIAGNOSER,
+                 *diagnoser_parameters: tuple[object]
     ):
         """
         Initialize the Fixer.
@@ -34,12 +31,8 @@ class Fixer:
         self.feature_types = mapped_tree.data_feature_types
         self.X = X
         self.y = y
-        diagnoser_name, diagnoser_default_parameters = diagnosers_dict[diagnoser_name]
-        if diagnoser_parameters is None:
-            diagnoser_parameters = diagnoser_default_parameters
-        if not isinstance(diagnoser_parameters, Iterable):
-            diagnoser_parameters = (diagnoser_parameters, )
-        self.diagnoser = diagnoser_name(self.mapped_tree, self.X, self.y, *diagnoser_parameters)
+        diagnoser_class, diagnoser_parameters = get_diagnoser(diagnoser_name, *diagnoser_parameters)
+        self.diagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, *diagnoser_parameters)
         self.faulty_nodes = None    # List of sk_indices of the faulty nodes; Lazy evaluation
         self.tree_already_fixed = False
 

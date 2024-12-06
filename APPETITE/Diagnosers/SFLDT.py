@@ -3,6 +3,8 @@ from numpy import zeros
 
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
+from APPETITE.Constants import SFLDT_DEFAULT_SIMILARITY_MEASURES
+
 def get_faith_similarity(participation_vector: Series,
                          error_vector: Series
  ) -> float:
@@ -36,7 +38,7 @@ class SFLDT:
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 similarity_measure: str = "faith"
+                 similarity_measure: str = SFLDT_DEFAULT_SIMILARITY_MEASURES
     ):
         """
         Initialize the SFLDT diagnoser.
@@ -80,21 +82,24 @@ class SFLDT:
                     self.error_vector[sample_id] = int(error)
 
     def get_diagnosis(self,
-                      retrieve_spectra_indices: bool = False
-     ) -> list[int]:
+                      retrieve_spectra_indices: bool = False,
+                      retrive_scores: bool = False
+     ) -> list[int] | list[tuple[int, float]]:
         """
         Get the diagnosis of the nodes.
         The diagnosis consists the nodes ordered by their similarity to the error vector (DESC).
 
         Parameters:
-        similarity_measure (str): The similarity measure to use.
         retrieve_spectra_indices (bool): Whether to return the spectra indices or the node indices.
 
         Returns:
-        list[int]: The diagnosis of the nodes. For each node, the spectra/node index, ordered by their similarity to the error vector (DESC).
+        list[int] | list[tuple[int, float]]: The diagnosis. If retrive_scores is True, the diagnosis will be a list of tuples,
+          where the first element is the index and the second is the similarity score.
         """
         similarity_measure_function = SFLDT.similarity_measure_functions_dict[self.similarity_measure]
-        sotred_fauly_spectra_indices = sorted(range(self.node_count), key=lambda spectra_index: similarity_measure_function(self.spectra[spectra_index], self.error_vector), reverse=True)
-        if retrieve_spectra_indices:
-            return sotred_fauly_spectra_indices
-        return list(map(self.mapped_tree.convert_spectra_index_to_node_index, sotred_fauly_spectra_indices))
+        get_returned_index = lambda spectra_index: spectra_index if retrieve_spectra_indices else self.mapped_tree.convert_spectra_index_to_node_index(spectra_index)
+        index_rank = [(get_returned_index(spectra_index), similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.node_count)]
+        index_rank.sort(key=lambda x: x[1], reverse=True)
+        if retrive_scores:
+            return index_rank
+        return [index for index, _ in index_rank]

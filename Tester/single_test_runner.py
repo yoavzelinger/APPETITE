@@ -38,7 +38,7 @@ def get_faulty_node(mapped_tree, X_drifted, y_original, diagnoser_name, *diagnos
     diagnosis = diagnoser.get_diagnosis()
     return diagnosis[0]
 
-def run_test(directory, file_name, diagnoser_name=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+def run_test(directory, file_name, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
     dataset = get_dataset(directory, file_name)
 
     X_train, y_train = dataset.get_before_concept()
@@ -60,21 +60,27 @@ def run_test(directory, file_name, diagnoser_name=DEFAULT_TESTING_DIAGNOSER, *di
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
             if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # Insigificant drift
                 continue
-            faulty_node_index = get_faulty_node(mapped_tree, X_after_drifted, y_after, diagnoser_name, *diagnoser_parameters)
-            faulty_feature = mapped_tree.get_node(faulty_node_index).feature
-            fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
-            fixed_mapped_tree = fixer.fix_single_fault()
-            test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
-            fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
-            test_accuracy_bump = fixed_test_accuracy - test_accuracy
-            yield {
+            current_results_dict = {
                 "drift description": drift_description,
                 "tree size": mapped_tree.node_count,
-                "after accuracy decrease precentage": after_accuracy_drop * 100,
-                "faulty node index": faulty_node_index,
-                "faulty feature": faulty_feature,
-                "fix accuracy increase precentage": test_accuracy_bump * 100
+                "after accuracy decrease precentage": after_accuracy_drop * 100
             }
+            if isinstance(diagnoser_names, str):
+                diagnoser_names = (diagnoser_names, )
+            for diagnoser_name in diagnoser_names:
+                faulty_node_index = get_faulty_node(mapped_tree, X_after_drifted, y_after, diagnoser_name, *diagnoser_parameters)
+                faulty_feature = mapped_tree.get_node(faulty_node_index).feature
+                fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
+                fixed_mapped_tree = fixer.fix_single_fault()
+                test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
+                fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
+                test_accuracy_bump = fixed_test_accuracy - test_accuracy
+                current_results_dict.update({
+                    f"{diagnoser_name} faulty node index": faulty_node_index,
+                    f"{diagnoser_name} faulty feature": faulty_feature,
+                    f"{diagnoser_name} fix accuracy increase precentage": test_accuracy_bump * 100
+                })
+            yield current_results_dict
         except Exception as e:
             if WRAP_EXCEPTION:
                 raise Exception(f"Error in {drift_description}: {e}")

@@ -1,12 +1,8 @@
 from APPETITE import *
-from APPETITE.Diagnosers import *
-from APPETITE.Fixers import *
 
 from sklearn.metrics import accuracy_score
 
-from .Constants import MINIMUM_ORIGINAL_ACCURACY, MINIMUM_DRIFT_ACCURACY_DROP, DEFAULT_TESTING_DIAGNOSER
-
-WRAP_EXCEPTION = True
+from Tester.Constants import MINIMUM_ORIGINAL_ACCURACY, MINIMUM_DRIFT_ACCURACY_DROP, DEFAULT_TESTING_DIAGNOSER, WRAP_EXCEPTION
 
 def get_dataset(directory, file_name):
     return Dataset(directory + file_name)
@@ -38,7 +34,7 @@ def get_faulty_node(mapped_tree, X_drifted, y_original, diagnoser_name, *diagnos
     diagnosis = diagnoser.get_diagnosis()
     return diagnosis[0]
 
-def run_test(directory, file_name, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
     dataset = get_dataset(directory, file_name)
 
     X_train, y_train = dataset.get_before_concept()
@@ -88,8 +84,8 @@ def run_test(directory, file_name, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *d
             raise e
 
 DIRECTORY = "data\\Classification_Datasets\\"
-EXAMPLE_FILE_NAME = "Acute-Inflammation"
-EXAMPLE_FILE_NAME = "Acute-Inflammation" + ".csv"
+EXAMPLE_FILE_NAME = "analcatdata_boxing1"
+EXAMPLE_FILE_NAME = EXAMPLE_FILE_NAME + ".csv"
 def get_example_mapped_tree(directory=DIRECTORY, file_name=EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name)
     X_train, y_train = dataset.get_before_concept()

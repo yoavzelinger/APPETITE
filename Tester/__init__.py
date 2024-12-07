@@ -1,1 +1,1 @@
-from .single_test_runner import run_test, sanity_run, get_example_mapped_tree
+from .single_run import run_test, sanity_run, get_example_mapped_tree, DEFAULT_TESTING_DIAGNOSER

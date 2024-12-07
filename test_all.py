@@ -2,7 +2,7 @@ import os
 from csv import DictReader
 from pandas import DataFrame
 
-from Tester.single_test_runner import run_test, DEFAULT_TESTING_DIAGNOSER
+from Tester import *
 
 DATA_DIRECTORY = "data"
 DATASET_DESCRIPTION_FILE = "all_datasets.csv"

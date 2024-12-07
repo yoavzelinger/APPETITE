@@ -78,7 +78,7 @@ def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_nam
                 })
             yield current_results_dict
         except Exception as e:
-            if WRAP_EXCEPTION:
+            if wrap_exception:
                 raise Exception(f"Error in {drift_description}: {e}")
             e.add_note(f"Error in {drift_description}")
             raise e

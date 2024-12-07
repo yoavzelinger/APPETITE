@@ -62,7 +62,7 @@ class Dataset:
                 continue
             # One hot encoding with multiple values
             one_hot_encoded_dict.update({f"{column_name}_{value}": "binary" for value in self.data[column_name].unique()})
-            self.data = get_dummies(self.data[column_name], columns=[column_name])
+            self.data = get_dummies(self.data, columns=[column_name])
         self.feature_types.update(one_hot_encoded_dict)
 
         self.data[self.target_name] = Categorical(y.fillna(y.mode().iloc[0]))

@@ -54,12 +54,12 @@ def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_nam
         try:
             after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
-            if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # Insigificant drift
+            if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
             current_results_dict = {
                 "drift description": drift_description,
                 "tree size": mapped_tree.node_count,
-                "after accuracy decrease precentage": after_accuracy_drop * 100
+                "after accuracy decrease percentage": after_accuracy_drop * 100
             }
             if isinstance(diagnoser_names, str):
                 diagnoser_names = (diagnoser_names, )
@@ -74,7 +74,7 @@ def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_nam
                 current_results_dict.update({
                     f"{diagnoser_name} faulty node index": faulty_node_index,
                     f"{diagnoser_name} faulty feature": faulty_feature,
-                    f"{diagnoser_name} fix accuracy increase precentage": test_accuracy_bump * 100
+                    f"{diagnoser_name} fix accuracy increase percentage": test_accuracy_bump * 100
                 })
             yield current_results_dict
         except Exception as e:

@@ -36,7 +36,12 @@ class STAT_SFLDT:
         if self.diagnosis is None:
             stat_diagnosis = self.stat.get_diagnosis(retrieve_scores=True)
             sfldt_diagnosis = self.sfldt.get_diagnosis(retrieve_scores=True)
-            self.diagnosis = [(node_index, stat_score * sfldt_score) for (node_index, stat_score), (_, sfldt_score) in zip(stat_diagnosis, sfldt_diagnosis)]
+            multiple_fault_dict = {}
+            for single_diagnosis in (stat_diagnosis, sfldt_diagnosis):
+                for node_index, fault_value in single_diagnosis:
+                    multiple_fault_dict[node_index] = multiple_fault_dict.get(node_index, 1) * fault_value
+            self.diagnosis = list(multiple_fault_dict.items())
+            self.diagnosis.sort(key=lambda fault: fault[1], reverse=True)
         if retrieve_scores:
             return self.diagnosis
         return [node_index for node_index, _ in self.diagnosis]

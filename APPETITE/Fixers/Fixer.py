@@ -101,7 +101,7 @@ class Fixer:
             values[0][max_value_index] = max_value
             values[0][second_max_value_index] = max_value
         
-        print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (terminal) class changed from {old_values[0]} to {values[0]}")
+        print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Terminal) class changed from {old_values[0]} to {values[0]}")
         self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index] = values
 
 

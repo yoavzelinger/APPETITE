@@ -62,7 +62,7 @@ def _numeric_drift_generator(
             k (int): The value to add to all entries in the specified column.
 
         Returns:
-            tuple[Series, str]: The new Series with the concept drift and a description of the drift (in the format of "NumericFeature[feature;{+/-}kstd]").
+            tuple[Series, str]: The new Series with the concept drift and a description of the drift (in the format of "NumericFeature[feature;{+/-}k*std]").
         """
         return (column + k * feature_std, f"NumericFeature[{column.name};{'+' if k >= 0 else ''}{k}std]")
     

@@ -2,7 +2,7 @@ from pandas import read_csv, DataFrame, Series, Categorical, get_dummies
 from scipy.io.arff import loadarff
 from typing import Generator
 
-from APPETITE.Constants import CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION, PROPORTIONS_TUPLE, RANDOM_STATE
+from APPETITE.Constants import CONCEPT_PROPORTION, DRIFT_PROPORTION, TEST_PROPORTION, PROPORTIONS_TUPLE, RANDOM_STATE
 
 from .DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
@@ -86,17 +86,17 @@ class Dataset:
             self.window = window
             self.concept_size = concept_size
         else:
-            before_proprtion, after_proprtion, test_proprtion = CONCEPT_PROPORTION, DRIFT_PROPOTION, TEST_PROPORTION
+            before_proportion, after_proportion, test_proportion = CONCEPT_PROPORTION, DRIFT_PROPORTION, TEST_PROPORTION
             if type(size) == int:
                 self.before_size = size
-                before_proprtion = 1.0 * size / n_samples
-                total_post_proportion = (1 - before_proprtion) / (after_proprtion + test_proprtion)
-                after_proprtion, test_proprtion = after_proprtion * total_post_proportion, test_proprtion * total_post_proportion
+                before_proportion = 1.0 * size / n_samples
+                total_post_proportion = (1 - before_proportion) / (after_proportion + test_proportion)
+                after_proportion, test_proportion = after_proportion * total_post_proportion, test_proportion * total_post_proportion
             elif type(size) == tuple and len(size) == 3:
-                before_proprtion, after_proprtion, test_proprtion = size
-            self.before_size = int(before_proprtion*n_samples)
-            self.after_size = int(after_proprtion*n_samples)
-            self.test_size = int(test_proprtion*n_samples)
+                before_proportion, after_proportion, test_proportion = size
+            self.before_size = int(before_proportion*n_samples)
+            self.after_size = int(after_proportion*n_samples)
+            self.test_size = int(test_proportion*n_samples)
 
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
@@ -164,16 +164,16 @@ class Dataset:
 
         Returns:
             Generator[tuple[tuple[DataFrame, Series], str], None, None]: 
-                A generator of all possible drifts in the feature and the description of the drift in the given partion name.
+                A generator of all possible drifts in the feature and the description of the drift in the given portion name.
                 Each drift represented by the (drifted dataset, original y) and the description of the drift. 
         """
         assert partition in Dataset.partitions, "Invalid partition name"
-        get_partion_dict = {
+        get_portion_dict = {
             "before": self.get_before_concept,
             "after": self.get_after_concept,
             "test": self.get_test_concept
         }
-        original_X, y = get_partion_dict[partition]()
+        original_X, y = get_portion_dict[partition]()
         for drifted_X, description in self._drift_data_generator(original_X, drift_features):
             yield (drifted_X, y), f"{partition.upper()}_{description}"
 

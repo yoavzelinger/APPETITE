@@ -12,8 +12,8 @@ def get_faith_similarity(participation_vector: Series,
     Get the faith similarity of the node to the error vector.
 
     The similarity is calculated by
-        (errror_participation +  0.5 * accurate_nonparticipation) /
-        (errror_participation + accurate_participation + error_nonparticipation + accurate_nonparticipation)
+        (error_participation +  0.5 * accurate_nonparticipation) /
+        (error_participation + accurate_participation + error_nonparticipation + accurate_nonparticipation)
     Parameters:
         participation_vector (Series): The participation vector, where 1 represent participation in the sample classification.
         error_vector (Series): The error vector, where 1 represent that the sample classified incorrectly.

@@ -166,7 +166,7 @@ class MappedDecisionTree:
             if self.feature_type == "numeric":
                 self.feature_average_value = X[self.feature].mean()
             if self.is_terminal() and y is not None:
-                # count currect classifications
+                # count correct classifications
                 self.correct_classifications_count = (y == self.class_name).sum()
                 self.misclassifications_count = (y != self.class_name).sum()
 
@@ -208,7 +208,7 @@ class MappedDecisionTree:
         Update the tree attributes. those attributes are aggregated from the nodes.
 
         Parameters:
-            X (DataFrame): The data. If provided - calculatig the data reached each node and the average feature value.
+            X (DataFrame): The data. If provided - calculating the data reached each node and the average feature value.
             y (Series): The target column. If provided - calculating the correct classifications count.
         """
         self.node_count = len(self.tree_dict)

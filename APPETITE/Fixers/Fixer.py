@@ -122,8 +122,8 @@ class Fixer:
         if node_feature_average_before_drift is None:
             raise NotImplementedError("The average feature value before the drift is not available")
         node_feature_average_after_drift = data_reached_faulty_node[faulty_node.feature].mean()
-        node_feature_average_differece = node_feature_average_after_drift - node_feature_average_before_drift
-        new_threshold = faulty_node.threshold + node_feature_average_differece
+        node_feature_average_difference = node_feature_average_after_drift - node_feature_average_before_drift
+        new_threshold = faulty_node.threshold + node_feature_average_difference
         print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Numeric) threshold changed from {faulty_node.threshold} to {new_threshold}")
         self.mapped_tree.sklearn_tree_model.tree_.threshold[faulty_node_index] = new_threshold
 

@@ -24,19 +24,19 @@ class STAT_SFLDT:
         self.diagnosis = None
 
     def get_diagnosis(self,
-                      retrive_scores=False
+                      retrieve_scores=False
      ) -> list[int] | list[tuple[int, float]]:
         """
         Get the diagnosis.
         The diagnosis is calculated as the multiplication of the diagnosis of the STAT and SFLDT diagnosers.
         
         Returns:
-        list[int] | list[tuple[int, float]]: The diagnosis. If retrive_scores is True, the diagnosis will be a list of tuples with the node index and the score.
+        list[int] | list[tuple[int, float]]: The diagnosis. If retrieve_scores is True, the diagnosis will be a list of tuples with the node index and the score.
         """
         if self.diagnosis is None:
-            stat_diagnosis = self.stat.get_diagnosis(retrive_scores=True)
-            sfldt_diagnosis = self.sfldt.get_diagnosis(retrive_scores=True)
+            stat_diagnosis = self.stat.get_diagnosis(retrieve_scores=True)
+            sfldt_diagnosis = self.sfldt.get_diagnosis(retrieve_scores=True)
             self.diagnosis = [(node_index, stat_score * sfldt_score) for (node_index, stat_score), (_, sfldt_score) in zip(stat_diagnosis, sfldt_diagnosis)]
-        if retrive_scores:
+        if retrieve_scores:
             return self.diagnosis
         return [node_index for node_index, _ in self.diagnosis]

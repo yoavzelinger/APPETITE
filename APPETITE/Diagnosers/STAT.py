@@ -92,21 +92,21 @@ class STAT:
         return abs(before_violation - after_violation)
 
     def get_diagnosis(self,
-                      retrive_scores: bool = False
+                      retrieve_scores: bool = False
      ) -> list[int] | list[tuple[int, float]]:
         """
         Get the diagnosis of the drift.
 
         Parameters:
-        retrive_scores (bool): Whether to return the scores of the nodes.
+        retrieve_scores (bool): Whether to return the scores of the nodes.
         
         Returns:
-        list[int] | list[tuple[int, float]]: The diagnosis. If retrive_scores is True, the diagnosis will be a list of tuples,
+        list[int] | list[tuple[int, float]]: The diagnosis. If retrieve_scores is True, the diagnosis will be a list of tuples,
           where the first element is the index and the second is the violation ratio.
         """
         if self.diagnosis is None:
             self.diagnosis = [(node_index, self.get_node_violation_difference(node_index)) for node_index in self.mapped_tree.tree_dict.keys()]
             self.diagnosis = sorted(self.diagnosis, key=lambda x: x[1], reverse=True)
-        if retrive_scores:
+        if retrieve_scores:
             return self.diagnosis
         return [node_index for node_index, _ in self.diagnosis]

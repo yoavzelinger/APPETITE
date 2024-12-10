@@ -83,7 +83,7 @@ class SFLDT:
 
     def get_diagnosis(self,
                       retrieve_spectra_indices: bool = False,
-                      retrive_scores: bool = False
+                      retrieve_scores: bool = False
      ) -> list[int] | list[tuple[int, float]]:
         """
         Get the diagnosis of the nodes.
@@ -93,13 +93,13 @@ class SFLDT:
         retrieve_spectra_indices (bool): Whether to return the spectra indices or the node indices.
 
         Returns:
-        list[int] | list[tuple[int, float]]: The diagnosis. If retrive_scores is True, the diagnosis will be a list of tuples,
+        list[int] | list[tuple[int, float]]: The diagnosis. If retrieve_scores is True, the diagnosis will be a list of tuples,
           where the first element is the index and the second is the similarity score.
         """
         similarity_measure_function = SFLDT.similarity_measure_functions_dict[self.similarity_measure]
         get_returned_index = lambda spectra_index: spectra_index if retrieve_spectra_indices else self.mapped_tree.convert_spectra_index_to_node_index(spectra_index)
         index_rank = [(get_returned_index(spectra_index), similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.node_count)]
         index_rank.sort(key=lambda x: x[1], reverse=True)
-        if retrive_scores:
+        if retrieve_scores:
             return index_rank
         return [index for index, _ in index_rank]

@@ -64,10 +64,9 @@ def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_nam
             if isinstance(diagnoser_names, str):
                 diagnoser_names = (diagnoser_names, )
             for diagnoser_name in diagnoser_names:
-                faulty_node_index = get_faulty_node(mapped_tree, X_after_drifted, y_after, diagnoser_name, *diagnoser_parameters)
-                faulty_feature = mapped_tree.get_node(faulty_node_index).feature
                 fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
-                fixed_mapped_tree = fixer.fix_single_fault()
+                fixed_mapped_tree, faulty_node_index = fixer.fix_single_fault()
+                faulty_feature = mapped_tree.get_node(faulty_node_index).feature
                 test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - test_accuracy

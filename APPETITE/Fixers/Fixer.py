@@ -187,14 +187,14 @@ class Fixer:
 
     def fix_single_fault(self, 
                          faulty_node: int = None
-     ) -> MappedDecisionTree:
+     ) -> tuple[MappedDecisionTree, int]:
         """
         Fix the decision tree under the assumption that there is a single faulty node in the tree.
 
         Parameters:
             faulty_node (int): The index of the faulty node. If None, the faulty node will be detected using the diagnoser.
         Returns:
-            MappedDecisionTree: The fixed decision tree.
+            MappedDecisionTree: The fixed decision tree and the faulty node index.
         """
         if self.tree_already_fixed:
             return self.mapped_tree
@@ -205,7 +205,7 @@ class Fixer:
         data_reached_faulty_node = self._filter_data_reached_single_fault()
         faulty_node_index = self.faulty_nodes[0]
         self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
-        return self._create_fixed_mapped_tree()
+        return self._create_fixed_mapped_tree(), faulty_node_index
 
     def fix_multiple_faults(self) -> MappedDecisionTree:
         """

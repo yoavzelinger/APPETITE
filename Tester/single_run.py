@@ -1,5 +1,4 @@
 from pandas import concat as pd_concat
-from numpy import concatenate as np_concat
 
 from APPETITE import *
 

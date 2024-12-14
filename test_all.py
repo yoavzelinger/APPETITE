@@ -13,21 +13,25 @@ RESULTS_FULL_PATH = f"{DATA_DIRECTORY}\\{RESULTS_DIRECTORY}\\"
 
 FAULTY_NODE_NAME_SUFFIX = " faulty node index"
 FAULTY_FEATURE_NAME_SUFFIX = " faulty feature"
-FIX_ACCURACY_NAME_SUFFIX = " fix accuracy increase percentage"
-AVERAGE_FIX_ACCURACY_NAME = " average" + FIX_ACCURACY_NAME_SUFFIX
+FIX_ACCURACY_NAME_SUFFIX = " fix accuracy percentage"
+AVERAGE_FIX_ACCURACY_NAME_SUFFIX = " average" + FIX_ACCURACY_NAME_SUFFIX
+FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase percentage"
+AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_NAME_SUFFIX
 
 if isinstance(DEFAULT_TESTING_DIAGNOSER, str):
     DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
 
-raw_results_columns = ["drift description", "tree size", "after accuracy decrease percentage"]
-aggregated_groupby_columns = ["name", "tree size", "drifts count", "average after accuracy decrease percentage"]
+raw_results_columns = ["drift description", "tree size", "after accuracy decrease percentage", "after retrain accuracy", "before after retrain accuracy"]
+aggregated_groupby_columns = ["name", "tree size", "drifts count", "average after accuracy decrease percentage", "average after retrain accuracy", "average before after retrain accuracy"]
 
 aggregated_summarizes_columns = []
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
     raw_results_columns.append(diagnoser_name + FAULTY_NODE_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + FAULTY_FEATURE_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + FIX_ACCURACY_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_NAME)
+    raw_results_columns.append(diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX)
 
 # Create DataFrame for the aggregated results
 raw_results = DataFrame(columns=raw_results_columns)
@@ -43,7 +47,9 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
         current_aggregated_row_dict = {
             "name": dataset_name,
             "tree size": -1,
-            "average after accuracy decrease percentage": 0
+            "average after accuracy decrease percentage": 0,
+            "average after retrain accuracy": 0,
+            "average before after retrain accuracy": 0
         }
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
 
@@ -53,8 +59,11 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
                 drifts_count += 1
                 current_aggregated_row_dict["tree size"] = test_result["tree size"]
                 current_aggregated_row_dict["average after accuracy decrease percentage"] = test_result["after accuracy decrease percentage"]
+                current_aggregated_row_dict["average after retrain accuracy"] = test_result["after retrain accuracy"]
+                current_aggregated_row_dict["average before after retrain accuracy"] = test_result["before after retrain accuracy"]
                 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
-                    current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME] += test_result[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
                 raw_results = raw_results._append(test_result, ignore_index=True)
             if drifts_count == 0:
                 continue
@@ -63,17 +72,20 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
                 current_aggregated_row_dict[summarize_column_name] /= drifts_count
             aggregated_results = aggregated_results._append(current_aggregated_row_dict, ignore_index=True)
         except Exception as e:
-            errors = errors._append({"name": dataset_name, "error": str(e)}, ignore_index=True)
+            errors = errors._append({"name": dataset_name, "error": e}, ignore_index=True)
             continue
 
 aggregating_total_row = {
     "name": "TOTAL",
     "tree size": aggregated_results["tree size"].mean(),
     "drifts count": aggregated_results["drifts count"].mean(),
-    "average after accuracy decrease percentage": aggregated_results["average after accuracy decrease percentage"].mean()
+    "average after accuracy decrease percentage": aggregated_results["average after accuracy decrease percentage"].mean(),
+    "average after retrain accuracy": aggregated_results["average after retrain accuracy"].mean(),
+    "average before after retrain accuracy": aggregated_results["average before after retrain accuracy"].mean()
 }
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
-    aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME] = raw_results[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX].mean()
+    aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] = raw_results[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX].mean()
+    aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] = raw_results[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()
 
 aggregated_results = aggregated_results._append(aggregating_total_row, ignore_index=True)
 
@@ -85,6 +97,6 @@ raw_results.to_csv(f"{RESULTS_FULL_PATH}/all_results.csv", index=False)
 if not errors.empty:
     errors.to_csv(f"{RESULTS_FULL_PATH}/errors.csv", index=False)
 
-print("All tests are done! average accuracy incremental:")
+print("All tests are done! average accuracy and the incremental:")
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
-    print(f"{diagnoser_name}: {aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME]}%")
+    print(f"{diagnoser_name}: {aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX]}%, {aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX]}%")

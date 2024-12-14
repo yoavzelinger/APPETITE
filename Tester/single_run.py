@@ -1,3 +1,6 @@
+from pandas import concat as pd_concat
+from numpy import concatenate as np_concat
+
 from APPETITE import *
 
 from sklearn.metrics import accuracy_score
@@ -56,10 +59,18 @@ def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_nam
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
             if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
+            retrained_after_tree = get_sklearn_tree(X_after_drifted, y_after)
+            retrained_after_accuracy = get_accuracy(retrained_after_tree, X_after_drifted, y_after)
+
+            X_before_after_concat, y_before_after_concat = pd_concat([X_train, X_after_drifted]), pd_concat([y_train, y_after])
+            retrained_before_after_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat)
+            retrained_before_after_accuracy = get_accuracy(retrained_before_after_tree, X_after_drifted, y_after)
             current_results_dict = {
                 "drift description": drift_description,
                 "tree size": mapped_tree.node_count,
-                "after accuracy decrease percentage": after_accuracy_drop * 100
+                "after accuracy decrease percentage": after_accuracy_drop * 100,
+                "after retrain accuracy": retrained_after_accuracy * 100,
+                "before after retrain accuracy": retrained_before_after_accuracy * 100
             }
             if isinstance(diagnoser_names, str):
                 diagnoser_names = (diagnoser_names, )
@@ -73,6 +84,7 @@ def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_nam
                 current_results_dict.update({
                     f"{diagnoser_name} faulty node index": faulty_node_index,
                     f"{diagnoser_name} faulty feature": faulty_feature,
+                    f"{diagnoser_name} fix accuracy percentage": fixed_test_accuracy * 100,
                     f"{diagnoser_name} fix accuracy increase percentage": test_accuracy_bump * 100
                 })
             yield current_results_dict

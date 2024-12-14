@@ -175,7 +175,7 @@ class Dataset:
         }
         original_X, y = get_portion_dict[partition]()
         for drifted_X, description in self._drift_data_generator(original_X, drift_features):
-            yield (drifted_X, y), f"{partition.upper()}_{description}"
+            yield (drifted_X, y), f"{partition.upper()}_{description}", drift_features if isinstance(drift_features, list) else [drift_features]
 
     def get_feature_first_drift(self,
                                   feature: str,

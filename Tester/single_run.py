@@ -7,8 +7,8 @@ from sklearn.metrics import accuracy_score
 
 from Tester.Constants import MINIMUM_ORIGINAL_ACCURACY, MINIMUM_DRIFT_ACCURACY_DROP, DEFAULT_TESTING_DIAGNOSER, WRAP_EXCEPTION
 
-def get_dataset(directory, file_name):
-    return Dataset(directory + file_name)
+def get_dataset(directory, file_name, proportions_tuple):
+    return Dataset(directory + file_name, proportions_tuple)
 
 def get_sklearn_tree(X_train, y_train):
     return build_tree(X_train, y_train)
@@ -16,7 +16,8 @@ def get_sklearn_tree(X_train, y_train):
 def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
     return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types, X=X_train, y=y_train)
 
-def drift_single_tree_feature(mapped_tree, dataset):
+def drift_single_tree_feature(mapped_tree: MappedDecisionTree, 
+                              dataset: Dataset):
     """
     Generate a drifted in a single tree that is used in the tree structure.
     """
@@ -37,8 +38,8 @@ def get_faulty_node(mapped_tree, X_drifted, y_original, diagnoser_name, *diagnos
     diagnosis = diagnoser.get_diagnosis()
     return diagnosis[0]
 
-def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
-    dataset = get_dataset(directory, file_name)
+def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tuple=PROPORTIONS_TUPLE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+    dataset = get_dataset(directory, file_name, proportions_tuple)
 
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)

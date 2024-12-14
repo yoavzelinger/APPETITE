@@ -2,7 +2,7 @@ from pandas import read_csv, DataFrame, Series, Categorical, get_dummies
 from scipy.io.arff import loadarff
 from typing import Generator
 
-from APPETITE.Constants import CONCEPT_PROPORTION, DRIFT_PROPORTION, TEST_PROPORTION, PROPORTIONS_TUPLE, RANDOM_STATE
+from APPETITE.Constants import BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION, PROPORTIONS_TUPLE, RANDOM_STATE
 
 from .DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
@@ -86,7 +86,7 @@ class Dataset:
             self.window = window
             self.concept_size = concept_size
         else:
-            before_proportion, after_proportion, test_proportion = CONCEPT_PROPORTION, DRIFT_PROPORTION, TEST_PROPORTION
+            before_proportion, after_proportion, test_proportion = BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION
             if type(size) == int:
                 self.before_size = size
                 before_proportion = 1.0 * size / n_samples

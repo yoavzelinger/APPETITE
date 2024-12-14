@@ -7,7 +7,7 @@ from Tester.Constants import MINIMUM_ORIGINAL_ACCURACY, MINIMUM_DRIFT_ACCURACY_D
 def get_dataset(directory, file_name):
     return Dataset(directory + file_name)
 
-def get_example_tree(X_train, y_train):
+def get_sklearn_tree(X_train, y_train):
     return build_tree(X_train, y_train)
 
 def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
@@ -38,7 +38,7 @@ def run_test(directory, file_name, wrap_exception= WRAP_EXCEPTION, diagnoser_nam
     dataset = get_dataset(directory, file_name)
 
     X_train, y_train = dataset.get_before_concept()
-    sklearn_tree_model = get_example_tree(X_train, y_train)
+    sklearn_tree_model = get_sklearn_tree(X_train, y_train)
 
     X_test, y_test = dataset.get_test_concept()
     no_drift_test_accuracy = get_accuracy(sklearn_tree_model, X_test, y_test)
@@ -88,7 +88,7 @@ EXAMPLE_FILE_NAME = EXAMPLE_FILE_NAME + ".csv"
 def get_example_mapped_tree(directory=DIRECTORY, file_name=EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name)
     X_train, y_train = dataset.get_before_concept()
-    sklearn_tree_model = get_example_tree(X_train, y_train)
+    sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
 def sanity_run(directory=DIRECTORY, file_name=EXAMPLE_FILE_NAME):

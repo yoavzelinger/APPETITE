@@ -92,11 +92,8 @@ def get_example_mapped_tree(directory=DIRECTORY, file_name=EXAMPLE_FILE_NAME):
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
 def sanity_run(directory=DIRECTORY, file_name=EXAMPLE_FILE_NAME):
-    global WRAP_EXCEPTION
-    WRAP_EXCEPTION = False
-    for result in run_test(directory, file_name):
+    for result in run_test(directory, file_name, False):
         print(result)
-    WRAP_EXCEPTION = True
         
 if __name__ == "__main__":
     sanity_run(DIRECTORY, EXAMPLE_FILE_NAME)

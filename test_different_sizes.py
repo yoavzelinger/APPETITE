@@ -42,8 +42,6 @@ for train_size in range(5, TRAIN_AFTER_PERCENTAGE_SIZE, 5):
                                   , COUNT_COLUMN_NAME: 0}
         current_total_row_dict.update({total_results_column: 0 for total_results_column in total_results_columns})
         
-        current_total_row_dict[COUNT_COLUMN_NAME] = 0
-        
         proportion_tuple = (train_proportion, after_proportion, TEST_PROPORTION)
 
         descriptions_reader = DictReader(descriptions_file)

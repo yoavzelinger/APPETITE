@@ -13,10 +13,13 @@ RESULTS_FULL_PATH = f"{DATA_DIRECTORY}\\{RESULTS_DIRECTORY}\\"
 
 FAULTY_NODE_NAME_SUFFIX = " faulty node index"
 FAULTY_FEATURE_NAME_SUFFIX = " faulty feature"
+WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
+AVERAGE_WASTED_EFFORT_NAME_SUFFIX = " average" + WASTED_EFFORT_NAME_SUFFIX
 FIX_ACCURACY_NAME_SUFFIX = " fix accuracy percentage"
 AVERAGE_FIX_ACCURACY_NAME_SUFFIX = " average" + FIX_ACCURACY_NAME_SUFFIX
 FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase percentage"
 AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_NAME_SUFFIX
+
 
 if isinstance(DEFAULT_TESTING_DIAGNOSER, str):
     DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
@@ -28,8 +31,10 @@ aggregated_summarizes_columns = []
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
     raw_results_columns.append(diagnoser_name + FAULTY_NODE_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + FAULTY_FEATURE_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + WASTED_EFFORT_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + FIX_ACCURACY_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX)
     aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX)
     aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX)
 
@@ -62,6 +67,7 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
                 current_aggregated_row_dict["average after retrain accuracy"] = test_result["after retrain accuracy"]
                 current_aggregated_row_dict["average before after retrain accuracy"] = test_result["before after retrain accuracy"]
                 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
+                    current_aggregated_row_dict[diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
                     current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
                     current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
                 raw_results = raw_results._append(test_result, ignore_index=True)
@@ -84,6 +90,7 @@ aggregating_total_row = {
     "average before after retrain accuracy": aggregated_results["average before after retrain accuracy"].mean()
 }
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
+    aggregating_total_row[diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] = raw_results[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX].mean()
     aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] = raw_results[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX].mean()
     aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] = raw_results[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()
 

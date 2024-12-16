@@ -154,7 +154,7 @@ class Dataset:
     def drift_generator(self,
                                   drift_features: str | list[str],
                                   partition: str = "after"
-     ) -> Generator[tuple[tuple[DataFrame, Series], str], None, None]:
+     ) -> Generator[tuple[tuple[DataFrame, Series], str, list[str]], None, None]:
         """
         Drift generator for a specific partition
         
@@ -165,7 +165,7 @@ class Dataset:
         Returns:
             Generator[tuple[tuple[DataFrame, Series], str], None, None]: 
                 A generator of all possible drifts in the feature and the description of the drift in the given portion name.
-                Each drift represented by the (drifted dataset, original y) and the description of the drift. 
+                Each drift represented by the (drifted dataset, original y) and the description of the drift and the drifted features.
         """
         assert partition in Dataset.partitions, "Invalid partition name"
         get_portion_dict = {
@@ -175,7 +175,9 @@ class Dataset:
         }
         original_X, y = get_portion_dict[partition]()
         for drifted_X, description in self._drift_data_generator(original_X, drift_features):
-            yield (drifted_X, y), f"{partition.upper()}_{description}", drift_features if isinstance(drift_features, list) else [drift_features]
+            if isinstance(drift_features, str):
+                drift_features = [drift_features]
+            yield (drifted_X, y), f"{partition.upper()}_{description}", drift_features
 
     def get_feature_first_drift(self,
                                   feature: str,

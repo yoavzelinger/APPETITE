@@ -2,9 +2,12 @@ from os.path import exists as os_path_exists
 from os import mkdir as os_mkdir
 from pandas import DataFrame
 from csv import DictReader
+from time import time
 
 from APPETITE.Constants import TEST_PROPORTION
 from Tester import *
+
+start_time = time()
 
 DATA_DIRECTORY = "data"
 DATASET_DESCRIPTION_FILE = "all_datasets.csv"
@@ -37,6 +40,7 @@ TRAIN_AFTER_PERCENTAGE_SIZE = int((1 - TEST_PROPORTION) * 100)
 for train_size in range(5, TRAIN_AFTER_PERCENTAGE_SIZE, 5):
     with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_file:
         train_proportion, after_proportion = train_size / 100, (TRAIN_AFTER_PERCENTAGE_SIZE - train_size) / 100
+        print("XXXXXXXXXXXXXXXXXXXXXXXX", train_proportion, after_proportion, TEST_PROPORTION, "XXXXXXXXXXXXXXXXXXXXXXXX")
 
         current_total_row_dict = {SIZES_COLUMN_NAME: f"{train_proportion}-{after_proportion}-{TEST_PROPORTION}"
                                   , COUNT_COLUMN_NAME: 0}
@@ -48,18 +52,16 @@ for train_size in range(5, TRAIN_AFTER_PERCENTAGE_SIZE, 5):
         for dataset_description in descriptions_reader:
             dataset_name = dataset_description["name"]
             
-            drifts_count = 0
             try:
                 for test_result in run_test(DATASETS_FULL_PATH, dataset_name + ".csv", proportions_tuple=proportion_tuple):
-                    drifts_count += 1
+                    current_total_row_dict[COUNT_COLUMN_NAME] = current_total_row_dict[COUNT_COLUMN_NAME] + 1
                     for key, value in test_result.items():
                         if key in total_results_columns:
                             current_total_row_dict[key] += value
-            except:
-                drifts_count = 0
-            if drifts_count == 0:
+            except Exception as e:
+                if isinstance(e, KeyError):
+                    raise(e)
                 continue
-            current_total_row_dict[COUNT_COLUMN_NAME] = drifts_count
         
         current_total_row_dict.update({total_results_column: current_total_row_dict[total_results_column] / current_total_row_dict[COUNT_COLUMN_NAME] for total_results_column in total_results_columns})
         total_results = total_results._append(current_total_row_dict, ignore_index=True)
@@ -68,3 +70,5 @@ if not os_path_exists(RESULTS_FULL_PATH):
     os_mkdir(RESULTS_FULL_PATH)
     
 total_results.to_csv(f"{RESULTS_FULL_PATH}total_results.csv", index=False)
+
+print(f"Total time: {time() - start_time}")

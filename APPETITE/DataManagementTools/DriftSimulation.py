@@ -22,7 +22,7 @@ The module provides the following generators:
     
     * The functions are lazy and generate the drifts on the fly.
     
-    Note that the original DataFrame is not changed, and the drifts are generated in new DataFrames\Series.
+    Note that the original DataFrame is not changed, and the drifts are generated in new DataFrames or Series.
 
 Example functions:
     - multiple_drifts_example: Generate all possible concept drifts in a given list of features.

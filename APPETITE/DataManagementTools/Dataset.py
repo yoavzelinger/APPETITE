@@ -11,7 +11,8 @@ class Dataset:
 
     def __init__(self, 
                  source: str | DataFrame,
-                 size: int | tuple | list = PROPORTIONS_TUPLE,
+                 size: int | tuple[float] = PROPORTIONS_TUPLE,
+                 after_window_size: float = 1.0,
                  to_shuffle: bool = True,
                  one_hot_encoding: bool = True
     ):
@@ -19,11 +20,12 @@ class Dataset:
         source: str or DataFrame
             If str, the path to the dataset file
             If DataFrame, the dataset itself
-        size: int or tuple
+        size: int or tuple[float]
             The size of the dataset
             If int, the size of the before concept
-            If tuple, the size of the before concept, the size of the after concept, the size of the test concept
-            If list, the size of the concept, the window size, the number of windows used, the test size and the slot size (Optional)
+            If tuple, the proportion sizes of the before concept, after concept and the test concept
+        after_window_size: float
+            the amount of after data to use, default is 1.0 (all).
         to_shuffle: bool
             Whether to shuffle the data
         one_hot_encoding: bool
@@ -74,31 +76,22 @@ class Dataset:
         self.data.attrs["name"] = self.name
 
         n_samples = len(self.data)
-        if type(size) == list:
-            if len(size) == 4:
-                concept_size, window, n_used, test = size
-            elif len(size) == 5:
-                concept_size, window, n_used, test, slot = size
-                self.slot = slot
-            self.before_size = concept_size - int(window/2)  # "clean" concept
-            self.after_size = int(window*n_used)
-            self.test_size = int(window*test)
-            self.window = window
-            self.concept_size = concept_size
-        else:
-            before_proportion, after_proportion, test_proportion = BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION
-            if type(size) == int:
-                self.before_size = size
-                before_proportion = 1.0 * size / n_samples
-                total_post_proportion = (1 - before_proportion) / (after_proportion + test_proportion)
-                after_proportion, test_proportion = after_proportion * total_post_proportion, test_proportion * total_post_proportion
-            elif type(size) == tuple and len(size) == 3:
-                before_proportion, after_proportion, test_proportion = size
-            self.before_size = int(before_proportion*n_samples)
-            self.after_size = int(after_proportion*n_samples)
-            self.test_size = int(test_proportion*n_samples)
+        before_proportion, after_proportion, test_proportion = BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION
+        if isinstance(size, int):   # Concept size
+            self.before_size = size
+            before_proportion = 1.0 * self.before_size / n_samples
+            total_post_proportion = (1 - before_proportion) / (after_proportion + test_proportion)
+            after_proportion, test_proportion = after_proportion * total_post_proportion, test_proportion * total_post_proportion
+        elif isinstance(size, tuple) and len(size) == 3: # (concept, after, test)
+            before_proportion, after_proportion, test_proportion = size
+        self.before_size = int(before_proportion*n_samples)
+        self.after_size = int(after_proportion*n_samples)
+        self.test_size = int(test_proportion*n_samples)
 
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
+
+        assert 0 < after_window_size and after_window_size <= 1
+        self.after_window_size = after_window_size
 
     def split_features_targets(self, 
                                data: DataFrame
@@ -121,7 +114,8 @@ class Dataset:
         return self.split_features_targets(before_concept_data)
     
     def get_after_concept(self) -> tuple[DataFrame, Series]:
-        after_concept_data = self.data.iloc[self.before_size: self.before_size+self.after_size]
+        after_concept_data = self.data.iloc[self.before_size: self.before_size + 
+                                            max(int(self.after_size * self.after_window_size), 1)]
         return self.split_features_targets(after_concept_data)
     
     def get_test_concept(self) -> tuple[DataFrame, Series]:
@@ -178,10 +172,3 @@ class Dataset:
             if isinstance(drift_features, str):
                 drift_features = [drift_features]
             yield (drifted_X, y), f"{partition.upper()}_{description}", drift_features
-
-    def get_feature_first_drift(self,
-                                  feature: str,
-                                  partition: str = "after"
-     ) -> Generator[tuple[tuple[DataFrame, Series], str], None, None]:
-        drift_generator = self.drift_generator(feature, partition)
-        return next(drift_generator)

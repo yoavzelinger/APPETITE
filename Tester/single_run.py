@@ -6,8 +6,8 @@ from sklearn.metrics import accuracy_score
 
 from Tester.Constants import MINIMUM_ORIGINAL_ACCURACY, MINIMUM_DRIFT_ACCURACY_DROP, DEFAULT_TESTING_DIAGNOSER, WRAP_EXCEPTION
 
-def get_dataset(directory, file_name, proportions_tuple):
-    return Dataset(directory + file_name, proportions_tuple)
+def get_dataset(directory, file_name, proportions_tuple, after_window_size):
+    return Dataset(directory + file_name, proportions_tuple, after_window_size)
 
 def get_sklearn_tree(X_train, y_train):
     return build_tree(X_train, y_train)
@@ -39,8 +39,8 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
             return diagnose_fault_rank
     return len(mapped_tree.tree_features_set)
 
-def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tuple=PROPORTIONS_TUPLE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
-    dataset = get_dataset(directory, file_name, proportions_tuple)
+def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=1, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+    dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)

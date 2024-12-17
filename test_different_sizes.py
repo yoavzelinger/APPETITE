@@ -4,7 +4,6 @@ from pandas import DataFrame
 from csv import DictReader
 from time import time
 
-from APPETITE.Constants import TEST_PROPORTION
 from Tester import *
 
 start_time = time()
@@ -16,7 +15,7 @@ DATASETS_FULL_PATH = f"{DATA_DIRECTORY}\\{DATASETS_DIRECTORY}\\"
 RESULTS_DIRECTORY = "results"
 RESULTS_FULL_PATH = f"{DATA_DIRECTORY}\\{RESULTS_DIRECTORY}\\"
 
-SIZES_COLUMN_NAME = "train-after-test"
+AFTER_WINDOW_COLUMN_NAME = "after window size"
 COUNT_COLUMN_NAME = "drifts count"
 WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
 FIX_ACCURACY_NAME_SUFFIX = " fix accuracy percentage"
@@ -34,27 +33,22 @@ for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
 
 if __name__ == "__main__":
     # Create DataFrame for the aggregated results
-    total_results = DataFrame(columns=[SIZES_COLUMN_NAME, COUNT_COLUMN_NAME] + total_results_columns)
+    total_results = DataFrame(columns=[AFTER_WINDOW_COLUMN_NAME, COUNT_COLUMN_NAME] + total_results_columns)
 
-    TRAIN_AFTER_PERCENTAGE_SIZE = int((1 - TEST_PROPORTION) * 100)
-
-    for train_size in range(5, TRAIN_AFTER_PERCENTAGE_SIZE, 5):
+    for after_window_percentage in range(5, 101, 5):
         with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_file:
-            train_proportion, after_proportion = train_size / 100, (TRAIN_AFTER_PERCENTAGE_SIZE - train_size) / 100
-            print("XXXXXXXXXXXXXXXXXXXXXXXX", train_proportion, after_proportion, TEST_PROPORTION, "XXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", f"CURRENT AFTER WINDOW SIZE: {after_window_percentage}%", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
-            current_total_row_dict = {SIZES_COLUMN_NAME: f"{train_proportion}-{after_proportion}-{TEST_PROPORTION}"
+            current_total_row_dict = {AFTER_WINDOW_COLUMN_NAME: f"{after_window_percentage}%"
                                     , COUNT_COLUMN_NAME: 0}
             current_total_row_dict.update({total_results_column: 0 for total_results_column in total_results_columns})
-            
-            proportion_tuple = (train_proportion, after_proportion, TEST_PROPORTION)
 
             descriptions_reader = DictReader(descriptions_file)
             for dataset_description in descriptions_reader:
                 dataset_name = dataset_description["name"]
                 
                 try:
-                    for test_result in run_test(DATASETS_FULL_PATH, dataset_name + ".csv", proportions_tuple=proportion_tuple):
+                    for test_result in run_test(DATASETS_FULL_PATH, dataset_name + ".csv", after_window_size=after_window_percentage / 100):
                         current_total_row_dict[COUNT_COLUMN_NAME] = current_total_row_dict[COUNT_COLUMN_NAME] + 1
                         for key, value in test_result.items():
                             if key in total_results_columns:

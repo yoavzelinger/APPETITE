@@ -1,4 +1,5 @@
 from barinel_utils import *
+from .SFLDT import SFLDT
 
 def barinel(spectrum: list[list[int]]) -> list[list[int]]:
     """
@@ -12,3 +13,9 @@ def barinel(spectrum: list[list[int]]) -> list[list[int]]:
     """
     diagnoses, _ = _barinel_diagnosis(spectrum)
     return diagnoses
+
+class BARINEL(SFLDT):
+    def __init__(mapped_tree, X, y):
+        super().__init__(mapped_tree, X, y)
+
+    def get_diagnosis(self):

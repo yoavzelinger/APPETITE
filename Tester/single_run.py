@@ -67,16 +67,21 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
 
             after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after)
             after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
+            after_retrained_accuracy_bump = after_retrained_accuracy - test_accuracy
 
             X_before_after_concat, y_before_after_concat = pd_concat([X_train, X_after_drifted]), pd_concat([y_train, y_after])
             before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat)
             before_after_retrained_accuracy = get_accuracy(before_after_retrained_tree, X_test_drifted, y_test)
+            before_after_retrained_accuracy_bump = before_after_retrained_accuracy - test_accuracy
+
             current_results_dict = {
                 "drift description": drift_description,
                 "tree size": mapped_tree.node_count,
-                "after accuracy decrease percentage": after_accuracy_drop * 100,
+                "after accuracy decrease": after_accuracy_drop * 100,
                 "after retrain accuracy": after_retrained_accuracy * 100,
-                "before after retrain accuracy": before_after_retrained_accuracy * 100
+                "after retrain accuracy increase": after_retrained_accuracy_bump * 100,
+                "before after retrain accuracy": before_after_retrained_accuracy * 100,
+                "before after retrain accuracy increase": before_after_retrained_accuracy_bump * 100
             }
             if isinstance(diagnoser_names, str):
                 diagnoser_names = (diagnoser_names, )
@@ -90,8 +95,8 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
                     f"{diagnoser_name} faulty node index": faulty_node_index,
                     f"{diagnoser_name} faulty feature": faulty_feature,
                     f"{diagnoser_name} wasted effort": get_wasted_effort(mapped_tree, fixer.faulty_nodes, [drifted_feature]),
-                    f"{diagnoser_name} fix accuracy percentage": fixed_test_accuracy * 100,
-                    f"{diagnoser_name} fix accuracy increase percentage": test_accuracy_bump * 100
+                    f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
+                    f"{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
                 })
             yield current_results_dict
         except Exception as e:

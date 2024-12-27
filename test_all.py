@@ -15,19 +15,19 @@ FAULTY_NODE_NAME_SUFFIX = " faulty node index"
 FAULTY_FEATURE_NAME_SUFFIX = " faulty feature"
 WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
 AVERAGE_WASTED_EFFORT_NAME_SUFFIX = " average" + WASTED_EFFORT_NAME_SUFFIX
-FIX_ACCURACY_NAME_SUFFIX = " fix accuracy percentage"
+FIX_ACCURACY_NAME_SUFFIX = " fix accuracy"
 AVERAGE_FIX_ACCURACY_NAME_SUFFIX = " average" + FIX_ACCURACY_NAME_SUFFIX
-FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase percentage"
+FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
 AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_NAME_SUFFIX
 
 
 if isinstance(DEFAULT_TESTING_DIAGNOSER, str):
     DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
 
-raw_results_columns = ["drift description", "tree size", "after accuracy decrease percentage", "after retrain accuracy", "before after retrain accuracy"]
-aggregated_groupby_columns = ["name", "tree size", "drifts count", "average after accuracy decrease percentage", "average after retrain accuracy", "average before after retrain accuracy"]
+raw_results_columns = ["drift description", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
+aggregated_groupby_columns = ["name", "tree size", "drifts count"]
 
-aggregated_summarizes_columns = []
+aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
     raw_results_columns.append(diagnoser_name + FAULTY_NODE_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + FAULTY_FEATURE_NAME_SUFFIX)
@@ -44,17 +44,23 @@ aggregated_results = DataFrame(columns=aggregated_groupby_columns + aggregated_s
 errors = DataFrame(columns=["name", "error"])
 
 with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_file:
+    c = 0
     descriptions_reader = DictReader(descriptions_file)
     for dataset_description in descriptions_reader:
+        c += 1
+        if c > 5:
+            break
         dataset_name = dataset_description["name"]
         drifts_count = 0
 
         current_aggregated_row_dict = {
             "name": dataset_name,
             "tree size": -1,
-            "average after accuracy decrease percentage": 0,
+            "average after accuracy decrease": 0,
             "average after retrain accuracy": 0,
-            "average before after retrain accuracy": 0
+            "average after retrain accuracy increase": 0,
+            "average before after retrain accuracy": 0,
+            "average before after retrain accuracy increase": 0
         }
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
 
@@ -63,9 +69,11 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
             for test_result in run_test(DATASETS_FULL_PATH, dataset_name + ".csv"):
                 drifts_count += 1
                 current_aggregated_row_dict["tree size"] = test_result["tree size"]
-                current_aggregated_row_dict["average after accuracy decrease percentage"] = test_result["after accuracy decrease percentage"]
-                current_aggregated_row_dict["average after retrain accuracy"] = test_result["after retrain accuracy"]
-                current_aggregated_row_dict["average before after retrain accuracy"] = test_result["before after retrain accuracy"]
+                current_aggregated_row_dict["average after accuracy decrease"] += test_result["after accuracy decrease"]
+                current_aggregated_row_dict["average after retrain accuracy"] += test_result["after retrain accuracy"]
+                current_aggregated_row_dict["average after retrain accuracy increase"] += test_result["after retrain accuracy increase"]
+                current_aggregated_row_dict["average before after retrain accuracy"] += test_result["before after retrain accuracy"]
+                current_aggregated_row_dict["average before after retrain accuracy increase"] += test_result["before after retrain accuracy increase"]
                 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
                     current_aggregated_row_dict[diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
                     current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
@@ -83,11 +91,13 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
 
 aggregating_total_row = {
     "name": "TOTAL",
-    "tree size": aggregated_results["tree size"].mean(),
+    "tree size": raw_results["tree size"].mean(),
     "drifts count": aggregated_results["drifts count"].mean(),
-    "average after accuracy decrease percentage": aggregated_results["average after accuracy decrease percentage"].mean(),
-    "average after retrain accuracy": aggregated_results["average after retrain accuracy"].mean(),
-    "average before after retrain accuracy": aggregated_results["average before after retrain accuracy"].mean()
+    "average after accuracy decrease": raw_results["after accuracy decrease"].mean(),
+    "average after retrain accuracy": raw_results["after retrain accuracy"].mean(),
+    "average after retrain accuracy increase": raw_results["after retrain accuracy increase"].mean(),
+    "average before after retrain accuracy": raw_results["before after retrain accuracy"].mean(),
+    "average before after retrain accuracy increase": raw_results["before after retrain accuracy increase"].mean()
 }
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
     aggregating_total_row[diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] = raw_results[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX].mean()

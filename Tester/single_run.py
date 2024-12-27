@@ -61,6 +61,8 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
             if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
+            test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
+            
             after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after)
             after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
 
@@ -80,7 +82,6 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
                 fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
                 fixed_mapped_tree, faulty_node_index = fixer.fix_single_fault()
                 faulty_feature = mapped_tree.get_node(faulty_node_index).feature
-                test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - test_accuracy
                 current_results_dict.update({

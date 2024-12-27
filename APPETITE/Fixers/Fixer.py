@@ -207,15 +207,24 @@ class Fixer:
         self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         return self._create_fixed_mapped_tree(), faulty_node_index
 
-    def fix_multiple_faults(self) -> MappedDecisionTree:
+    def fix_multiple_faults(self,
+                            faulty_nodes: list[int]
+                            ) -> MappedDecisionTree:
         """
         Fix all the faulty nodes in the decision tree.
+
+        Parameters:
+            faulty_nodes (list[int]): The indices of the faulty nodes.
 
         Returns:
             MappedDecisionTree: The fixed decision tree.
         """
         if self.tree_already_fixed:
             return self.mapped_tree
-        raise NotImplementedError
-        # TBC
-        return self._create_fixed_mapped_tree()
+        if faulty_nodes is None:
+            self.faulty_nodes = self.diagnoser.get_diagnosis()
+        else:
+            self.faulty_nodes = faulty_nodes
+        for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):  
+            self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
+        return self._create_fixed_mapped_tree(), self.faulty_nodes

@@ -91,6 +91,7 @@ class SFLDT:
 
         Parameters:
         retrieve_spectra_indices (bool): Whether to return the spectra indices or the node indices.
+        retrieve_scores (bool): Whether to return the diagnosis scores.
 
         Returns:
         list[int] | list[tuple[int, float]]: The diagnosis. If retrieve_scores is True, the diagnosis will be a list of tuples,

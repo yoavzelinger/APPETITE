@@ -1,7 +1,7 @@
 import copy
 import random
 
-import functions
+from . import functions
 
 
 def diagnosis_0(spectrum, local_spectra):

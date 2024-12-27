@@ -59,10 +59,12 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
         try:
             after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
-            if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
-                continue
+
             test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
-            
+            test_accuracy_drop = no_drift_test_accuracy - test_accuracy
+            if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP or test_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
+                continue
+
             after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after)
             after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
 

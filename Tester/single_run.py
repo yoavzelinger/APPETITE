@@ -61,18 +61,18 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
             if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
-            retrained_after_tree = get_sklearn_tree(X_after_drifted, y_after)
-            retrained_after_accuracy = get_accuracy(retrained_after_tree, X_after_drifted, y_after)
+            after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after)
+            after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
 
             X_before_after_concat, y_before_after_concat = pd_concat([X_train, X_after_drifted]), pd_concat([y_train, y_after])
-            retrained_before_after_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat)
-            retrained_before_after_accuracy = get_accuracy(retrained_before_after_tree, X_after_drifted, y_after)
+            before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat)
+            before_after_retrained_accuracy = get_accuracy(before_after_retrained_tree, X_test_drifted, y_test)
             current_results_dict = {
                 "drift description": drift_description,
                 "tree size": mapped_tree.node_count,
                 "after accuracy decrease percentage": after_accuracy_drop * 100,
-                "after retrain accuracy": retrained_after_accuracy * 100,
-                "before after retrain accuracy": retrained_before_after_accuracy * 100
+                "after retrain accuracy": after_retrained_accuracy * 100,
+                "before after retrain accuracy": before_after_retrained_accuracy * 100
             }
             if isinstance(diagnoser_names, str):
                 diagnoser_names = (diagnoser_names, )

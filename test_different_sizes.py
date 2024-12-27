@@ -18,10 +18,10 @@ RESULTS_FULL_PATH = f"{DATA_DIRECTORY}\\{RESULTS_DIRECTORY}\\"
 AFTER_WINDOW_COLUMN_NAME = "after window size"
 COUNT_COLUMN_NAME = "drifts count"
 WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
-FIX_ACCURACY_NAME_SUFFIX = " fix accuracy percentage"
-FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase percentage"
+FIX_ACCURACY_NAME_SUFFIX = " fix accuracy"
+FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
 
-total_results_columns = ["after accuracy decrease percentage", "after retrain accuracy", "before after retrain accuracy"]
+total_results_columns = ["after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 
 if isinstance(DEFAULT_TESTING_DIAGNOSER, str):
     DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     for after_window_percentage in range(5, 101, 5):
         with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_file:
-            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", f"CURRENT AFTER WINDOW SIZE: {after_window_percentage}%", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", f"CURRENT AFTER WINDOW SIZE: {after_window_percentage}%", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
             current_total_row_dict = {AFTER_WINDOW_COLUMN_NAME: f"{after_window_percentage}%"
                                     , COUNT_COLUMN_NAME: 0}
@@ -66,4 +66,4 @@ if __name__ == "__main__":
         
     total_results.to_csv(f"{RESULTS_FULL_PATH}total_results.csv", index=False)
 
-    print(f"Total time: {time() - start_time}")
+    print(f"Total time: {(time() - start_time) / 60} minutes")

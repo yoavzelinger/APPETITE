@@ -199,7 +199,7 @@ class Fixer:
         if self.tree_already_fixed:
             return self.mapped_tree
         if faulty_node is None:
-            self.faulty_nodes = self.diagnoser.get_diagnosis()
+            self.faulty_nodes = self.diagnoser.get_diagnoses()
         else:
             self.faulty_nodes = [faulty_node]
         data_reached_faulty_node = self._filter_data_reached_single_fault()
@@ -208,8 +208,8 @@ class Fixer:
         return self._create_fixed_mapped_tree(), faulty_node_index
 
     def fix_multiple_faults(self,
-                            faulty_nodes: list[int]
-                            ) -> MappedDecisionTree:
+                            faulty_nodes: list[int] = None
+                            ) -> tuple[MappedDecisionTree, list[int]]:
         """
         Fix all the faulty nodes in the decision tree.
 
@@ -222,7 +222,7 @@ class Fixer:
         if self.tree_already_fixed:
             return self.mapped_tree
         if faulty_nodes is None:
-            self.faulty_nodes = self.diagnoser.get_diagnosis()
+            self.faulty_nodes = self.diagnoser.get_diagnoses()[0]
         else:
             self.faulty_nodes = faulty_nodes
         for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):  

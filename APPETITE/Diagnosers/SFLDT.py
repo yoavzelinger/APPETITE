@@ -1,8 +1,6 @@
-from pandas import DataFrame, Series
 from numpy import zeros
 
-from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
-
+from .ADiagnoser import *
 from APPETITE.Constants import SFLDT_DEFAULT_SIMILARITY_MEASURES
 
 def get_faith_similarity(participation_vector: Series,
@@ -28,7 +26,7 @@ def get_faith_similarity(participation_vector: Series,
     
     return (n11 +  0.5 * n00) / (n11 + n10 + n01 + n00)
 
-class SFLDT:
+class SFLDT(ADiagnoser):
 
     similarity_measure_functions_dict = {
         "faith": get_faith_similarity
@@ -49,7 +47,7 @@ class SFLDT:
         y (Series): The target column.
         similarity_measure (str): The similarity measure to use.
         """
-        self.mapped_tree = mapped_tree
+        super().__init__(mapped_tree, X, y)
         self.node_count = mapped_tree.node_count
         self.sample_count = len(X)
         self.spectra = zeros((self.node_count, self.sample_count))
@@ -81,26 +79,40 @@ class SFLDT:
                     error = node.class_name != y[sample_id]
                     self.error_vector[sample_id] = int(error)
 
-    def get_diagnosis(self,
-                      retrieve_spectra_indices: bool = False,
-                      retrieve_scores: bool = False
+    def get_diagnoses_with_return_indices(self,
+                                          retrieve_spectra_indices: bool = False
+    ):
+        if retrieve_spectra_indices:
+            return self.diagnoses
+        convert_func = self.mapped_tree.convert_spectra_index_to_node_index
+        returned_diagnoses = []
+        for diagnosis, rank in self.diagnoses:
+            if isinstance(diagnosis, int):
+                diagnosis = convert_func(diagnosis)
+            else:
+                diagnosis = [convert_func(spectra_index) for spectra_index in diagnosis]
+            returned_diagnoses.append((diagnosis, rank))
+        return returned_diagnoses
+    
+    def get_diagnoses(self,
+                      retrieve_ranks: bool = False,
+                      retrieve_spectra_indices: bool = False
      ) -> list[int] | list[tuple[int, float]]:
         """
-        Get the diagnosis of the nodes.
-        The diagnosis consists the nodes ordered by their similarity to the error vector (DESC).
+        Get the diagnoses of the nodes.
+        The diagnoses consists the nodes ordered by their similarity to the error vector (DESC).
 
         Parameters:
         retrieve_spectra_indices (bool): Whether to return the spectra indices or the node indices.
-        retrieve_scores (bool): Whether to return the diagnosis scores.
+        retrieve_ranks (bool): Whether to return the diagnoses rank.
 
         Returns:
-        list[int] | list[tuple[int, float]]: The diagnosis. If retrieve_scores is True, the diagnosis will be a list of tuples,
-          where the first element is the index and the second is the similarity score.
+        list[int] | list[tuple[int, float]]: The diagnoses. If retrieve_ranks is True, the diagnoses will be a list of tuples,
+          where the first element is the index and the second is the similarity rank.
         """
-        similarity_measure_function = SFLDT.similarity_measure_functions_dict[self.similarity_measure]
-        get_returned_index = lambda spectra_index: spectra_index if retrieve_spectra_indices else self.mapped_tree.convert_spectra_index_to_node_index(spectra_index)
-        index_rank = [(get_returned_index(spectra_index), similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.node_count)]
-        index_rank.sort(key=lambda x: x[1], reverse=True)
-        if retrieve_scores:
-            return index_rank
-        return [index for index, _ in index_rank]
+        if self.diagnoses is None:
+            similarity_measure_function = SFLDT.similarity_measure_functions_dict[self.similarity_measure]
+            self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.node_count)]
+            self.sort_diagnoses()
+        diagnoses = self.get_diagnoses_with_return_indices(retrieve_spectra_indices)
+        return super().get_diagnoses(retrieve_ranks, diagnoses)

@@ -1,26 +1,14 @@
-from pandas import DataFrame, Series
 from copy import deepcopy
 
-from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from .ADiagnoser import *
 
-class STAT:
+class STAT(ADiagnoser):
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series
     ):
-        """
-        Initialize the STAT diagnoser.
-        
-        Parameters:
-        mapped_tree (MappedDecisionTree): The mapped decision tree.
-        X (DataFrame): The data.
-        y (Series): The target column.
-        """
-        self.mapped_tree = mapped_tree
-        self.X_after = X
-        self.y_after = y
-        self.diagnosis = None
+        super().__init__(mapped_tree, X, y)
 
     def get_violation_ratio(self,
                             node: MappedDecisionTree.DecisionTreeNode
@@ -91,22 +79,21 @@ class STAT:
         after_violation = self.get_after_violation(node_index)
         return abs(before_violation - after_violation)
 
-    def get_diagnosis(self,
-                      retrieve_scores: bool = False
+    def get_diagnoses(self,
+                      retrieve_ranks: bool = False
      ) -> list[int] | list[tuple[int, float]]:
         """
-        Get the diagnosis of the drift.
+        Get the diagnoses of the drift.
+
 
         Parameters:
-        retrieve_scores (bool): Whether to return the scores of the nodes.
+        retrieve_ranks (bool): Whether to return the ranks of the nodes.
         
         Returns:
-        list[int] | list[tuple[int, float]]: The diagnosis. If retrieve_scores is True, the diagnosis will be a list of tuples,
+        list[int] | list[tuple[int, float]]: The diagnosis. If retrieve_ranks is True, the diagnosis will be a list of tuples,
           where the first element is the index and the second is the violation ratio.
         """
-        if self.diagnosis is None:
-            self.diagnosis = [(node_index, self.get_node_violation_difference(node_index)) for node_index in self.mapped_tree.tree_dict.keys()]
-            self.diagnosis = sorted(self.diagnosis, key=lambda x: x[1], reverse=True)
-        if retrieve_scores:
-            return self.diagnosis
-        return [node_index for node_index, _ in self.diagnosis]
+        if self.diagnoses is None:
+            self.diagnoses = [(node_index, self.get_node_violation_difference(node_index)) for node_index in self.mapped_tree.tree_dict.keys()]
+            self.sort_diagnoses()
+        return super().get_diagnoses(retrieve_ranks)

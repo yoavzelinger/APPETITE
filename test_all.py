@@ -44,12 +44,8 @@ aggregated_results = DataFrame(columns=aggregated_groupby_columns + aggregated_s
 errors = DataFrame(columns=["name", "error"])
 
 with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_file:
-    c = 0
     descriptions_reader = DictReader(descriptions_file)
     for dataset_description in descriptions_reader:
-        c += 1
-        if c > 5:
-            break
         dataset_name = dataset_description["name"]
         drifts_count = 0
 
@@ -66,7 +62,7 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
 
         print(f"Running tests for {dataset_name}")
         try:
-            for test_result in run_test(DATASETS_FULL_PATH, dataset_name + ".csv"):
+            for test_result in run_single_test(DATASETS_FULL_PATH, dataset_name + ".csv"):
                 drifts_count += 1
                 current_aggregated_row_dict["tree size"] = test_result["tree size"]
                 current_aggregated_row_dict["average after accuracy decrease"] += test_result["after accuracy decrease"]

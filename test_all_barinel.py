@@ -11,8 +11,8 @@ DATASETS_FULL_PATH = f"{DATA_DIRECTORY}\\{DATASETS_DIRECTORY}\\"
 RESULTS_DIRECTORY = "results"
 RESULTS_FULL_PATH = f"{DATA_DIRECTORY}\\{RESULTS_DIRECTORY}\\"
 
-FAULTY_NODE_NAME_SUFFIX = " faulty node index"
-FAULTY_FEATURE_NAME_SUFFIX = " faulty feature"
+FAULTY_NODES_NAME_SUFFIX = " faulty nodes indicies"
+FAULTY_FEATURES_NAME_SUFFIX = " faulty features"
 WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
 AVERAGE_WASTED_EFFORT_NAME_SUFFIX = " average" + WASTED_EFFORT_NAME_SUFFIX
 FIX_ACCURACY_NAME_SUFFIX = " fix accuracy"
@@ -29,8 +29,8 @@ aggregated_groupby_columns = ["name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
-    raw_results_columns.append(diagnoser_name + FAULTY_NODE_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_name + FAULTY_FEATURE_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + FAULTY_NODES_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + WASTED_EFFORT_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + FIX_ACCURACY_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
@@ -59,7 +59,8 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
             "average before after retrain accuracy increase": 0
         }
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
-
+        if dataset_name in ("image-segmentation", "car"):
+            continue
         print(f"Running tests for {dataset_name}")
         try:
             for test_result in run_barinel_test(DATASETS_FULL_PATH, dataset_name + ".csv"):
@@ -82,6 +83,7 @@ with open(f"{DATA_DIRECTORY}/{DATASET_DESCRIPTION_FILE}", "r") as descriptions_f
                 current_aggregated_row_dict[summarize_column_name] /= drifts_count
             aggregated_results = aggregated_results._append(current_aggregated_row_dict, ignore_index=True)
         except Exception as e:
+            raise e
             errors = errors._append({"name": dataset_name, "error": e}, ignore_index=True)
             continue
 

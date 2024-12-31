@@ -93,7 +93,7 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - test_accuracy
                 current_results_dict.update({
-                    f"{diagnoser_name} faulty node indicies": ", ".join(map(str, faulty_nodes_indicies)),
+                    f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
                     f"{diagnoser_name} faulty features": ", ".join(str(faulty_features)),
                     f"{diagnoser_name} wasted effort": get_wasted_effort(mapped_tree, fixer.faulty_nodes, [drifted_feature]),
                     f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,

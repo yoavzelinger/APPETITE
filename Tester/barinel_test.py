@@ -35,7 +35,7 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
                       diagnosed_faulty_nodes_indices: list[int],
                       true_faulty_features: list[str]):
     for diagnose_fault_rank, diagnosed_faulty_node in enumerate(map(mapped_tree.get_node, diagnosed_faulty_nodes_indices)):
-        if diagnosed_faulty_node.feature in true_faulty_features:
+        if diagnosed_faulty_node.feature is not None and diagnosed_faulty_node.feature in true_faulty_features:
             return diagnose_fault_rank
     return len(mapped_tree.tree_features_set)
 
@@ -92,8 +92,8 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - test_accuracy
                 current_results_dict.update({
-                    f"{diagnoser_name} faulty node indicies": ", ".join(map(str, faulty_nodes_indicies)),
-                    f"{diagnoser_name} faulty features": ", ".join(faulty_features),
+                    f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
+                    f"{diagnoser_name} faulty features": ", ".join(str(faulty_features)),
                     f"{diagnoser_name} wasted effort": get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_feature),
                     f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
                     f"{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100

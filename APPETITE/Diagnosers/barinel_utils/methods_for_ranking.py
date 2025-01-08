@@ -86,14 +86,15 @@ def ranking_0(spectrum, diagnoses, step):
         ef, DF, h = estimation_and_derivative_functions(diagnosis, spectrum)
 
         # while true
-        while True:
+        for i in range(1000):
             # calculate P_n(d, H, S)
             P = functions.substitute_and_eval(H, ef)
             P = float(P)
             P_arr.append([P, copy.deepcopy(H)])
+            print(abs(P_arr[-1][0] - P_arr[-2][0]))
             # if condition is reached, abort
+            likelihood = P_arr[-1][0]
             if abs(P_arr[-1][0] - P_arr[-2][0]) < epsilon:
-                likelihood = P_arr[-1][0]
                 H = P_arr[-1][1]
                 break
             if P_arr[-1][0] > 1.0:

@@ -1,4 +1,4 @@
-from numpy import ndarray, array
+from numpy import ndarray
 from pandas import DataFrame, Series
 
 from APPETITE.Constants import GRADIENT_STEP

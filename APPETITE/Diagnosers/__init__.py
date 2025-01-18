@@ -2,13 +2,15 @@ from .STAT import STAT
 from .SFLDT import SFLDT, SFLDT_DEFAULT_SIMILARITY_MEASURES
 from .STAT_SFLDT import STAT_SFLDT
 from .BARINEL import BARINEL, get_barinel_diagnoses
+from .STAT_BARINEL import STAT_BARINEL
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {
     "SFLDT": (SFLDT, (SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
     "STAT": (STAT, ()),
     "STAT_SFLDT": (STAT_SFLDT, (SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
-    "BARINEL": (BARINEL, ())
+    "BARINEL": (BARINEL, ()),
+    "STAT_BARINEL": (STAT_BARINEL, ())
 }
 
 def get_diagnoser(diagnoser_name: str, 
@@ -31,4 +33,4 @@ def get_diagnoser(diagnoser_name: str,
         diagnoser_parameters = diagnoser_default_parameters
     return diagnoser_class, diagnoser_parameters
 
-__all__ = ["STAT", "SFLDT", "SFLDT_DEFAULT_SIMILARITY_MEASURES", "STAT_SFLDT", "BARINEL", "get_barinel_diagnoses","get_diagnoser"]
+__all__ = ["STAT", "SFLDT", "SFLDT_DEFAULT_SIMILARITY_MEASURES", "STAT_SFLDT", "BARINEL", "get_barinel_diagnoses", "STAT_BARINEL", "get_diagnoser"]

@@ -4,6 +4,9 @@ from pandas import DataFrame
 
 from Tester import *
 
+from warnings import simplefilter as warnings_simplefilter
+warnings_simplefilter(action='ignore', category=FutureWarning)
+
 DATA_DIRECTORY = "data"
 DATASET_DESCRIPTION_FILE = "all_datasets.csv"
 DATASETS_DIRECTORY = "Classification_Datasets"
@@ -107,8 +110,8 @@ aggregated_results = aggregated_results._append(aggregating_total_row, ignore_in
 if not os.path.exists(RESULTS_FULL_PATH):
     os.mkdir(RESULTS_FULL_PATH)
 
-aggregated_results.to_csv(f"{RESULTS_FULL_PATH}/BARINEL_aggregated_results.csv", index=False)
-raw_results.to_csv(f"{RESULTS_FULL_PATH}/BARINEL_all_results.csv", index=False)
+aggregated_results.to_csv(f"{RESULTS_FULL_PATH}/STAT_BARINEL_normalized_aggregated_results.csv", index=False)
+raw_results.to_csv(f"{RESULTS_FULL_PATH}/STAT_BARINEL_normalized_all_results.csv", index=False)
 if not errors.empty:
     errors.to_csv(f"{RESULTS_FULL_PATH}/errors.csv", index=False)
 

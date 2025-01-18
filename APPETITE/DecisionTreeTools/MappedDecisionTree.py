@@ -114,6 +114,16 @@ class MappedDecisionTree:
             if self.parent is None:
                 return None
             return self.parent.left_child if self.is_right_child() else self.parent.right_child
+
+        def get_feature_extended(self) -> str:
+            """
+            Get the feature extended name.
+            If the node is a leaf then the parent's feature is returned.
+
+            Returns:
+                str: The extended feature .
+            """
+            return self.parent.feature if self.is_terminal() else self.feature
         
         def __repr__(self) -> str:
             """

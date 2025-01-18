@@ -101,7 +101,7 @@ class Fixer:
             values[0][max_value_index] = max_value
             values[0][second_max_value_index] = max_value
         
-        print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Terminal) class changed from {old_values[0]} to {values[0]}")
+        print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Terminal) class changed from {max(old_values[0])} to {max(values[0])}")
         self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index] = values
 
 
@@ -124,7 +124,7 @@ class Fixer:
         node_feature_average_after_drift = data_reached_faulty_node[faulty_node.feature].mean()
         node_feature_average_difference = node_feature_average_after_drift - node_feature_average_before_drift
         new_threshold = faulty_node.threshold + node_feature_average_difference
-        print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Numeric) threshold changed from {faulty_node.threshold} to {new_threshold}")
+        print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Numeric) threshold changed from {faulty_node.threshold:.2f} to {new_threshold:.2f}")
         self.mapped_tree.sklearn_tree_model.tree_.threshold[faulty_node_index] = new_threshold
 
     def _fix_categorical_faulty_node(self,

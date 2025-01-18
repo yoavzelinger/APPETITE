@@ -10,8 +10,8 @@ class STAT(ADiagnoser):
     ):
         super().__init__(mapped_tree, X, y)
 
-    def get_violation_ratio(self,
-                            node: MappedDecisionTree.DecisionTreeNode
+    @staticmethod
+    def get_violation_ratio(node: MappedDecisionTree.DecisionTreeNode
      ) -> float:
         """
         Get the violation ratio of the node.
@@ -41,7 +41,7 @@ class STAT(ADiagnoser):
         float: The violation of the node before the drift.
         """
         node = self.mapped_tree.get_node(node_index)
-        return self.get_violation_ratio(node)
+        return STAT.get_violation_ratio(node)
     
     def get_after_violation(self,
                             node_index: int
@@ -61,7 +61,7 @@ class STAT(ADiagnoser):
         if not node.is_terminal():
             node_after.left_child = deepcopy(node.left_child)
             node_after.left_child.update_node_data_attributes(self.X_after, self.y_after)
-        return self.get_violation_ratio(node_after)
+        return STAT.get_violation_ratio(node_after)
     
     def get_node_violation_difference(self,
                                       node_index: int,

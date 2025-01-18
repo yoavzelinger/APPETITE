@@ -47,21 +47,21 @@ def get_wasted_effort_full_fix(mapped_tree: MappedDecisionTree,
     Returns:
     int: The wasted effort.
     """
-    get_node_feature_func = lambda node: node = node.feature if node.feature is not None else node.parent.feature
+    get_node_feature_func = lambda node: node.feature if node.feature is not None else node.parent.feature
     # Get node's feature or it's parent's feature if it's None
     faulty_features_nodes_counts = {true_faulty_feature : 0 for true_faulty_feature in true_faulty_features}
-    for node in mapped_tree.tree_dict.values():
-        node_feature = get_node_feature_func(node)
-        if node_feature in true_faulty_features:
-            faulty_features_nodes_counts[node_feature] += 1
+    for tree_node in mapped_tree.tree_dict.values():
+        tree_node_feature = get_node_feature_func(tree_node)
+        if tree_node_feature in true_faulty_features:
+            faulty_features_nodes_counts[tree_node_feature] += 1
 
     wasted_effort = 0
     for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosed_faulty_nodes_indices):
-        diagnosed_faulty_feature = get_node_feature_func(node)
+        diagnosed_faulty_feature = get_node_feature_func(diagnosed_faulty_node)
         if diagnosed_faulty_feature in true_faulty_features:
             faulty_features_nodes_counts[diagnosed_faulty_feature] -= 1
             if not any(faulty_features_nodes_counts.values()):
-                return wasted_effort
+                break
         else:
             wasted_effort += 1
     return wasted_effort
@@ -83,20 +83,21 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
     int: The wasted effort.
     """
     # Get node's feature or it's parent's feature if it's None
-    get_node_feature_func = lambda node: node = node.feature if node.feature is not None else node.parent.feature
+    get_node_feature_func = lambda node: node.feature if node.feature is not None else node.parent.feature
     # Create inverted dict of features to it's nodes
     faulty_features_nodes_dict = {true_faulty_feature : [] for true_faulty_feature in true_faulty_features}
-    for node_index, node in mapped_tree.nodes.items():
-        node_feature = get_node_feature_func(node)
+    for tree_node_index, tree_node in mapped_tree.nodes.items():
+        node_feature = get_node_feature_func(tree_node)
         if node_feature in faulty_features_nodes_dict:
-            faulty_features_nodes_dict[node_feature].append(node_index)
+            faulty_features_nodes_dict[node_feature].append(tree_node_index)
+
     wasted_effort = 0
     for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosed_faulty_nodes_indices):
         faulty_node_feature = diagnosed_faulty_node.feature if diagnosed_faulty_node.feature is not None else diagnosed_faulty_node.parent.feature
         if faulty_node_feature in true_faulty_features:
             true_faulty_features.remove(faulty_node_feature)
-            if not (len(true_faulty_features) and WASTED_EFFORT_REQUIRE_FULL_FIX):
-                return wasted_effort
+            if not len(true_faulty_features):
+                break
         else:
             wasted_effort += 1
     return wasted_effort
@@ -153,10 +154,12 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
                 faulty_features = [mapped_tree.get_node(faulty_node_index).feature for faulty_node_index in faulty_nodes_indicies]
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - test_accuracy
+                drifted_feature = set([drifted_feature])
+                wasted_effort = get_wasted_effort_full_fix(mapped_tree, fixer.faulty_nodes, drifted_feature) if WASTED_EFFORT_REQUIRE_FULL_FIX else get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_feature)
                 current_results_dict.update({
                     f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
                     f"{diagnoser_name} faulty features": ", ".join(str(faulty_features)),
-                    f"{diagnoser_name} wasted effort": get_wasted_effort(mapped_tree, fixer.faulty_nodes, set([drifted_feature])),
+                    f"{diagnoser_name} wasted effort": wasted_effort,
                     f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
                     f"{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
                 })

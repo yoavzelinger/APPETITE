@@ -2,7 +2,7 @@ from pandas import read_csv, DataFrame, Series, Categorical, get_dummies
 from scipy.io.arff import loadarff
 from typing import Generator
 
-from APPETITE.Constants import BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION, PROPORTIONS_TUPLE, RANDOM_STATE
+from APPETITE.Constants import BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION, PROPORTIONS_TUPLE, AFTER_WINDOW_SIZE,RANDOM_STATE
 
 from .DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
@@ -12,7 +12,7 @@ class Dataset:
     def __init__(self, 
                  source: str | DataFrame,
                  size: int | tuple[float] = PROPORTIONS_TUPLE,
-                 after_window_size: float = 1.0,
+                 after_window_size: float = AFTER_WINDOW_SIZE,
                  to_shuffle: bool = True,
                  one_hot_encoding: bool = True
     ):

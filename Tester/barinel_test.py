@@ -4,9 +4,9 @@ from APPETITE import *
 
 from sklearn.metrics import accuracy_score
 
-from Tester.Constants import MINIMUM_ORIGINAL_ACCURACY, MINIMUM_DRIFT_ACCURACY_DROP, DEFAULT_TESTING_DIAGNOSER, WRAP_EXCEPTION
+from Tester.Constants import MINIMUM_ORIGINAL_ACCURACY, MINIMUM_DRIFT_ACCURACY_DROP, DEFAULT_TESTING_DIAGNOSER, WRAP_EXCEPTION, WASTED_EFFORT_REQUIRE_FULL_FIX
 
-def get_dataset(directory, file_name, proportions_tuple, after_window_size):
+def get_dataset(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE):
     return Dataset(directory + file_name, proportions_tuple, after_window_size)
 
 def get_sklearn_tree(X_train, y_train):

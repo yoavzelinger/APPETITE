@@ -31,15 +31,77 @@ def get_accuracy(model, X, y):
     y_predicted = model.predict(X)
     return accuracy_score(y, y_predicted)
 
+def get_wasted_effort_full_fix(mapped_tree: MappedDecisionTree,
+                               diagnosed_faulty_nodes_indices: list[int],
+                               true_faulty_features: set[str]
+ ) -> int:
+    """
+    Calculate the wasted effort of the diagnoser.
+    In here the wasted effort is calculated for fixes of all the nodes that include a faulty feature.
+
+    Parameters:
+    mapped_tree (MappedDecisionTree): The mapped decision tree.
+    diagnosed_faulty_nodes_indices (list[int]): The indices of the diagnosed faulty nodes.
+    true_faulty_features (list[str]): The true faulty features.
+
+    Returns:
+    int: The wasted effort.
+    """
+    get_node_feature_func = lambda node: node = node.feature if node.feature is not None else node.parent.feature
+    # Get node's feature or it's parent's feature if it's None
+    faulty_features_nodes_counts = {true_faulty_feature : 0 for true_faulty_feature in true_faulty_features}
+    for node in mapped_tree.tree_dict.values():
+        node_feature = get_node_feature_func(node)
+        if node_feature in true_faulty_features:
+            faulty_features_nodes_counts[node_feature] += 1
+
+    wasted_effort = 0
+    for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosed_faulty_nodes_indices):
+        diagnosed_faulty_feature = get_node_feature_func(node)
+        if diagnosed_faulty_feature in true_faulty_features:
+            faulty_features_nodes_counts[diagnosed_faulty_feature] -= 1
+            if not any(faulty_features_nodes_counts.values()):
+                return wasted_effort
+        else:
+            wasted_effort += 1
+    return wasted_effort
+
+
 def get_wasted_effort(mapped_tree: MappedDecisionTree,
                       diagnosed_faulty_nodes_indices: list[int],
-                      true_faulty_features: list[str]):
-    for diagnose_fault_rank, diagnosed_faulty_node in enumerate(map(mapped_tree.get_node, diagnosed_faulty_nodes_indices)):
-        if diagnosed_faulty_node.feature is not None and diagnosed_faulty_node.feature in true_faulty_features:
-            return diagnose_fault_rank
-    return len(mapped_tree.tree_features_set)
+                      true_faulty_features: set[str]
+ ) -> int:
+    """
+    Calculate the wasted effort of the diagnoser.
+    
+    Parameters:
+    mapped_tree (MappedDecisionTree): The mapped decision tree.
+    diagnosed_faulty_nodes_indices (list[int]): The indices of the diagnosed faulty nodes.
+    true_faulty_features (list[str]): The true faulty features.
 
-def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=1, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+    Returns:
+    int: The wasted effort.
+    """
+    # Get node's feature or it's parent's feature if it's None
+    get_node_feature_func = lambda node: node = node.feature if node.feature is not None else node.parent.feature
+    # Create inverted dict of features to it's nodes
+    faulty_features_nodes_dict = {true_faulty_feature : [] for true_faulty_feature in true_faulty_features}
+    for node_index, node in mapped_tree.nodes.items():
+        node_feature = get_node_feature_func(node)
+        if node_feature in faulty_features_nodes_dict:
+            faulty_features_nodes_dict[node_feature].append(node_index)
+    wasted_effort = 0
+    for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosed_faulty_nodes_indices):
+        faulty_node_feature = diagnosed_faulty_node.feature if diagnosed_faulty_node.feature is not None else diagnosed_faulty_node.parent.feature
+        if faulty_node_feature in true_faulty_features:
+            true_faulty_features.remove(faulty_node_feature)
+            if not (len(true_faulty_features) and WASTED_EFFORT_REQUIRE_FULL_FIX):
+                return wasted_effort
+        else:
+            wasted_effort += 1
+    return wasted_effort
+
+def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
@@ -94,7 +156,7 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
                 current_results_dict.update({
                     f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
                     f"{diagnoser_name} faulty features": ", ".join(str(faulty_features)),
-                    f"{diagnoser_name} wasted effort": get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_feature),
+                    f"{diagnoser_name} wasted effort": get_wasted_effort(mapped_tree, fixer.faulty_nodes, set([drifted_feature])),
                     f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
                     f"{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
                 })
@@ -106,7 +168,7 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
             raise e
 
 DIRECTORY = "data\\Classification_Datasets\\"
-EXAMPLE_FILE_NAME = "acute-inflammation"
+EXAMPLE_FILE_NAME = "bank"
 EXAMPLE_FILE_NAME = EXAMPLE_FILE_NAME + ".csv"
 def get_example_mapped_tree(directory=DIRECTORY, file_name=EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name)

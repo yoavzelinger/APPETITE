@@ -110,8 +110,8 @@ aggregated_results = aggregated_results._append(aggregating_total_row, ignore_in
 if not os.path.exists(RESULTS_FULL_PATH):
     os.mkdir(RESULTS_FULL_PATH)
 
-aggregated_results.to_csv(f"{RESULTS_FULL_PATH}/BARINEL_Combo_aggregated_results.csv", index=False)
-raw_results.to_csv(f"{RESULTS_FULL_PATH}/BARINEL_Combo_all_results.csv", index=False)
+aggregated_results.to_csv(f"{RESULTS_FULL_PATH}/after_STAT_BARINEL_aggregated_results.csv", index=False)
+raw_results.to_csv(f"{RESULTS_FULL_PATH}/after_STAT_BARINEL_all_results.csv", index=False)
 if not errors.empty:
     errors.to_csv(f"{RESULTS_FULL_PATH}/Combo_errors.csv", index=False)
 

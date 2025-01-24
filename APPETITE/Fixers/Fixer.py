@@ -101,7 +101,7 @@ class Fixer:
             values[0][max_value_index] = max_value
             values[0][second_max_value_index] = max_value
         
-        print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Terminal) class changed from {max(old_values[0])} to {max(values[0])}")
+        # print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Terminal) class changed from {max(old_values[0])} to {max(values[0])}")
         self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index] = values
 
 
@@ -124,7 +124,7 @@ class Fixer:
         node_feature_average_after_drift = data_reached_faulty_node[faulty_node.feature].mean()
         node_feature_average_difference = node_feature_average_after_drift - node_feature_average_before_drift
         new_threshold = faulty_node.threshold + node_feature_average_difference
-        print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Numeric) threshold changed from {faulty_node.threshold:.2f} to {new_threshold:.2f}")
+        # print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Numeric) threshold changed from {faulty_node.threshold:.2f} to {new_threshold:.2f}")
         self.mapped_tree.sklearn_tree_model.tree_.threshold[faulty_node_index] = new_threshold
 
     def _fix_categorical_faulty_node(self,
@@ -144,7 +144,7 @@ class Fixer:
           sklearn_tree_model = self.mapped_tree.sklearn_tree_model
           sklearn_tree_model.tree_.children_left[faulty_node_index] = right_child_index
           sklearn_tree_model.tree_.children_right[faulty_node_index] = left_child_index
-          print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Categorical) condition flipped")
+        #   print(f"{self.diagnoser_name}: Faulty node {faulty_node_index} (Categorical) condition flipped")
           
     def fix_faulty_node(self,
                         faulty_node_index: int,
@@ -204,6 +204,7 @@ class Fixer:
             self.faulty_nodes = [faulty_node]
         data_reached_faulty_node = self._filter_data_reached_single_fault()
         faulty_node_index = self.faulty_nodes[0]
+        print(f"Fixing faulty node: {faulty_node_index}")
         self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         return self._create_fixed_mapped_tree(), faulty_node_index
 
@@ -225,6 +226,7 @@ class Fixer:
             self.faulty_nodes = self.diagnoser.get_diagnoses()[0]
         else:
             self.faulty_nodes = faulty_nodes
+        print(f"Fixing faulty nodes: {self.faulty_nodes}")
         for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):  
             self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         return self._create_fixed_mapped_tree(), self.faulty_nodes

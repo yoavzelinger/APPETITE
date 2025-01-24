@@ -4,6 +4,7 @@ from .STAT_SFLDT import STAT_SFLDT
 from .BARINEL import BARINEL, get_barinel_diagnoses
 from .STAT_BARINEL import STAT_BARINEL
 from .BARINEL_Combo import BARINEL_Combo
+from .BARINEL_Paths import BARINEL_Paths
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {
@@ -12,7 +13,8 @@ diagnosers_dict = {
     "STAT_SFLDT": (STAT_SFLDT, (SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
     "BARINEL": (BARINEL, ()),
     "STAT_BARINEL": (STAT_BARINEL, ()),
-    "BARINEL_Combo": (BARINEL_Combo, ())
+    "BARINEL_Combo": (BARINEL_Combo, ()),
+    "BARINEL_Paths": (BARINEL_Paths, ())
 }
 
 def get_diagnoser(diagnoser_name: str, 

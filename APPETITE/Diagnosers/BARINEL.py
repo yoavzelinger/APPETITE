@@ -1,10 +1,11 @@
 from numpy import ndarray
 from pandas import DataFrame, Series
 
-from APPETITE.Constants import GRADIENT_STEP
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .barinel_utils import *
 from .SFLDT import SFLDT
+
+from APPETITE.Constants import GRADIENT_STEP
 
 def get_barinel_diagnoses(spectra: ndarray,
                           error_vector: Series

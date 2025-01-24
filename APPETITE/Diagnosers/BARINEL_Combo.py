@@ -35,17 +35,18 @@ class BARINEL_Combo(ADiagnoser):
         """
         if self.diagnoses is None:
             barinel_diagnoses = self.barinel.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=retrieve_spectra_indices)
-            features_cumulative_diagnoses = {feature: (0, 0) for feature in self.mapped_tree.tree_features_set}
+            nodes_cumulative_diagnoses = {}
             for diagnosis, rank in barinel_diagnoses:
-                for diagnosis_faulty_feature in map(lambda node_index: self.mapped_tree.get_node(node_index, use_spectra_index=retrieve_spectra_indices).get_feature_extended(), diagnosis):
-                    features_cumulative_diagnoses[diagnosis_faulty_feature] = (features_cumulative_diagnoses[diagnosis_faulty_feature][0] + rank, features_cumulative_diagnoses[diagnosis_faulty_feature][1] + 1)
+                for node_index in diagnosis:
+                    node_ranks, node_sums = nodes_cumulative_diagnoses.get(node_index, (0, 0))
+                    nodes_cumulative_diagnoses[node_index] = (node_ranks + rank, node_sums + 1)
 
             self.diagnoses = []
             for diagnosis, _ in barinel_diagnoses:
-                features_ranks_sum, features_diagnoses_count = 0, 0
-                for diagnosis_faulty_feature in map(lambda node_index: self.mapped_tree.get_node(node_index, use_spectra_index=retrieve_spectra_indices).get_feature_extended(), diagnosis):
-                    features_ranks_sum += features_cumulative_diagnoses[diagnosis_faulty_feature][0]
-                    features_diagnoses_count += features_cumulative_diagnoses[diagnosis_faulty_feature][1]
-                self.diagnoses.append((diagnosis, features_ranks_sum / features_diagnoses_count))
+                nodes_ranks_sum, nodes_diagnoses_count = 0, 0
+                for node_index in diagnosis:
+                    nodes_ranks_sum = nodes_cumulative_diagnoses[node_index][0]
+                    nodes_diagnoses_count = nodes_cumulative_diagnoses[node_index][1]
+                self.diagnoses.append((diagnosis, nodes_ranks_sum / nodes_diagnoses_count))
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks)

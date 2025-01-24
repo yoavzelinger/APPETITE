@@ -322,7 +322,6 @@ class MappedDecisionTree:
             self.sklearn_tree_model.tree_.feature[parent_index] = -2
         if len(pruned_indices): # Attributes changed
             self.update_tree_attributes()
-            print(f"Pruned {len(pruned_indices)} nodes from the tree. Pruned nodes: {pruned_indices}")
 
     def __repr__(self) -> str:
         return export_text(self.sklearn_tree_model, feature_names=list(self.data_feature_types.keys()))

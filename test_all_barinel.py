@@ -27,6 +27,8 @@ AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_N
 if isinstance(DEFAULT_TESTING_DIAGNOSER, str):
     DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
 
+print("Testing diagnosers:", DEFAULT_TESTING_DIAGNOSER)
+
 raw_results_columns = ["drift description", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]
 

@@ -28,6 +28,8 @@ def get_faith_similarity(participation_vector: Series,
 
 class SFLDT(ADiagnoser):
 
+    diagnoser_type = "single"
+    
     similarity_measure_functions_dict = {
         "faith": get_faith_similarity
     }

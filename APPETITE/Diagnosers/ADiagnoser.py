@@ -4,6 +4,18 @@ from pandas import DataFrame, Series
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
 class ADiagnoser(ABC):
+    DIAGNOSER_TYPES = ("single", "multiple")
+    
+    diagnoser_type = None # Can be "single" or "multiple"
+    def get_diagnoser_type(self) -> str:
+        """
+        Get the diagnoser type.
+        
+        Returns:
+        str: The diagnoser type.
+        """
+        assert self.diagnoser_type in ADiagnoser.DIAGNOSER_TYPES, "DIAGNOSER_TYPE must be defined"
+        return self.diagnoser_type
     
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,

@@ -26,6 +26,9 @@ def get_barinel_diagnoses(spectra: ndarray,
     return diagnoses
 
 class BARINEL(SFLDT):
+
+    diagnoser_type = "multiple"
+    
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,

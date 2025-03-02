@@ -6,6 +6,9 @@ class STAT_SFLDT(ADiagnoser):
     """
     The diagnoser that combines the STAT and SFLDT diagnosers.
     """
+
+    diagnoser_type = "single"
+
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,

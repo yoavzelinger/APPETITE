@@ -20,6 +20,9 @@ def get_fuzzy_error(accuracy: float) -> float:
     return 1 - accuracy
 
 class BARINEL_Paths(BARINEL):
+    
+    diagnoser_type = "multiple"
+    
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,

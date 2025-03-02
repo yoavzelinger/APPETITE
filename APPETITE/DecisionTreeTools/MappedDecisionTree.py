@@ -321,7 +321,7 @@ class MappedDecisionTree:
     
     def prune_leaf(self,
                    leaf_node: 'MappedDecisionTree.DecisionTreeNode'
-     ) -> None:
+     ) -> 'MappedDecisionTree.DecisionTreeNode':
         """
         Prune a leaf.
         The prune is done by removing the leaf and replacing the parent with it's sibling.
@@ -337,26 +337,29 @@ class MappedDecisionTree:
         parent.feature, parent.feature_type, parent.threshold, parent.class_name = sibling.feature, sibling.feature_type, sibling.threshold, sibling.class_name
         # Update the sklearn tree
         parent_index = parent.sk_index
-        self.sk_children_left[parent_index] = sibling.left_child.sk_index
-        self.sk_children_right[parent_index] = sibling.right_child.sk_index
-        self.sk_features[parent_index] = sibling.sk_index
+        self.sk_children_left[parent_index] = sibling.left_child.sk_index if not sibling.is_terminal() else TREE_LEAF
+        self.sk_children_right[parent_index] = sibling.right_child.sk_index if not sibling.is_terminal() else TREE_LEAF
+        self.sk_features[parent_index] = self.sk_features[sibling.sk_index]
         self.sk_thresholds[parent_index] = sibling.threshold
         self.sk_values[parent_index] = self.sk_values[sibling.sk_index]
+        return parent
     
     def prune_tree(self) -> None:
         leaf_nodes = [node for node in self.tree_dict.values() if node.is_terminal()]
         tree_changed = False
         while len(leaf_nodes):
             current_leaf = leaf_nodes.pop(0)
+            if current_leaf.sk_index not in self.tree_dict: # Already pruned
+                continue
             sibling = current_leaf.get_sibling()
             if sibling is None: # Root
                 continue
             if sibling.is_terminal() and current_leaf.class_name == sibling.class_name: # Sibling is a leaf with the same class
                 tree_changed = True
                 leaf_nodes += [self.prune_sibling_leaves(current_leaf, sibling)]
-            if not current_leaf.reached_samples_count: # Redundant leaf
+            if hasattr(current_leaf, "reached_samples_count") and not current_leaf.reached_samples_count: # Redundant leaf
                 tree_changed = True
-                self.prune_leaf(current_leaf)
+                leaf_nodes += [self.prune_leaf(current_leaf)]
             
         if tree_changed: # Attributes changed
             self.update_tree_attributes()

@@ -6,3 +6,8 @@ DEFAULT_TESTING_DIAGNOSER = ("STAT_BARINEL")
 WRAP_EXCEPTION = True
 
 WASTED_EFFORT_REQUIRE_FULL_FIX = True # Fix all faulty features
+
+DATASETS_DIRECTORY = "data\\Classification_Datasets\\"
+
+EXAMPLE_FILE_NAME = "analcatdata_boxing1"
+EXAMPLE_FILE_NAME = EXAMPLE_FILE_NAME + ".csv"

@@ -3,8 +3,8 @@ from copy import deepcopy
 from .ADiagnoser import *
 
 class STAT(ADiagnoser):
-    diagnoser_type = "single"
-    
+    diagnoser_type = SINGLE_DIAGNOSER_NAME
+
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,

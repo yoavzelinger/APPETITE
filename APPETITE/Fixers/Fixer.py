@@ -6,7 +6,7 @@ from copy import deepcopy
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from APPETITE.Diagnosers import *
 
-from APPETITE.Constants import DEFAULT_FIXING_DIAGNOSER
+from APPETITE.Constants import DEFAULT_FIXING_DIAGNOSER, SINGLE_DIAGNOSER_NAME, MULTIPLE_DIAGNOSER_NAME
 
 class Fixer:
     def __init__(self, 
@@ -196,8 +196,6 @@ class Fixer:
         Returns:
             MappedDecisionTree: The fixed decision tree and the faulty node index.
         """
-        if self.tree_already_fixed:
-            return self.mapped_tree
         if faulty_node is None:
             self.faulty_nodes = self.diagnoser.get_diagnoses()
         else:
@@ -214,14 +212,9 @@ class Fixer:
         """
         Fix all the faulty nodes in the decision tree.
 
-        Parameters:
-            faulty_nodes (list[int]): The indices of the faulty nodes.
-
         Returns:
             MappedDecisionTree: The fixed decision tree.
         """
-        if self.tree_already_fixed:
-            return self.mapped_tree
         if faulty_nodes is None:
             self.faulty_nodes = self.diagnoser.get_diagnoses()[0]
         else:
@@ -230,3 +223,21 @@ class Fixer:
         for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):  
             self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         return self._create_fixed_mapped_tree(), self.faulty_nodes
+    
+    def fix_tree(self,
+                 faulty_nodes: int | list[int] = None
+        ) -> tuple[MappedDecisionTree, int | list[int]]:
+        """
+        Fix the decision tree.
+
+        Parameters:
+            faulty_nodes (int | list[int]): The indices of the faulty nodes.
+
+        Returns:
+            MappedDecisionTree: The fixed decision tree.
+        """
+        if self.tree_already_fixed:
+            return self.mapped_tree
+        if self.diagnoser.diagnoser_type == SINGLE_DIAGNOSER_NAME:
+            return self.fix_single_fault(faulty_nodes)
+        return self.fix_multiple_faults(faulty_nodes)

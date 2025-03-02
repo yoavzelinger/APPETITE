@@ -3,6 +3,7 @@ from pandas import DataFrame, Series
 
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .barinel_utils import *
+from .ADiagnoser import *
 from .SFLDT import SFLDT
 
 from APPETITE.Constants import GRADIENT_STEP
@@ -27,8 +28,8 @@ def get_barinel_diagnoses(spectra: ndarray,
 
 class BARINEL(SFLDT):
 
-    diagnoser_type = "multiple"
-    
+    diagnoser_type = MULTIPLE_DIAGNOSER_NAME
+
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,

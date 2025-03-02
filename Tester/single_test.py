@@ -20,12 +20,6 @@ def get_sklearn_tree(X_train,
 def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
     return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types, X=X_train, y=y_train)
 
-def get_example_mapped_tree(directory=DATASETS_DIRECTORY, file_name=EXAMPLE_FILE_NAME):
-    dataset = get_dataset(directory, file_name)
-    X_train, y_train = dataset.get_before_concept()
-    sklearn_tree_model = get_sklearn_tree(X_train, y_train)
-    return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
-
 def drift_single_tree_feature(mapped_tree: MappedDecisionTree, 
                               dataset: Dataset):
     """

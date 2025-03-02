@@ -152,7 +152,7 @@ def run_single_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proport
             raise e
         
 def get_example_mapped_tree(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
-    dataset = get_dataset(directory, file_name)
+    dataset = get_dataset(directory, file_name + ".csv")
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)

@@ -1,19 +1,29 @@
 from pandas import concat as pd_concat
+from sklearn.metrics import accuracy_score
 
 from APPETITE import *
 
-from sklearn.metrics import accuracy_score
+from Tester.Constants import *
 
-from Tester.Constants import MINIMUM_ORIGINAL_ACCURACY, MINIMUM_DRIFT_ACCURACY_DROP, DEFAULT_TESTING_DIAGNOSER, WRAP_EXCEPTION, WASTED_EFFORT_REQUIRE_FULL_FIX
-
-def get_dataset(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE):
+def get_dataset(directory: str,
+                file_name: str,
+                proportions_tuple: int | tuple[float] = PROPORTIONS_TUPLE,
+                after_window_size: float = AFTER_WINDOW_SIZE
+                )-> Dataset:
     return Dataset(directory + file_name, proportions_tuple, after_window_size)
 
-def get_sklearn_tree(X_train, y_train):
+def get_sklearn_tree(X_train,
+                     y_train):
     return build_tree(X_train, y_train)
 
 def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
     return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types, X=X_train, y=y_train)
+
+def get_example_mapped_tree(directory=DATASETS_DIRECTORY, file_name=EXAMPLE_FILE_NAME):
+    dataset = get_dataset(directory, file_name)
+    X_train, y_train = dataset.get_before_concept()
+    sklearn_tree_model = get_sklearn_tree(X_train, y_train)
+    return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
 def drift_single_tree_feature(mapped_tree: MappedDecisionTree, 
                               dataset: Dataset):
@@ -27,13 +37,19 @@ def drift_single_tree_feature(mapped_tree: MappedDecisionTree,
         for ((X_after_drifted, y_after), after_drift_description, drifted_features), ((X_test_drifted, y_test), _, _) in zip(after_drift_generator, test_drift_generator):
             yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], drifted_features[0]
 
-def get_accuracy(model, X, y):
-    y_predicted = model.predict(X)
-    return accuracy_score(y, y_predicted)
+def drift_tree(mapped_tree: MappedDecisionTree,
+               dataset: Dataset
+               ):
+    assert CURRENT_DRIFT_TYPE in SUPPORTED_DRIFT_TYPES, f"{CURRENT_DRIFT_TYPE} drift type is not supported. Supported drift types: {SUPPORTED_DRIFT_TYPES}"
+    if CURRENT_DRIFT_TYPE == SINGLE_DRIFT_TYPE:
+        yield from drift_single_tree_feature(mapped_tree, dataset)
+    else:
+        raise NotImplementedError(f"{CURRENT_DRIFT_TYPE} drift type is not implemented.")
 
-def get_wasted_effort_full_fix(mapped_tree: MappedDecisionTree,
+def get_wasted_effort(mapped_tree: MappedDecisionTree,
                                diagnosed_faulty_nodes_indices: list[int],
-                               true_faulty_features: set[str]
+                               true_faulty_features: set[str],
+                               require_full_fix = True
  ) -> int:
     """
     Calculate the wasted effort of the diagnoser.
@@ -49,11 +65,13 @@ def get_wasted_effort_full_fix(mapped_tree: MappedDecisionTree,
     """
     get_node_feature_func = lambda node: node.feature if node.feature is not None else node.parent.feature
     # Get node's feature or it's parent's feature if it's None
-    faulty_features_nodes_counts = {true_faulty_feature : 0 for true_faulty_feature in true_faulty_features}
+    # If not require_full_fix, then the faulty feature will be counted only as one
+    faulty_features_nodes_counts = {true_faulty_feature : int(not require_full_fix) for true_faulty_feature in true_faulty_features}
     for tree_node in mapped_tree.tree_dict.values():
         tree_node_feature = get_node_feature_func(tree_node)
         if tree_node_feature in true_faulty_features:
-            faulty_features_nodes_counts[tree_node_feature] += 1
+            if require_full_fix:
+                faulty_features_nodes_counts[tree_node_feature] += 1
 
     wasted_effort = 0
     for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosed_faulty_nodes_indices):
@@ -66,43 +84,11 @@ def get_wasted_effort_full_fix(mapped_tree: MappedDecisionTree,
             wasted_effort += 1
     return wasted_effort
 
+def get_accuracy(model, X, y):
+    y_predicted = model.predict(X)
+    return accuracy_score(y, y_predicted)
 
-def get_wasted_effort(mapped_tree: MappedDecisionTree,
-                      diagnosed_faulty_nodes_indices: list[int],
-                      true_faulty_features: set[str]
- ) -> int:
-    """
-    Calculate the wasted effort of the diagnoser.
-    
-    Parameters:
-    mapped_tree (MappedDecisionTree): The mapped decision tree.
-    diagnosed_faulty_nodes_indices (list[int]): The indices of the diagnosed faulty nodes.
-    true_faulty_features (list[str]): The true faulty features.
-
-    Returns:
-    int: The wasted effort.
-    """
-    # Get node's feature or it's parent's feature if it's None
-    get_node_feature_func = lambda node: node.feature if node.feature is not None else node.parent.feature
-    # Create inverted dict of features to it's nodes
-    faulty_features_nodes_dict = {true_faulty_feature : [] for true_faulty_feature in true_faulty_features}
-    for tree_node_index, tree_node in mapped_tree.nodes.items():
-        node_feature = get_node_feature_func(tree_node)
-        if node_feature in faulty_features_nodes_dict:
-            faulty_features_nodes_dict[node_feature].append(tree_node_index)
-
-    wasted_effort = 0
-    for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosed_faulty_nodes_indices):
-        faulty_node_feature = diagnosed_faulty_node.feature if diagnosed_faulty_node.feature is not None else diagnosed_faulty_node.parent.feature
-        if faulty_node_feature in true_faulty_features:
-            true_faulty_features.remove(faulty_node_feature)
-            if not len(true_faulty_features):
-                break
-        else:
-            wasted_effort += 1
-    return wasted_effort
-
-def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+def run_single_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
@@ -118,7 +104,7 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
-    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_feature in drift_single_tree_feature(mapped_tree, dataset):
+    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_feature in drift_tree(mapped_tree, dataset):
         try:
             after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
@@ -150,12 +136,12 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
                 diagnoser_names = (diagnoser_names, )
             for diagnoser_name in diagnoser_names:
                 fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
-                fixed_mapped_tree, faulty_nodes_indicies = fixer.fix_multiple_faults()
+                fixed_mapped_tree, faulty_nodes_indicies = fixer.fix_tree()
                 faulty_features = [mapped_tree.get_node(faulty_node_index).feature for faulty_node_index in faulty_nodes_indicies]
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - test_accuracy
                 drifted_feature = set([drifted_feature])
-                wasted_effort = get_wasted_effort_full_fix(mapped_tree, fixer.faulty_nodes, drifted_feature) if WASTED_EFFORT_REQUIRE_FULL_FIX else get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_feature)
+                wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_feature, WASTED_EFFORT_REQUIRE_FULL_FIX)
                 current_results_dict.update({
                     f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
                     f"{diagnoser_name} faulty features": ", ".join(str(faulty_features)),
@@ -169,19 +155,16 @@ def run_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tu
                 raise Exception(f"Error in {drift_description}: {e}")
             e.add_note(f"Error in {drift_description}")
             raise e
-
-DIRECTORY = "data\\Classification_Datasets\\"
-EXAMPLE_FILE_NAME = "bank"
-EXAMPLE_FILE_NAME = EXAMPLE_FILE_NAME + ".csv"
-def get_example_mapped_tree(directory=DIRECTORY, file_name=EXAMPLE_FILE_NAME):
+        
+def get_example_mapped_tree(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name)
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
-def sanity_run(directory=DIRECTORY, file_name=EXAMPLE_FILE_NAME):
-    for result in run_test(directory, file_name, False):
+def sanity_run(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
+    for result in run_single_test(directory, file_name, False):
         print(result)
         
 if __name__ == "__main__":
-    sanity_run(DIRECTORY, EXAMPLE_FILE_NAME)
+    sanity_run(DATASETS_FULL_PATH, EXAMPLE_FILE_NAME)

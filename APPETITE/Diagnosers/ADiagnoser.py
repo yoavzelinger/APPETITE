@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from pandas import DataFrame, Series
 
-from APPETITE.Constants import SINGLE_DIAGNOSER_NAME, MULTIPLE_DIAGNOSER_NAME, DIAGNOSER_TYPES
+from APPETITE.Constants import SINGLE_DIAGNOSER_TYPE_NAME, MULTIPLE_DIAGNOSER_TYPE_NAME, DIAGNOSER_TYPES
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
 class ADiagnoser(ABC):

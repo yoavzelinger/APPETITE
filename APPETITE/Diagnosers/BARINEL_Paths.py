@@ -21,7 +21,7 @@ def get_fuzzy_error(accuracy: float) -> float:
 
 class BARINEL_Paths(BARINEL):
     
-    diagnoser_type = MULTIPLE_DIAGNOSER_NAME
+    diagnoser_type = MULTIPLE_DIAGNOSER_TYPE_NAME
     
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,

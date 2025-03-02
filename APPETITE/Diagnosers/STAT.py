@@ -3,7 +3,7 @@ from copy import deepcopy
 from .ADiagnoser import *
 
 class STAT(ADiagnoser):
-    diagnoser_type = SINGLE_DIAGNOSER_NAME
+    diagnoser_type = SINGLE_DIAGNOSER_TYPE_NAME
 
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,

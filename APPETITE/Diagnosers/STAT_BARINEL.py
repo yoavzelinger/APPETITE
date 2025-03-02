@@ -9,7 +9,7 @@ class STAT_BARINEL(ADiagnoser):
     The diagnoser that combines the STAT and BARINEL diagnosers.
     """
 
-    diagnoser_type = MULTIPLE_DIAGNOSER_NAME
+    diagnoser_type = MULTIPLE_DIAGNOSER_TYPE_NAME
 
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,

@@ -225,7 +225,7 @@ class Fixer:
         return self._create_fixed_mapped_tree(), self.faulty_nodes
     
     def fix_tree(self,
-                 faulty_nodes: int | list[int] = None
+                 faulty_nodes: list[int] = None
         ) -> tuple[MappedDecisionTree, int | list[int]]:
         """
         Fix the decision tree.
@@ -239,5 +239,7 @@ class Fixer:
         if self.tree_already_fixed:
             return self.mapped_tree
         if self.diagnoser.diagnoser_type == SINGLE_DIAGNOSER_NAME:
-            return self.fix_single_fault(faulty_nodes)
+            diagnosis = self.fix_single_fault(faulty_nodes)
+            if type(diagnosis) is tuple:
+                diagnosis = diagnosis[0], [diagnosis[1]]
         return self.fix_multiple_faults(faulty_nodes)

@@ -62,8 +62,6 @@ class BARINEL_Paths(BARINEL):
             if path_terminal is None:
                 raise ValueError(f"No terminal node found for sample {sample_id}. Paths: {participated_nodes}")
             path_before_accuracy = path_terminal.correct_classifications_count / path_terminal.reached_samples_count
-            path_terminal.correct_classifications_count / 1
-            # 1 / path_terminal.reached_samples_count
             spectra_participation = tuple(spectra_participation)
             classified_correctly_count, total_count, _ = paths_dict.get(spectra_participation, (0, 0, 0))
             paths_dict[spectra_participation] = (classified_correctly_count + int(path_terminal.class_name == y[sample_id]), total_count + 1, path_before_accuracy)

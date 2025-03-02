@@ -61,7 +61,7 @@ with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
             continue
         print(f"Running tests for {dataset_name}")
         try:
-            for test_result in run_single_test(DATASETS_FULL_PATH, dataset_name + ".csv"):
+            for test_result in run_single_test(DATASETS_FULL_PATH, dataset_name + ".csv", diagnoser_names=DEFAULT_TESTING_DIAGNOSER):
                 drifts_count += 1
                 current_aggregated_row_dict["tree size"] = test_result["tree size"]
                 current_aggregated_row_dict["average after accuracy decrease"] += test_result["after accuracy decrease"]

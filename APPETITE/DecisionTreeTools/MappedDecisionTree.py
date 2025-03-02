@@ -237,11 +237,11 @@ class MappedDecisionTree:
 
     def map_tree(self, 
     ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
-        sk_features = self.sklearn_tree_model.tree_.feature
-        sk_thresholds = self.sklearn_tree_model.tree_.threshold
-        sk_children_left = self.sklearn_tree_model.tree_.children_left
-        sk_children_right = self.sklearn_tree_model.tree_.children_right
-        sk_values = self.sklearn_tree_model.tree_.value
+        self.sk_features = self.sklearn_tree_model.tree_.feature
+        self.sk_thresholds = self.sklearn_tree_model.tree_.threshold
+        self.sk_children_left = self.sklearn_tree_model.tree_.children_left
+        self.sk_children_right = self.sklearn_tree_model.tree_.children_right
+        self.sk_values = self.sklearn_tree_model.tree_.value
         sk_class_names = self.sklearn_tree_model.classes_
         
         tree_representation = {}
@@ -252,21 +252,21 @@ class MappedDecisionTree:
             current_node.update_condition()
             current_index = current_node.sk_index
             tree_representation[current_index] = current_node
-            left_child_index = sk_children_left[current_index]
-            right_child_index = sk_children_right[current_index]
+            left_child_index = self.sk_children_left[current_index]
+            right_child_index = self.sk_children_right[current_index]
 
             if left_child_index == right_child_index:  # Leaf
-                current_node_value = sk_values[current_index]
+                current_node_value = self.sk_values[current_index]
                 class_name = argmax(current_node_value)
                 class_name = sk_class_names[class_name]
                 current_node.class_name = class_name
                 continue
             
-            current_node.threshold = sk_thresholds[current_index]
-            feature_index = sk_features[current_index]
+            current_node.threshold = self.sk_thresholds[current_index]
+            feature_index = self.sk_features[current_index]
             current_node.feature = list(self.data_feature_types.keys())[feature_index]
             current_node.feature_type = self.data_feature_types[current_node.feature]
-            right_child_index = sk_children_right[current_index]
+            right_child_index = self.sk_children_right[current_index]
             for child_index in (left_child_index, right_child_index):
                 child_node = self.DecisionTreeNode(sk_index=child_index, parent=current_node)
                 nodes_to_check.append(child_node)
@@ -292,50 +292,73 @@ class MappedDecisionTree:
     ) -> int:
         return self.spectra_dict[index].sk_index
     
-    def prune_node(self,
-                   leaf_node: 'MappedDecisionTree.DecisionTreeNode'
-     ) -> None:
+    def prune_sibling_leaves(self,
+                             leaf1: 'MappedDecisionTree.DecisionTreeNode',
+                             leaf2: 'MappedDecisionTree.DecisionTreeNode'
+     ) -> 'MappedDecisionTree.DecisionTreeNode':
         """
-        Prune a node from the tree.
-        The node is pruned by making its parent a leaf node.
-        The parent's class is set to the class of the pruned node.
-        
+        Prune the sibling leaves.
+
         Parameters:
-            leaf_node (DecisionTreeNode): The node to prune.
+            leaf1 (DecisionTreeNode): The first leaf.
+            leaf2 (DecisionTreeNode): The second leaf.
+
+        Returns:
+            DecisionTreeNode: The parent of the leaves.
         """
-        parent = leaf_node.parent
+        self.tree_dict.pop(leaf1.sk_index)
+        self.tree_dict.pop(leaf2.sk_index)
+        parent = leaf1.parent
         parent.update_children(None, None)
-        current_class = leaf_node.class_name
+        current_class = leaf1.class_name
         parent.feature, parent.feature_type, parent.threshold, parent.class_name = None, None, None, current_class
-        leaf_nodes += [parent]
         # Adjust the tree
         parent_index = parent.sk_index
         self.sklearn_tree_model.tree_.children_left[parent_index] = TREE_LEAF
         self.sklearn_tree_model.tree_.children_right[parent_index] = TREE_LEAF
         self.sklearn_tree_model.tree_.feature[parent_index] = -2
         return parent
-        
-
+    
+    def prune_leaf(self,
+                   leaf_node: 'MappedDecisionTree.DecisionTreeNode'
+     ) -> None:
+        """
+        Prune a leaf.
+        The prune is done by removing the leaf and replacing the parent with it's sibling.
+    
+        Parameters:
+            leaf (DecisionTreeNode): The leaf to prune.
+        """
+        parent, sibling = leaf_node.parent, leaf_node.get_sibling()
+        self.tree_dict.pop(leaf_node.sk_index)
+        self.tree_dict.pop(sibling.sk_index)
+        # Replace all parent's attributes with siblings'
+        parent.update_children(sibling.left_child, sibling.right_child)
+        parent.feature, parent.feature_type, parent.threshold, parent.class_name = sibling.feature, sibling.feature_type, sibling.threshold, sibling.class_name
+        # Update the sklearn tree
+        parent_index = parent.sk_index
+        self.sk_children_left[parent_index] = sibling.left_child.sk_index
+        self.sk_children_right[parent_index] = sibling.right_child.sk_index
+        self.sk_features[parent_index] = sibling.sk_index
+        self.sk_thresholds[parent_index] = sibling.threshold
+        self.sk_values[parent_index] = self.sk_values[sibling.sk_index]
     
     def prune_tree(self) -> None:
         leaf_nodes = [node for node in self.tree_dict.values() if node.is_terminal()]
-        pruned_indices = []
+        tree_changed = False
         while len(leaf_nodes):
             current_leaf = leaf_nodes.pop(0)
             sibling = current_leaf.get_sibling()
-
             if sibling is None: # Root
                 continue
-            if not sibling.is_terminal():
-                continue
-            if current_leaf.class_name != sibling.class_name:
-                continue
-            # Prune
-            pruned_indices += [current_leaf.sk_index, sibling.sk_index]
-            self.tree_dict.pop(current_leaf.sk_index)
-            self.tree_dict.pop(sibling.sk_index)
-            leaf_nodes += [self.prune_node(current_leaf)]
-        if len(pruned_indices): # Attributes changed
+            if sibling.is_terminal() and current_leaf.class_name == sibling.class_name: # Sibling is a leaf with the same class
+                tree_changed = True
+                leaf_nodes += [self.prune_sibling_leaves(current_leaf, sibling)]
+            if not current_leaf.reached_samples_count: # Redundant leaf
+                tree_changed = True
+                self.prune_leaf(current_leaf)
+            
+        if tree_changed: # Attributes changed
             self.update_tree_attributes()
 
     def __repr__(self) -> str:

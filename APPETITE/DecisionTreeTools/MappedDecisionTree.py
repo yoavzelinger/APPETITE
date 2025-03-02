@@ -292,6 +292,31 @@ class MappedDecisionTree:
     ) -> int:
         return self.spectra_dict[index].sk_index
     
+    def prune_node(self,
+                   leaf_node: 'MappedDecisionTree.DecisionTreeNode'
+     ) -> None:
+        """
+        Prune a node from the tree.
+        The node is pruned by making its parent a leaf node.
+        The parent's class is set to the class of the pruned node.
+        
+        Parameters:
+            leaf_node (DecisionTreeNode): The node to prune.
+        """
+        parent = leaf_node.parent
+        parent.update_children(None, None)
+        current_class = leaf_node.class_name
+        parent.feature, parent.feature_type, parent.threshold, parent.class_name = None, None, None, current_class
+        leaf_nodes += [parent]
+        # Adjust the tree
+        parent_index = parent.sk_index
+        self.sklearn_tree_model.tree_.children_left[parent_index] = TREE_LEAF
+        self.sklearn_tree_model.tree_.children_right[parent_index] = TREE_LEAF
+        self.sklearn_tree_model.tree_.feature[parent_index] = -2
+        return parent
+        
+
+    
     def prune_tree(self) -> None:
         leaf_nodes = [node for node in self.tree_dict.values() if node.is_terminal()]
         pruned_indices = []
@@ -309,17 +334,7 @@ class MappedDecisionTree:
             pruned_indices += [current_leaf.sk_index, sibling.sk_index]
             self.tree_dict.pop(current_leaf.sk_index)
             self.tree_dict.pop(sibling.sk_index)
-            # Make parent a leaf
-            parent = current_leaf.parent
-            parent.update_children(None, None)
-            current_class = current_leaf.class_name
-            parent.feature, parent.feature_type, parent.threshold, parent.class_name = None, None, None, current_class
-            leaf_nodes += [parent]
-            # Adjust the tree
-            parent_index = parent.sk_index
-            self.sklearn_tree_model.tree_.children_left[parent_index] = TREE_LEAF
-            self.sklearn_tree_model.tree_.children_right[parent_index] = TREE_LEAF
-            self.sklearn_tree_model.tree_.feature[parent_index] = -2
+            leaf_nodes += [self.prune_node(current_leaf)]
         if len(pruned_indices): # Attributes changed
             self.update_tree_attributes()
 

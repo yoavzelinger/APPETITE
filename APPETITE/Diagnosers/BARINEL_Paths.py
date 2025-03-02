@@ -61,16 +61,24 @@ class BARINEL_Paths(BARINEL):
                     path_terminal = node
             if path_terminal is None:
                 raise ValueError(f"No terminal node found for sample {sample_id}. Paths: {participated_nodes}")
+            path_before_accuracy = path_terminal.correct_classifications_count / path_terminal.reached_samples_count
+            path_terminal.correct_classifications_count / 1
+            # 1 / path_terminal.reached_samples_count
             spectra_participation = tuple(spectra_participation)
-            classified_correctly_count, total_count = paths_dict.get(spectra_participation, (0, 0))
-            paths_dict[spectra_participation] = (classified_correctly_count + int(path_terminal.class_name == y[sample_id]), total_count + 1)
+            classified_correctly_count, total_count, _ = paths_dict.get(spectra_participation, (0, 0, 0))
+            paths_dict[spectra_participation] = (classified_correctly_count + int(path_terminal.class_name == y[sample_id]), total_count + 1, path_before_accuracy)
         
         self.paths_count = len(paths_dict)
         self.spectra = zeros((self.node_count, self.paths_count))
         self.error_vector = zeros(self.paths_count)
-        for path_index, (path, (classified_correctly_count, total_count)) in enumerate(paths_dict.items()):
+        for path_index, (path, (classified_correctly_count, total_count, path_before_accuracy)) in enumerate(paths_dict.items()):
+            path_before_accuracy = -1
             for node_spectra_index in path:
                 self.spectra[node_spectra_index, path_index] = 1
+                node = self.mapped_tree.get_node(node_spectra_index, use_spectra_index=True)
+            path_current_accuracy = classified_correctly_count / total_count
+            # accuracy_difference = path_current_accuracy - path_before_accuracy
+            # error = get_fuzzy_error(accuracy_difference)
             error = get_fuzzy_error(path_current_accuracy)
             self.error_vector[path_index] = error
         accuracy_threshold = min(BARINEL_PATHS_ACCURACY_THRESHOLD, max(self.error_vector))

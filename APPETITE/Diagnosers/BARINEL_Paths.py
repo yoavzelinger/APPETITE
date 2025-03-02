@@ -1,4 +1,4 @@
-from numpy import zeros
+from numpy import zeros, clip
 from pandas import DataFrame, Series
 
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
@@ -17,7 +17,7 @@ def get_fuzzy_error(accuracy: float) -> float:
     Returns:
     float: The fuzzy error.
     """
-    return 1 - accuracy
+    return clip(1 - accuracy, 0, 1)
 
 class BARINEL_Paths(BARINEL):
     
@@ -71,5 +71,7 @@ class BARINEL_Paths(BARINEL):
         for path_index, (path, (classified_correctly_count, total_count)) in enumerate(paths_dict.items()):
             for node_spectra_index in path:
                 self.spectra[node_spectra_index, path_index] = 1
-            error = get_fuzzy_error(classified_correctly_count / total_count)
-            self.error_vector[path_index] = int(error > BARINEL_PATHS_ACCURACY_THRESHOLD)
+            error = get_fuzzy_error(path_current_accuracy)
+            self.error_vector[path_index] = error
+        accuracy_threshold = min(BARINEL_PATHS_ACCURACY_THRESHOLD, max(self.error_vector))
+        self.error_vector = (self.error_vector >= accuracy_threshold).astype(int)

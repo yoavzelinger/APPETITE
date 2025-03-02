@@ -1,3 +1,4 @@
+from sys import argv as sys_argv
 from pandas import concat as pd_concat
 from sklearn.metrics import accuracy_score
 
@@ -167,4 +168,5 @@ def sanity_run(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
         print(result)
         
 if __name__ == "__main__":
-    sanity_run(DATASETS_FULL_PATH, EXAMPLE_FILE_NAME)
+    file_name = EXAMPLE_FILE_NAME if len(sys_argv) < 2 else sys_argv[1]
+    sanity_run(DATASETS_FULL_PATH, file_name + ".csv")

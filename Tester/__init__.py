@@ -1,2 +1,2 @@
-from test_functions import *
+from .single_test import *
 from .Constants import *

@@ -32,7 +32,7 @@ class Fixer:
         self.y = y
         self.diagnoser_name = diagnoser_name
         diagnoser_class, diagnoser_parameters = get_diagnoser(diagnoser_name, *diagnoser_parameters)
-        self.diagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, *diagnoser_parameters)
+        self.diagnoser: ADiagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, *diagnoser_parameters)
         self.faulty_nodes = None    # List of sk_indices of the faulty nodes; Lazy evaluation
         self.tree_already_fixed = False
 

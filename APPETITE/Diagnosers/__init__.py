@@ -1,3 +1,4 @@
+from .ADiagnoser import ADiagnoser
 from .STAT import STAT
 from .SFLDT import SFLDT, SFLDT_DEFAULT_SIMILARITY_MEASURES
 from .STAT_SFLDT import STAT_SFLDT
@@ -37,4 +38,4 @@ def get_diagnoser(diagnoser_name: str,
         diagnoser_parameters = diagnoser_default_parameters
     return diagnoser_class, diagnoser_parameters
 
-__all__ = ["STAT", "SFLDT", "SFLDT_DEFAULT_SIMILARITY_MEASURES", "STAT_SFLDT", "BARINEL", "get_barinel_diagnoses", "STAT_BARINEL", "BARINEL_Combo", "get_diagnoser"]
+__all__ = ["ADiagnoser", "STAT", "SFLDT", "SFLDT_DEFAULT_SIMILARITY_MEASURES", "STAT_SFLDT", "BARINEL", "get_barinel_diagnoses", "STAT_BARINEL", "BARINEL_Combo", "get_diagnoser"]

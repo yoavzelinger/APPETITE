@@ -1,4 +1,5 @@
 import os
+from sys import argv as sys_argv
 from csv import DictReader
 from pandas import DataFrame
 
@@ -16,6 +17,9 @@ AVERAGE_FIX_ACCURACY_NAME_SUFFIX = " average" + FIX_ACCURACY_NAME_SUFFIX
 FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
 AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_NAME_SUFFIX
 
+if len(sys_argv) > 1:
+    DEFAULT_TESTING_DIAGNOSER = sys_argv[1:]
+    
 print("Testing diagnosers:", DEFAULT_TESTING_DIAGNOSER)
 
 raw_results_columns = ["drift description", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]

@@ -242,4 +242,5 @@ class Fixer:
             diagnosis = self.fix_single_fault(faulty_nodes)
             if type(diagnosis) is tuple:
                 diagnosis = diagnosis[0], [diagnosis[1]]
+            return diagnosis
         return self.fix_multiple_faults(faulty_nodes)

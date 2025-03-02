@@ -39,10 +39,13 @@ class BARINEL_Paths(BARINEL):
         """
         super().__init__(mapped_tree, X, y)
 
-    def fill_spectra_and_error_vector_with_paths(self, 
+    def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
      ) -> None:
+        """
+        Fill the spectra and error vector with paths.
+        """
         paths_dict = {}
         node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))
         for sample_id in range(self.sample_count):

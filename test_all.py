@@ -20,26 +20,21 @@ FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
 AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_NAME_SUFFIX
 
 parser = ArgumentParser(description="Run all tests")
-parser.add_argument("-o", "--output", type=str, help="Output file name prefix", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
-parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help="List of names", default=DEFAULT_TESTING_DIAGNOSER)
-parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception", default=STOP_ON_EXCEPTION)
-parser.add_argument("-c", "--count", type=int, help="Number of tests to run", default=-1)
-parser.add_argument("-n", "--name", type=str, help="Name of the dataset to run")
+parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
+parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help=f"List of diagnosers, default is {DEFAULT_TESTING_DIAGNOSER}", default=DEFAULT_TESTING_DIAGNOSER)
+parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception, default is false and writing the errors to errors file", default=STOP_ON_EXCEPTION)
+parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
+parser.add_argument("-n", "--name", type=str, help="Name of the dataset to run, use only if you want to run a specific test")
 
 args = parser.parse_args()
 RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{args.output}", f"{ERRORS_FILE_PATH_PREFIX}_{args.output}"
 DEFAULT_TESTING_DIAGNOSER = args.diagnosers
+print(f"Running tests with diagnosers: {DEFAULT_TESTING_DIAGNOSER}")
 STOP_ON_EXCEPTION = args.stop
 datasets_count = args.count
 if args.name:
     single_test.sanity_run(file_name=args.name + ".csv")
     exit(0)
-    
-
-print(f"Results will be saved to {RESULTS_FILE_PATH_PREFIX}_aggregated.csv and {RESULTS_FILE_PATH_PREFIX}_raw.csv")
-print(f"Errors will be saved to {ERRORS_FILE_PATH_PREFIX}.csv")
-print(f"Tests will be run for {datasets_count} datasets")
-print(f"Diagnosers: {DEFAULT_TESTING_DIAGNOSER}")
 
 raw_results_columns = ["drift description", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]

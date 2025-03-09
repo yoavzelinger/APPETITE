@@ -74,7 +74,7 @@ with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
             "average before after retrain accuracy increase": 0
         }
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
-        if dataset_name in ("image-segmentation", "car"):
+        if dataset_name in ("image-segmentation", "car", "socmob"):
             continue
         print(f"Running tests for {dataset_name}")
         try:

@@ -5,7 +5,7 @@ from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
 from .BARINEL import *
 
-from APPETITE.Constants import BARINEL_PATHS_ACCURACY_THRESHOLD
+from APPETITE.Constants import BARINEL_PATHS_ERROR_STD_THRESHOLD
 
 def get_fuzzy_error(accuracy: float) -> float:
     """
@@ -79,5 +79,6 @@ class BARINEL_Paths(BARINEL):
             # error = get_fuzzy_error(accuracy_difference)
             error = get_fuzzy_error(path_current_accuracy)
             self.error_vector[path_index] = error
-        accuracy_threshold = min(BARINEL_PATHS_ACCURACY_THRESHOLD, max(self.error_vector))
-        self.error_vector = (self.error_vector >= accuracy_threshold).astype(int)
+        error_threshold = error_average + BARINEL_PATHS_ERROR_STD_THRESHOLD * error_std
+        self.error_vector = (fuzzy_error_vector >= error_threshold).astype(int)
+        assert self.error_vector.sum() > 0, f"No path with error above the threshold {error_threshold} (average: {error_average}). The largest error is {max(fuzzy_error_vector)}"

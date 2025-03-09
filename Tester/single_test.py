@@ -83,7 +83,7 @@ def get_accuracy(model, X, y):
     y_predicted = model.predict(X)
     return accuracy_score(y, y_predicted)
 
-def run_single_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
@@ -146,10 +146,8 @@ def run_single_test(directory, file_name, wrap_exception=WRAP_EXCEPTION, proport
                 })
             yield current_results_dict
         except Exception as e:
-            if wrap_exception:
-                raise Exception(f"Error in {drift_description}: {e}")
-            e.add_note(f"Error in {drift_description}")
-            raise e
+            exception_class = e.__class__.__name__
+            raise Exception(f"{exception_class} in {drift_description}: {e}")
         
 def get_example_mapped_tree(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name + ".csv")
@@ -158,7 +156,7 @@ def get_example_mapped_tree(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
 def sanity_run(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
-    for result in run_single_test(directory, file_name, False):
+    for result in run_single_test(directory, file_name):
         print(result)
         
 if __name__ == "__main__":

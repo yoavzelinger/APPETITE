@@ -1,5 +1,6 @@
 import os
-from sys import argv as sys_argv
+from argparse import ArgumentParser
+from datetime import datetime
 from csv import DictReader
 from pandas import DataFrame
 
@@ -17,10 +18,22 @@ AVERAGE_FIX_ACCURACY_NAME_SUFFIX = " average" + FIX_ACCURACY_NAME_SUFFIX
 FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
 AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_NAME_SUFFIX
 
-if len(sys_argv) > 1:
-    DEFAULT_TESTING_DIAGNOSER = sys_argv[1:]
-    
-print("Testing diagnosers:", DEFAULT_TESTING_DIAGNOSER)
+parser = ArgumentParser(description="Run all tests")
+parser.add_argument("-n", "--name", type=str, help="Output file name prefix", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
+parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help="List of names", default=DEFAULT_TESTING_DIAGNOSER)
+parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception", default=STOP_ON_EXCEPTION)
+parser.add_argument("-c", "--count", type=int, help="Number of tests to run", default=-1)
+
+args = parser.parse_args()
+RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{args.name}", f"{ERRORS_FILE_PATH_PREFIX}_{args.name}"
+DEFAULT_TESTING_DIAGNOSER = args.diagnosers
+STOP_ON_EXCEPTION = args.stop
+datasets_count = args.count
+
+print(f"Results will be saved to {RESULTS_FILE_PATH_PREFIX}_aggregated.csv and {RESULTS_FILE_PATH_PREFIX}_raw.csv")
+print(f"Errors will be saved to {ERRORS_FILE_PATH_PREFIX}.csv")
+print(f"Tests will be run for {datasets_count} datasets")
+print(f"Diagnosers: {DEFAULT_TESTING_DIAGNOSER}")
 
 raw_results_columns = ["drift description", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]
@@ -44,6 +57,9 @@ errors = DataFrame(columns=["name", "error"])
 with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
     descriptions_reader = DictReader(descriptions_file)
     for dataset_description in descriptions_reader:
+        if not datasets_count:
+            break
+        datasets_count -= 1
         dataset_name = dataset_description["name"]
         drifts_count = 0
 
@@ -109,9 +125,9 @@ if not os.path.exists(RESULTS_FULL_PATH):
 aggregated_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_aggregated.csv", index=False)
 raw_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_raw.csv", index=False)
 if not errors.empty:
-    errors.to_csv(f"{RESULTS_FULL_PATH}\\errors.csv", index=False)
-elif os.path.exists(f"{RESULTS_FULL_PATH}\\errors.csv"):
-        os.remove(f"{RESULTS_FULL_PATH}\\errors.csv")
+    errors.to_csv(f"{ERRORS_FILE_PATH_PREFIX}.csv", index=False)
+elif os.path.exists(f"{ERRORS_FILE_PATH_PREFIX}.csv"):
+    os.remove(f"{ERRORS_FILE_PATH_PREFIX}.csv")
 
 print("All tests are done! average accuracy and the incremental:")
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:

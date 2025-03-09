@@ -1,4 +1,5 @@
 import os
+from sys import exit
 from argparse import ArgumentParser
 from datetime import datetime
 from csv import DictReader
@@ -19,16 +20,21 @@ FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
 AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_NAME_SUFFIX
 
 parser = ArgumentParser(description="Run all tests")
-parser.add_argument("-n", "--name", type=str, help="Output file name prefix", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
+parser.add_argument("-o", "--output", type=str, help="Output file name prefix", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help="List of names", default=DEFAULT_TESTING_DIAGNOSER)
 parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception", default=STOP_ON_EXCEPTION)
 parser.add_argument("-c", "--count", type=int, help="Number of tests to run", default=-1)
+parser.add_argument("-n", "--name", type=str, help="Name of the dataset to run")
 
 args = parser.parse_args()
-RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{args.name}", f"{ERRORS_FILE_PATH_PREFIX}_{args.name}"
+RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{args.output}", f"{ERRORS_FILE_PATH_PREFIX}_{args.output}"
 DEFAULT_TESTING_DIAGNOSER = args.diagnosers
 STOP_ON_EXCEPTION = args.stop
 datasets_count = args.count
+if args.name:
+    single_test.sanity_run(file_name=args.name + ".csv")
+    exit(0)
+    
 
 print(f"Results will be saved to {RESULTS_FILE_PATH_PREFIX}_aggregated.csv and {RESULTS_FILE_PATH_PREFIX}_raw.csv")
 print(f"Errors will be saved to {ERRORS_FILE_PATH_PREFIX}.csv")

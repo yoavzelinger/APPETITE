@@ -133,14 +133,15 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
             for diagnoser_name in diagnoser_names:
                 fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
                 fixed_mapped_tree, faulty_nodes_indicies = fixer.fix_tree()
-                faulty_features = [mapped_tree.get_node(faulty_node_index).feature for faulty_node_index in faulty_nodes_indicies]
+                faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indicies]
+                faulty_features = [faulty_node.feature if (faulty_node.feature or not faulty_node.is_terminal()) else "target" for faulty_node in faulty_nodes]
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - test_accuracy
                 drifted_feature = drifted_feature if isinstance(drifted_feature, set) else set([drifted_feature])
                 wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_feature, WASTED_EFFORT_REQUIRE_FULL_FIX)
                 current_results_dict.update({
                     f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
-                    f"{diagnoser_name} faulty features": ", ".join(str(faulty_features)),
+                    f"{diagnoser_name} faulty features": ", ".join(faulty_features),
                     f"{diagnoser_name} wasted effort": wasted_effort,
                     f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
                     f"{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100

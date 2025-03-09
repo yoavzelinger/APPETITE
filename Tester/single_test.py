@@ -5,6 +5,7 @@ from sklearn.metrics import accuracy_score
 from APPETITE import *
 
 from Tester.Constants import *
+import traceback
 
 def get_dataset(directory: str,
                 file_name: str,
@@ -147,7 +148,9 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
             yield current_results_dict
         except Exception as e:
             exception_class = e.__class__.__name__
-            raise Exception(f"{exception_class} in {drift_description}: {e}")
+            tb = traceback.extract_tb(e.__traceback__)
+            error_line, error_file = tb[-1].lineno, tb[-1].filename
+            raise Exception(f"{exception_class} in {drift_description} ({error_file}, line {error_line}): {e}")
         
 def get_example_mapped_tree(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name + ".csv")

@@ -135,7 +135,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
                 faulty_features = [mapped_tree.get_node(faulty_node_index).feature for faulty_node_index in faulty_nodes_indicies]
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - test_accuracy
-                drifted_feature = set([drifted_feature])
+                drifted_feature = drifted_feature if isinstance(drifted_feature, set) else set([drifted_feature])
                 wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_feature, WASTED_EFFORT_REQUIRE_FULL_FIX)
                 current_results_dict.update({
                     f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),

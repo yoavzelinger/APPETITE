@@ -1,7 +1,7 @@
 MINIMUM_ORIGINAL_ACCURACY = 0.75
 MINIMUM_DRIFT_ACCURACY_DROP = 0.1
 
-DEFAULT_TESTING_DIAGNOSER = ("BARINEL_Paths",)
+DEFAULT_TESTING_DIAGNOSER = ("BARINEL_Paths_After", "BARINEL_Paths_Difference")
 
 # Transform the diagnoser to iterable
 try:

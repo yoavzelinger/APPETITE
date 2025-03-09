@@ -6,6 +6,8 @@ from .BARINEL import BARINEL, get_barinel_diagnoses
 from .STAT_BARINEL import STAT_BARINEL
 from .BARINEL_Combo import BARINEL_Combo
 from .BARINEL_Paths import BARINEL_Paths
+from .BARINEL_Paths_After import BARINEL_Paths_After
+from .BARINEL_Paths_Difference import BARINEL_Paths_Difference
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {
@@ -15,7 +17,9 @@ diagnosers_dict = {
     "BARINEL": (BARINEL, ()),
     "STAT_BARINEL": (STAT_BARINEL, ()),
     "BARINEL_Combo": (BARINEL_Combo, ()),
-    "BARINEL_Paths": (BARINEL_Paths, ())
+    "BARINEL_Paths": (BARINEL_Paths, ()),
+    "BARINEL_Paths_After": (BARINEL_Paths_After, ()),
+    "BARINEL_Paths_Difference": (BARINEL_Paths_Difference, ())
 }
 
 def get_diagnoser(diagnoser_name: str, 
@@ -37,5 +41,3 @@ def get_diagnoser(diagnoser_name: str,
     if diagnoser_parameters is None:
         diagnoser_parameters = diagnoser_default_parameters
     return diagnoser_class, diagnoser_parameters
-
-__all__ = ["ADiagnoser", "STAT", "SFLDT", "SFLDT_DEFAULT_SIMILARITY_MEASURES", "STAT_SFLDT", "BARINEL", "get_barinel_diagnoses", "STAT_BARINEL", "BARINEL_Combo", "get_diagnoser"]

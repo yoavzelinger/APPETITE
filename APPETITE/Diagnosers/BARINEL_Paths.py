@@ -1,4 +1,4 @@
-from numpy import zeros, clip
+from numpy import zeros
 from pandas import DataFrame, Series
 
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
@@ -17,7 +17,7 @@ def get_fuzzy_error(accuracy: float) -> float:
     Returns:
     float: The fuzzy error.
     """
-    return clip(1 - accuracy, 0, 1)
+    return 1 - accuracy
 
 class BARINEL_Paths(BARINEL):
     

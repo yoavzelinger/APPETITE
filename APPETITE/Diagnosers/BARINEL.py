@@ -23,7 +23,8 @@ def get_barinel_diagnoses(spectra: ndarray,
     spectrum = list(map(lambda spectra_vector_pair: spectra_vector_pair[0] + [spectra_vector_pair[1]], zip(spectra.T.tolist(), error_vector.tolist())))
     diagnoses, _ = _barinel_diagnosis(spectrum, [])
     # diagnoses = _rank_diagnoses(spectrum, diagnoses, GRADIENT_STEP)
-    diagnoses = rank_diagnoses(np_array(diagnoses), np_array(spectrum), error_vector)
+    diagnoses = list(map(np_array, diagnoses))
+    diagnoses = rank_diagnoses(diagnoses, np_array(spectrum), error_vector)
     diagnoses = [(diagnosis[0], diagnosis[1]) for diagnosis in diagnoses]
     return diagnoses
 

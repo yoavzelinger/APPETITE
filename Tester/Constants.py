@@ -6,6 +6,8 @@ DEFAULT_TESTING_DIAGNOSER = ("STAT_BARINEL_Paths_After", "STAT_BARINEL_Paths_Dif
 # Transform the diagnoser to iterable
 try:
     iter(DEFAULT_TESTING_DIAGNOSER)
+    if isinstance(DEFAULT_TESTING_DIAGNOSER, str):
+        raise TypeError
 except TypeError:
     DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER,)
 

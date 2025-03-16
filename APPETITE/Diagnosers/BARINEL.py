@@ -1,4 +1,4 @@
-from numpy import ndarray, array as np_array
+from numpy import ndarray, array as np_array, concatenate as np_concatenate
 from pandas import DataFrame, Series
 
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
@@ -6,10 +6,10 @@ from .barinel_utils import *
 from .ADiagnoser import *
 from .SFLDT import SFLDT
 
-from APPETITE.Constants import GRADIENT_STEP
-
 def get_barinel_diagnoses(spectra: ndarray,
-                          error_vector: ndarray
+                          error_vector: ndarray,
+                          threshold:float = None,
+                          components_prior_probabilities: ndarray = None
  ) -> list[tuple[list[int], float]]:
     """
     Perform the Barinel diagnosis algorithm on the given spectrum.
@@ -20,11 +20,13 @@ def get_barinel_diagnoses(spectra: ndarray,
     Returns:
     list[tuple[list[int], float]]: The diagnoses with their corresponding ranks.
     """
-    spectrum = list(map(lambda spectra_vector_pair: spectra_vector_pair[0] + [spectra_vector_pair[1]], zip(spectra.T.tolist(), error_vector.tolist())))
-    diagnoses, _ = _barinel_diagnosis(spectrum, [])
-    # diagnoses = _rank_diagnoses(spectrum, diagnoses, GRADIENT_STEP)
+    discrete_error_vector = error_vector if threshold is None else [1 if error > threshold else 0 for error in error_vector]
+    assert all([error in [0, 1] for error in discrete_error_vector]), "The error vector must be binary (for candidation)"
+    spectrum = list(map(lambda spectra_vector_pair: spectra_vector_pair[0] + [spectra_vector_pair[1]], zip(spectra.T.tolist(), discrete_error_vector.tolist())))
+    diagnoses, _ = get_candidates(spectrum)
     diagnoses = list(map(np_array, diagnoses))
-    diagnoses = rank_diagnoses(diagnoses, np_array(spectrum), error_vector)
+    spectrum = np_concatenate((np_array(spectrum)[:, :-1], np_array([error_vector]).T), axis=1)
+    diagnoses = rank_diagnoses(spectrum, diagnoses)
     diagnoses = [(diagnosis[0], diagnosis[1]) for diagnosis in diagnoses]
     return diagnoses
 

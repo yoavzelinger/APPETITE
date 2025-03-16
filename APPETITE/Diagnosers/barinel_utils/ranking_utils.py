@@ -67,9 +67,8 @@ def rank_diagnosis(diagnosis: NDArray,
     maximum_likelihood = -mle_model.fun
     return maximum_likelihood * prior_probability
 
-def rank_diagnoses(diagnoses: list[NDArray],
-                   spectrum: NDArray,
-                   fuzzy_error_vector: NDArray,
+def rank_diagnoses(spectrum: NDArray,
+                   diagnoses: list[NDArray],
                    components_prior_probabilities: NDArray = None
  ) -> list[tuple[NDArray, float]]:
     """
@@ -83,6 +82,7 @@ def rank_diagnoses(diagnoses: list[NDArray],
     Returns:
     list[tuple[ndarray, float]]: The ranked diagnoses.
     """
+    spectrum, fuzzy_error_vector = spectrum[:, :-1], spectrum[:, -1]
     if components_prior_probabilities is None:
         components_prior_probabilities = full(spectrum.shape[1], BARINEL_COMPONENT_PRIOR_PROBABILITY)
     return [(diagnosis, rank_diagnosis(diagnosis, spectrum, fuzzy_error_vector, components_prior_probabilities)) for diagnosis in diagnoses]

@@ -1,4 +1,5 @@
 from numpy import full, arange, vectorize
+from math import prod
 from numpy.typing import NDArray
 
 from scipy.optimize import minimize
@@ -35,7 +36,7 @@ def get_total_likelihood(diagnosis: NDArray,
     get_participated_components = lambda participation_vector: diagnosis[participation_vector[diagnosis] == 1]
     spectrum_diagnosis_components = [get_participated_components(spectrum_component) for spectrum_component in spectrum]
     tests_likelihoods = map(get_single_test_likelihood, spectrum_diagnosis_components, fuzzy_error_vector)
-    return -sum(tests_likelihoods) # Maximize the likelihood
+    return -prod(tests_likelihoods) # Maximize the likelihood
 
 def rank_diagnosis(diagnosis: NDArray,
                    spectrum: NDArray,

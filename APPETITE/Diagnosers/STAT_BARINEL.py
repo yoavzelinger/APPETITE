@@ -1,3 +1,4 @@
+from numpy import array as np_array
 from .ADiagnoser import *
 from .STAT import STAT
 from .BARINEL import BARINEL
@@ -42,7 +43,8 @@ class STAT_BARINEL(ADiagnoser):
 
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
-                      retrieve_spectra_indices: bool = False
+                      retrieve_spectra_indices: bool = False,
+                      threshold: float = None
      ) -> list[int] | list[tuple[int, float]]:
         """
         Get the diagnoses.
@@ -54,13 +56,9 @@ class STAT_BARINEL(ADiagnoser):
         list[int] | list[tuple[int, float]]: The diagnoses. If retrieve_ranks is True, the diagnoses will be a list of tuples with the node index and the rank.
         """
         if self.diagnoses is None:
-            self.diagnoses = self.barinel.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=retrieve_spectra_indices)
-            for diagnosis_index, (diagnosis, barinel_rank) in enumerate(self.diagnoses):
-                combined_rank = barinel_rank
-                for node_index in diagnosis:
-                    if retrieve_spectra_indices:
-                        node_index = self.mapped_tree.convert_spectra_index_to_node_index(node_index)
-                    combined_rank *= self.get_stat_violation(node_index)
-                self.diagnoses[diagnosis_index] = (diagnosis, combined_rank)
+            stat_diagnoses = self.stat.get_diagnoses(retrieve_ranks=True)
+            stat_diagnoses.sort()
+            stat_diagnoses = np_array([diagnosis[1] for diagnosis in stat_diagnoses])
+            self.diagnoses = self.barinel.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=retrieve_spectra_indices, components_prior_probabilities=stat_diagnoses, threshold=threshold)
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks)

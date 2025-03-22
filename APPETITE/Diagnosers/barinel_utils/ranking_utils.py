@@ -29,8 +29,6 @@ def get_total_likelihood(diagnosis: NDArray,
         """"
         Get the likelihood of the single test.
         """
-        if participated_components.size == 0:
-            return 0
         transaction_goodness = healthiness_probabilities[participated_components].prod()
         return fuzzy_error * (1 - transaction_goodness) + (1 - fuzzy_error) * transaction_goodness
     get_participated_components = lambda participation_vector: diagnosis[participation_vector[diagnosis] == 1]

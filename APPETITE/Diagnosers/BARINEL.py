@@ -25,6 +25,7 @@ def get_barinel_diagnoses(spectra: ndarray,
     """
     discrete_error_vector = error_vector if threshold is None else [1 if error > threshold else 0 for error in error_vector]
     assert all([error in [0, 1] for error in discrete_error_vector]), "The error vector must be binary (for candidation)"
+    assert sum(discrete_error_vector) > 0, f"No path with error above the threshold {threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
     spectrum = list(map(lambda spectra_vector_pair: spectra_vector_pair[0] + [spectra_vector_pair[1]], zip(spectra.T.tolist(), discrete_error_vector.tolist())))
     diagnoses, _ = get_candidates(spectrum)
     diagnoses = list(map(np_array, diagnoses))

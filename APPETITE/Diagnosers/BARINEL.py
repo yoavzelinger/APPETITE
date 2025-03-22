@@ -8,14 +8,17 @@ from .SFLDT import SFLDT
 
 def get_barinel_diagnoses(spectra: ndarray,
                           error_vector: ndarray,
-                          threshold:float = None,
-                          components_prior_probabilities: ndarray = None
+                          components_prior_probabilities: ndarray = None,
+                          threshold: float = None
  ) -> list[tuple[list[int], float]]:
     """
     Perform the Barinel diagnosis algorithm on the given spectrum.
 
     Parameters:
-    spectrum (list[list[int]]): The spectrum.
+    spectra (ndarray): The spectrum.
+    error_vector (ndarray): The error vector.
+    components_prior_probabilities (ndarray): The components prior probabilities.
+    threshold (float): The threshold for the error vector.
 
     Returns:
     list[tuple[list[int], float]]: The diagnoses with their corresponding ranks.
@@ -26,7 +29,7 @@ def get_barinel_diagnoses(spectra: ndarray,
     diagnoses, _ = get_candidates(spectrum)
     diagnoses = list(map(np_array, diagnoses))
     spectrum = np_concatenate((np_array(spectrum)[:, :-1], np_array([error_vector]).T), axis=1)
-    diagnoses = rank_diagnoses(spectrum, diagnoses)
+    diagnoses = rank_diagnoses(spectrum, diagnoses, components_prior_probabilities)
     diagnoses = [(diagnosis[0], diagnosis[1]) for diagnosis in diagnoses]
     return diagnoses
 
@@ -43,7 +46,9 @@ class BARINEL(SFLDT):
 
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
-                      retrieve_spectra_indices: bool = False
+                      retrieve_spectra_indices: bool = False,
+                      components_prior_probabilities: ndarray = None,
+                      threshold: float = None
      ) -> list[list[int]] | list[tuple[list[int], float]]:
         """
         Get the diagnosis of the nodes.
@@ -52,13 +57,15 @@ class BARINEL(SFLDT):
         Parameters:
         retrieve_ranks (bool): Whether to return the diagnosis ranks.
         retrieve_spectra_indices (bool): Whether to return the spectra indices or the node indices.
+        components_prior_probabilities (ndarray): The components prior probabilities.
+        threshold (float): The threshold for the error vector
 
         Returns:
         list[int] | list[tuple[int, float]]: The diagnosis. If retrieve_ranks is True, the diagnosis will be a list of tuples,
           where the first element contains the indices of the faulty nodes and the second is the similarity rank.
         """
         if self.diagnoses is None:
-            self.diagnoses = get_barinel_diagnoses(self.spectra, self.error_vector)
+            self.diagnoses = get_barinel_diagnoses(self.spectra, self.error_vector, components_prior_probabilities, threshold)
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks, retrieve_spectra_indices)
         

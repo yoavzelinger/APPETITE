@@ -58,6 +58,7 @@ class BARINEL_Paths(BARINEL):
         """
         raise NotImplementedError("The method 'get_fuzzy_data' must be implemented")
 
+    # TODO - EDIT HERE AND ADAPT TO V2
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
@@ -98,7 +99,5 @@ class BARINEL_Paths(BARINEL):
             current_accuracy_vector[path_index] = path_current_accuracy
             assert path_before_accuracy >= 0 and path_before_accuracy <= 1, f"Path before accuracy is {path_before_accuracy}"
             assert path_current_accuracy >= 0 and path_current_accuracy <= 1, f"Path current accuracy is {path_current_accuracy} ({classified_correctly_count} / {total_count})"
-        fuzzy_error_vector, error_average, error_std = self.get_fuzzy_data(before_accuracy_vector, current_accuracy_vector)
-        error_threshold = min(error_average + BARINEL_PATHS_ERROR_STD_THRESHOLD * error_std, max(fuzzy_error_vector))
-        self.error_vector = (fuzzy_error_vector >= error_threshold).astype(int)
-        assert self.error_vector.sum() > 0, f"No path with error above the threshold {error_threshold} (average: {error_average}). The largest error is {max(fuzzy_error_vector)}"
+        self.error_vector, error_average, error_std = self.get_fuzzy_data(before_accuracy_vector, current_accuracy_vector)
+        self.threshold = min(error_average + BARINEL_PATHS_ERROR_STD_THRESHOLD * error_std, max(self.error_vector))

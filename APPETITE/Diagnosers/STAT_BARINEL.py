@@ -43,8 +43,7 @@ class STAT_BARINEL(ADiagnoser):
 
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
-                      retrieve_spectra_indices: bool = False,
-                      threshold: float = None
+                      retrieve_spectra_indices: bool = False
      ) -> list[int] | list[tuple[int, float]]:
         """
         Get the diagnoses.
@@ -58,7 +57,7 @@ class STAT_BARINEL(ADiagnoser):
         if self.diagnoses is None:
             stat_diagnoses = self.stat.get_diagnoses(retrieve_ranks=True)
             stat_diagnoses.sort()
-            stat_diagnoses = np_array([diagnosis[1] for diagnosis in stat_diagnoses])
-            self.diagnoses = self.barinel.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=retrieve_spectra_indices, components_prior_probabilities=stat_diagnoses, threshold=threshold)
+            self.barinel.components_prior_probabilities = np_array([diagnosis[1] for diagnosis in stat_diagnoses])
+            self.diagnoses = self.barinel.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=retrieve_spectra_indices)
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks)

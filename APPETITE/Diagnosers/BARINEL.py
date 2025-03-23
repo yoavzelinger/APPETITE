@@ -44,12 +44,12 @@ class BARINEL(SFLDT):
                  y: Series
     ):
         super().__init__(mapped_tree, X, y)
+        self.components_prior_probabilities = None
+        self.threshold = None
 
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
-                      retrieve_spectra_indices: bool = False,
-                      components_prior_probabilities: ndarray = None,
-                      threshold: float = None
+                      retrieve_spectra_indices: bool = False
      ) -> list[list[int]] | list[tuple[list[int], float]]:
         """
         Get the diagnosis of the nodes.
@@ -66,7 +66,7 @@ class BARINEL(SFLDT):
           where the first element contains the indices of the faulty nodes and the second is the similarity rank.
         """
         if self.diagnoses is None:
-            self.diagnoses = get_barinel_diagnoses(self.spectra, self.error_vector, components_prior_probabilities, threshold)
+            self.diagnoses = get_barinel_diagnoses(self.spectra, self.error_vector, self.components_prior_probabilities, self.threshold)
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks, retrieve_spectra_indices)
         

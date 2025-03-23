@@ -58,7 +58,7 @@ def rank_diagnosis(diagnosis: NDArray,
     vectorized_flip_probability = vectorize(flip_probability)
     components_prior_probabilities = vectorized_flip_probability(arange(components_count), components_prior_probabilities)
     prior_probability = components_prior_probabilities.prod()
-    healthiness_probabilities = [0.5 for _ in range(components_count)]
+    healthiness_probabilities = full(components_count, 0.5)
     healthiness_bounds = [(0, 1) for _ in range(components_count)]
     likelihood_objective_function = lambda healthiness_probabilities: get_total_likelihood(diagnosis, healthiness_probabilities, spectrum, fuzzy_error_vector)
     mle_model = minimize(likelihood_objective_function, healthiness_probabilities, bounds=healthiness_bounds, options={"maxiter": 1000})

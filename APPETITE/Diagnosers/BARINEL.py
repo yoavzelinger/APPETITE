@@ -9,7 +9,7 @@ from .SFLDT import SFLDT
 def get_barinel_diagnoses(spectra: ndarray,
                           error_vector: ndarray,
                           components_prior_probabilities: ndarray = None,
-                          threshold: float = None
+                          error_threshold: float = None
  ) -> list[tuple[list[int], float]]:
     """
     Perform the Barinel diagnosis algorithm on the given spectrum.
@@ -23,12 +23,13 @@ def get_barinel_diagnoses(spectra: ndarray,
     Returns:
     list[tuple[list[int], float]]: The diagnoses with their corresponding ranks.
     """
-    discrete_error_vector = error_vector if threshold is None else [1 if error > threshold else 0 for error in error_vector]
-    assert all([error in [0, 1] for error in discrete_error_vector]), "The error vector must be binary (for candidation)"
-    assert sum(discrete_error_vector) > 0, f"No path with error above the threshold {threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
+    discrete_error_vector = error_vector if error_threshold is None else (error_vector >= error_threshold).astype(int)
+    assert all([error in [0, 1] for error in discrete_error_vector]), f"The error vector must be binary (for candidation). Provided threshold: {error_threshold}"
+    assert sum(discrete_error_vector) > 0, f"No path with error above the threshold {error_threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
     spectrum = list(map(lambda spectra_vector_pair: spectra_vector_pair[0] + [spectra_vector_pair[1]], zip(spectra.T.tolist(), discrete_error_vector.tolist())))
     diagnoses, _ = get_candidates(spectrum)
     diagnoses = list(map(np_array, diagnoses))
+    assert len(diagnoses) > 0, "No candidate diagnoses found"
     spectrum = np_concatenate((np_array(spectrum)[:, :-1], np_array([error_vector]).T), axis=1)
     diagnoses = rank_diagnoses(spectrum, diagnoses, components_prior_probabilities)
     diagnoses = [(diagnosis[0], diagnosis[1]) for diagnosis in diagnoses]
@@ -43,9 +44,9 @@ class BARINEL(SFLDT):
                  X: DataFrame,
                  y: Series
     ):
-        super().__init__(mapped_tree, X, y)
         self.components_prior_probabilities = None
         self.threshold = None
+        super().__init__(mapped_tree, X, y)
 
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
@@ -66,7 +67,7 @@ class BARINEL(SFLDT):
           where the first element contains the indices of the faulty nodes and the second is the similarity rank.
         """
         if self.diagnoses is None:
-            self.diagnoses = get_barinel_diagnoses(self.spectra, self.error_vector, self.components_prior_probabilities, self.threshold)
+            self.diagnoses = get_barinel_diagnoses(spectra=self.spectra, error_vector=self.error_vector, components_prior_probabilities=self.components_prior_probabilities, error_threshold=self.threshold)
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks, retrieve_spectra_indices)
         

@@ -160,7 +160,7 @@ def get_example_mapped_tree(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
-def sanity_run(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
+def sanity_run(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
     for result in run_single_test(directory, file_name):
         print(result)
         

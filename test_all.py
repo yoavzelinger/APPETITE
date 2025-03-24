@@ -33,7 +33,7 @@ print(f"Running tests with diagnosers: {DEFAULT_TESTING_DIAGNOSER}")
 STOP_ON_EXCEPTION = args.stop
 datasets_count = args.count
 if args.name:
-    single_test.sanity_run(file_name=args.name + ".csv")
+    single_test.sanity_run(file_name=args.name + ".csv", diagnoser_names=DEFAULT_TESTING_DIAGNOSER)
     exit(0)
 
 raw_results_columns = ["drift description", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]

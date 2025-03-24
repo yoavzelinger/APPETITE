@@ -1,7 +1,7 @@
+from APPETITE.Constants import DEFAULT_FIXING_DIAGNOSER as DEFAULT_TESTING_DIAGNOSER
+
 MINIMUM_ORIGINAL_ACCURACY = 0.75
 MINIMUM_DRIFT_ACCURACY_DROP = 0.1
-
-DEFAULT_TESTING_DIAGNOSER = ("STAT_BARINEL_Paths_After", "STAT_BARINEL_Paths_Difference")
 
 # Transform the diagnoser to iterable
 try:
@@ -9,7 +9,7 @@ try:
     if isinstance(DEFAULT_TESTING_DIAGNOSER, str):
         raise TypeError
 except TypeError:
-    DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER,)
+    DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
 
 SINGLE_DRIFT_TYPE = "single_drift"
 MULTIPLE_DRIFT_TYPE = "multiple_drift"

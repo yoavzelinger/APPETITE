@@ -39,6 +39,11 @@ def get_diagnoser(diagnoser_name: str,
     Returns:
     tuple[object, tuple[object]]: The diagnoser class and the diagnoser default parameters tuple.
     """
+    if not isinstance(diagnoser_name, str):
+        try:
+            diagnoser_name = diagnoser_name[0]
+        except:
+            diagnoser_name = f"Failed to process diagnoser_name: {diagnoser_name}"
     assert diagnoser_name in diagnosers_dict, f"Diagnoser {diagnoser_name} is not supported"
 
     diagnoser_class, diagnoser_default_parameters = diagnosers_dict[diagnoser_name]

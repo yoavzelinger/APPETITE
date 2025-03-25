@@ -73,7 +73,7 @@ class SFLDT(ADiagnoser):
         X (DataFrame): The data.
         y (Series): The target column.
         """
-        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth for spectra_index in range(self.node_count)])
+        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.node_count)])
         self.paths_depths_vector = zeros(self.sample_count)
         # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
         node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))

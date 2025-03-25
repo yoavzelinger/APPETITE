@@ -1,4 +1,4 @@
-from numpy import zeros
+from numpy import zeros, array as np_array
 
 from .ADiagnoser import *
 from APPETITE.Constants import SFLDT_DEFAULT_SIMILARITY_MEASURES
@@ -13,8 +13,8 @@ def get_faith_similarity(participation_vector: Series,
         (error_participation +  0.5 * accurate_nonparticipation) /
         (error_participation + accurate_participation + error_nonparticipation + accurate_nonparticipation)
     Parameters:
-        participation_vector (Series): The participation vector, where 1 represent participation in the sample classification.
-        error_vector (Series): The error vector, where 1 represent that the sample classified incorrectly.
+        participation_vector (Series): The participation vector, where high value (1) represent high participation in the sample classification.
+        error_vector (Series): The error vector, where high value (1) represent that the sample classified incorrectly.
 
     Returns:
         float: The faith similarity between the vectors
@@ -57,6 +57,11 @@ class SFLDT(ADiagnoser):
         self.similarity_measure = similarity_measure
         self.fill_spectra_and_error_vector(X, y)
 
+    def update_fuzzy_participation(self,
+     ) -> None:
+        assert self.components_depths_vector.all()
+        assert self.paths_depths_vector.all()
+
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
@@ -68,6 +73,8 @@ class SFLDT(ADiagnoser):
         X (DataFrame): The data.
         y (Series): The target column.
         """
+        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth for spectra_index in range(self.node_count)])
+        self.paths_depths_vector = zeros(self.sample_count)
         # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
         node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))
         for sample_id in range(self.sample_count):
@@ -78,8 +85,10 @@ class SFLDT(ADiagnoser):
                 node_spectra_index = node.spectra_index
                 self.spectra[node_spectra_index, sample_id] = 1
                 if node.is_terminal():
+                    self.paths_depths_vector[sample_id] = node.depth
                     error = node.class_name != y[sample_id]
                     self.error_vector[sample_id] = int(error)
+        self.update_fuzzy_participation()
 
     def get_diagnoses_with_return_indices(self,
                                           retrieve_spectra_indices: bool = False

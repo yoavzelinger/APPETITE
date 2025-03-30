@@ -91,40 +91,41 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
 
+    X_after, y_after = dataset.get_after_concept()
     X_test, y_test = dataset.get_test_concept()
-    no_drift_test_accuracy = get_accuracy(sklearn_tree_model, X_test, y_test)
-    if no_drift_test_accuracy < MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
+    no_drift_accuracy = get_accuracy(sklearn_tree_model, pd_concat([X_after, X_test]), pd_concat([y_after, y_test]))
+    if no_drift_accuracy < MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
+        # print(f"Original model is not good enough, accuracy: {no_drift_accuracy}")
         return
-
-    X_after_original, y_after_original = dataset.get_after_concept()
-    no_drift_after_accuracy = get_accuracy(sklearn_tree_model, X_after_original, y_after_original)
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
     for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_features, drifted_features_types in drift_tree(mapped_tree, dataset):
         try:
-            after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
-            after_accuracy_drop = no_drift_after_accuracy - after_accuracy
-
-            test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test) # Original model
-            test_accuracy_drop = no_drift_test_accuracy - test_accuracy
-            if after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP or test_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
+            drift_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, pd_concat([X_after_drifted, X_test_drifted]), pd_concat([y_after, y_test]))
+            drift_accuracy_drop = no_drift_accuracy - drift_accuracy
+            if drift_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
+            # print(f"Drift is insignificant, accuracy drop: {drift_accuracy_drop}")
                 continue
+
+            drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
 
             after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after)
             after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
-            after_retrained_accuracy_bump = after_retrained_accuracy - test_accuracy
+            after_retrained_accuracy_bump = after_retrained_accuracy - drifted_test_accuracy
 
             X_before_after_concat, y_before_after_concat = pd_concat([X_train, X_after_drifted]), pd_concat([y_train, y_after])
             before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat)
             before_after_retrained_accuracy = get_accuracy(before_after_retrained_tree, X_test_drifted, y_test)
-            before_after_retrained_accuracy_bump = before_after_retrained_accuracy - test_accuracy
+            before_after_retrained_accuracy_bump = before_after_retrained_accuracy - drifted_test_accuracy
+
+            drifted_features_types = [drifted_features_types] if isinstance(drifted_features_types, str) else drifted_features_types
 
             current_results_dict = {
                 "drift description": drift_description,
                 "drifted features types": ", ".join(drifted_features_types),
                 "tree size": mapped_tree.node_count,
-                "after accuracy decrease": after_accuracy_drop * 100,
+                "after accuracy decrease": drifted_test_accuracy * 100,
                 "after retrain accuracy": after_retrained_accuracy * 100,
                 "after retrain accuracy increase": after_retrained_accuracy_bump * 100,
                 "before after retrain accuracy": before_after_retrained_accuracy * 100,
@@ -138,9 +139,9 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
                 faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indicies]
                 faulty_features = [faulty_node.feature if (faulty_node.feature or not faulty_node.is_terminal()) else "target" for faulty_node in faulty_nodes]
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
-                test_accuracy_bump = fixed_test_accuracy - test_accuracy
-                drifted_feature = drifted_feature if isinstance(drifted_feature, set) else set([drifted_feature])
-                wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_feature, WASTED_EFFORT_REQUIRE_FULL_FIX)
+                test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
+                drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
+                wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_features, WASTED_EFFORT_REQUIRE_FULL_FIX)
                 current_results_dict.update({
                     f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
                     f"{diagnoser_name} faulty features": ", ".join(faulty_features),

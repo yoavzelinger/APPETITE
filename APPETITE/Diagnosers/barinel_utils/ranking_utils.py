@@ -24,16 +24,18 @@ def get_total_likelihood(diagnosis: NDArray,
     float: The likelihood of the diagnosis.
     """
     def get_single_test_likelihood(participated_components: NDArray,
+                                   participation_vector: NDArray,
                                     fuzzy_error: float
         ) -> float:
         """"
         Get the likelihood of the single test.
         """
         transaction_goodness = healthiness_probabilities[participated_components].prod()
+        transaction_goodness *= participation_vector[participated_components].prod()
         return fuzzy_error * (1 - transaction_goodness) + (1 - fuzzy_error) * transaction_goodness
-    get_participated_components = lambda participation_vector: diagnosis[participation_vector[diagnosis] == 1]
-    spectrum_diagnosis_components = [get_participated_components(spectrum_component) for spectrum_component in spectrum]
-    tests_likelihoods = map(get_single_test_likelihood, spectrum_diagnosis_components, fuzzy_error_vector)
+    get_diagnosis_participated_components = lambda test_participation_vector: diagnosis[test_participation_vector[diagnosis] > 0]
+    tests_diagnosis_components = map(get_diagnosis_participated_components, spectrum)
+    tests_likelihoods = map(get_single_test_likelihood, tests_diagnosis_components, spectrum, fuzzy_error_vector)
     return -prod(tests_likelihoods) # Maximize the likelihood
 
 def rank_diagnosis(diagnosis: NDArray,

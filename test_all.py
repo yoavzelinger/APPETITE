@@ -36,7 +36,7 @@ if args.name:
     single_test.sanity_run(file_name=args.name + ".csv", diagnoser_names=DEFAULT_TESTING_DIAGNOSER)
     exit(0)
 
-raw_results_columns = ["drift description", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
+raw_results_columns = ["drift description", "drifted features types", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]

@@ -28,10 +28,11 @@ def drift_single_tree_feature(mapped_tree: MappedDecisionTree,
     """
     tree_features_set = mapped_tree.tree_features_set
     for drifting_feature in tree_features_set:
+        drifted_feature_type = dataset.feature_types[drifting_feature]
         after_drift_generator = dataset.drift_generator(drifting_feature, partition="after")
         test_drift_generator = dataset.drift_generator(drifting_feature, partition="test")
         for ((X_after_drifted, y_after), after_drift_description, drifted_features), ((X_test_drifted, y_test), _, _) in zip(after_drift_generator, test_drift_generator):
-            yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], drifted_features[0]
+            yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], drifted_features[0], drifted_feature_type
 
 def drift_tree(mapped_tree: MappedDecisionTree,
                dataset: Dataset
@@ -100,7 +101,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
-    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_feature in drift_tree(mapped_tree, dataset):
+    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_features, drifted_features_types in drift_tree(mapped_tree, dataset):
         try:
             after_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after) # Original model
             after_accuracy_drop = no_drift_after_accuracy - after_accuracy
@@ -121,6 +122,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
 
             current_results_dict = {
                 "drift description": drift_description,
+                "drifted features types": ", ".join(drifted_features_types),
                 "tree size": mapped_tree.node_count,
                 "after accuracy decrease": after_accuracy_drop * 100,
                 "after retrain accuracy": after_retrained_accuracy * 100,

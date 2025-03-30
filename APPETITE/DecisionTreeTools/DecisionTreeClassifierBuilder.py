@@ -34,7 +34,6 @@ def build_tree(
     # Grid search modification
     modified_X_train, modified_y_train = X_train, y_train
     classes_counts = y_train.value_counts()
-    # TODO - Manipulate to test
     if classes_counts.min() == 1:
         # Duplicate the rows with that one instance
         min_classes = classes_counts[classes_counts == 1].index

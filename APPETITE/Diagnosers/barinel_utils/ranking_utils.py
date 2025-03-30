@@ -56,8 +56,7 @@ def rank_diagnosis(diagnosis: NDArray,
     """
     components_count = spectrum.shape[1]
     components_prior_probabilities = components_prior_probabilities.copy()
-    flip_probability = lambda spectrum_index, probability: probability if spectrum_index in diagnosis else 1 - probability
-    vectorized_flip_probability = vectorize(flip_probability)
+    vectorized_flip_probability = vectorize(lambda spectrum_index, probability: probability if spectrum_index in diagnosis else 1 - probability)
     components_prior_probabilities = vectorized_flip_probability(arange(components_count), components_prior_probabilities)
     prior_probability = components_prior_probabilities.prod()
     healthiness_probabilities = full(components_count, 0.5)

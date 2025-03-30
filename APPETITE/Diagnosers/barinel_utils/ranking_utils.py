@@ -1,7 +1,6 @@
 from numpy import full, arange, vectorize
 from math import prod
 from numpy.typing import NDArray
-from sys import float_info
 
 from scipy.optimize import minimize
 
@@ -61,7 +60,7 @@ def rank_diagnosis(diagnosis: NDArray,
     components_prior_probabilities = vectorized_flip_probability(arange(components_count), components_prior_probabilities)
     prior_probability = components_prior_probabilities.prod()
     healthiness_probabilities = full(components_count, 0.5)
-    healthiness_bounds = [(float_info.epsilon, 1) for _ in range(components_count)]
+    healthiness_bounds = [(0, 1) for _ in range(components_count)]
     likelihood_objective_function = lambda healthiness_probabilities: get_total_likelihood(diagnosis, healthiness_probabilities, spectrum, fuzzy_error_vector)
     mle_model = minimize(likelihood_objective_function, healthiness_probabilities, bounds=healthiness_bounds, options={"maxiter": 1000})
     # Get maximum likelihood estimation

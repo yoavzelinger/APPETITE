@@ -194,7 +194,7 @@ def estimation_and_derivative_functions(h, spectrum, diagnosis):
     for row in spectrum:
         row_comp = sympy.Integer(1)
         for fa in diagnosis:
-            if row[fa] == 1:
+            if row[fa] != 0:
                 # row_comp += f'(h{fa})'
                 row_comp = row_comp * h[fa]
         if row[-1] == 1:

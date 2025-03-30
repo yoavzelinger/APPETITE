@@ -5,6 +5,7 @@ from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .barinel_utils import *
 from .ADiagnoser import *
 from .SFLDT import SFLDT
+from .FuzzySFLDT import FuzzySFLDT
 
 def get_barinel_diagnoses(spectra: ndarray,
                           error_vector: ndarray,

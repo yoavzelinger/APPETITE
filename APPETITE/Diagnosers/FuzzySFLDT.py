@@ -1,4 +1,4 @@
-from numpy import ones, newaxis
+from numpy import ones, newaxis, max
 
 from .SFLDT import SFLDT
 
@@ -16,4 +16,5 @@ class FuzzySFLDT(SFLDT):
         The participation is calculated as the depth of the component normalized by the depth of the path.
         """
         super().update_fuzzy_participation()
-        self.spectra = self.spectra * (self.components_depths_vector + ones(self.node_count))[:, newaxis] / self.paths_depths_vector[newaxis, :]
+        self.spectra = self.spectra * self.components_depths_vector[:, newaxis] / self.paths_depths_vector[newaxis, :]
+        assert max(self.spectra) <= 1.0, f"Participations should be in [0, 1] but got {max(self.spectra)}"

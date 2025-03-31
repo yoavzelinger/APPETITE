@@ -22,7 +22,7 @@ def diagnosis_0(spectrum, local_spectra):
     conflicts = []
     for i, row in enumerate(spectrum):
         if row[-1] == 1:
-            conf = [j for j, a in enumerate(row[:-1]) if a != 1]
+            conf = [j for j, a in enumerate(row[:-1]) if a != 0]
             conflicts.append(conf)
 
     # compute diagnoses

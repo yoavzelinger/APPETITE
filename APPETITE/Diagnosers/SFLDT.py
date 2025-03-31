@@ -85,7 +85,7 @@ class SFLDT(ADiagnoser):
                 node_spectra_index = node.spectra_index
                 self.spectra[node_spectra_index, sample_id] = 1
                 if node.is_terminal():
-                    self.paths_depths_vector[sample_id] = node.depth
+                    self.paths_depths_vector[sample_id] = node.depth + 1
                     error = node.class_name != y[sample_id]
                     self.error_vector[sample_id] = int(error)
         self.update_fuzzy_participation()

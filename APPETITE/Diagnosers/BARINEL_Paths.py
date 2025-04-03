@@ -58,7 +58,6 @@ class BARINEL_Paths(BARINEL):
         """
         raise NotImplementedError("The method 'get_fuzzy_data' must be implemented")
 
-    # TODO - EDIT HERE AND ADAPT TO V2
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
@@ -89,11 +88,15 @@ class BARINEL_Paths(BARINEL):
         self.paths_count = len(paths_dict)
         self.spectra = zeros((self.node_count, self.paths_count))
         self.error_vector = zeros(self.paths_count)
+        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.node_count)])
+        self.paths_depths_vector = zeros(self.paths_count)
         before_accuracy_vector, current_accuracy_vector = zeros(self.paths_count), zeros(self.paths_count)
         for path_index, (path, (classified_correctly_count, total_count, path_before_accuracy)) in enumerate(paths_dict.items()):
             for node_spectra_index in path:
                 self.spectra[node_spectra_index, path_index] = 1
                 node = self.mapped_tree.get_node(node_spectra_index, use_spectra_index=True)
+                if node.is_terminal():
+                    self.paths_depths_vector[path_index] = node.depth + 1
             path_current_accuracy = classified_correctly_count / total_count
             before_accuracy_vector[path_index] = path_before_accuracy
             current_accuracy_vector[path_index] = path_current_accuracy

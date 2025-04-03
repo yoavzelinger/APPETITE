@@ -68,6 +68,7 @@ class BARINEL(SFLDT):
           where the first element contains the indices of the faulty nodes and the second is the similarity rank.
         """
         if self.diagnoses is None:
+            self.update_fuzzy_participation()
             self.diagnoses = get_barinel_diagnoses(spectra=self.spectra, error_vector=self.error_vector, components_prior_probabilities=self.components_prior_probabilities, error_threshold=self.threshold)
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks, retrieve_spectra_indices)

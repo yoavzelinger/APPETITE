@@ -3,7 +3,7 @@ from pandas import Series
 from .BARINEL_Paths import BARINEL_Paths, get_fuzzy_error
 
 class BARINEL_Paths_Difference(BARINEL_Paths):
-    def get_fuzzy_data(self,
+    def get_fuzzy_error_data(self,
                        before_accuracy_vector: Series,
                        current_accuracy_vector: Series
     ) -> tuple[Series, float, float]:

@@ -8,8 +8,12 @@ from .BARINEL import BARINEL
 from .BARINEL_Paths_After import BARINEL_Paths_After
 from .BARINEL_Paths_Difference import BARINEL_Paths_Difference
 
-class BARINEL_Features(BARINEL):
-    def __init__(self, mapped_tree, X, y):
+class BARINEL_Features(BARINEL_Paths_Difference):
+    def __init__(self,
+                 mapped_tree: MappedDecisionTree,
+                 X: DataFrame,
+                 y: Series,
+    ) -> None:
         super().__init__(mapped_tree, X, y)
         self.features_spectra_dict = {}  # {feature: feature_spectra_index, [node_spectra_indices]}
         self.spectra_features_dict = {}  # {feature_spectra_index: feature}
@@ -32,6 +36,15 @@ class BARINEL_Features(BARINEL):
             self.spectra = self.spectra / self.components_depths_vector
         super().update_fuzzy_participation()
 
+    def convert_features_diagnosis_to_nodes_diagnosis(self,
+            features_diagnosis: list[int]
+            ) -> list[int]:
+        nodes_diagnosis = []
+        for feature_spectra_index in features_diagnosis:
+            feature = self.spectra_features_dict[feature_spectra_index]
+            nodes_diagnosis.extend(self.features_spectra_dict[feature][1])
+        return nodes_diagnosis
+
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
                       retrieve_spectra_indices: bool = False
@@ -40,9 +53,6 @@ class BARINEL_Features(BARINEL):
         for diagnosis_index, (features_diagnosis, rank) in enumerate(self.diagnoses):
             if isinstance(features_diagnosis, int):
                 features_diagnosis = [features_diagnosis]
-            nodes_diagnosis = []
-            for feature_spectra_index in features_diagnosis:
-                feature = self.spectra_features_dict[feature_spectra_index]
-                nodes_diagnosis.extend(self.features_spectra_dict[feature][1])
-            self.diagnoses[diagnosis_index] = (features_diagnosis, rank)
+            nodes_diagnosis = self.convert_features_diagnosis_to_nodes_diagnosis(features_diagnosis)
+            self.diagnoses[diagnosis_index] = (nodes_diagnosis, rank)
         return super().get_diagnoses(retrieve_ranks, retrieve_spectra_indices)

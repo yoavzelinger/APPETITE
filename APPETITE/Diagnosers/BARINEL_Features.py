@@ -23,6 +23,8 @@ class BARINEL_Features(BARINEL):
         self.spectra_features_dict = {}  # {feature_spectra_index: feature}
         for node_spectra_index, node in self.mapped_tree.spectra_dict.items():
             feature = node.feature if not node.is_terminal() else "target"
+            if feature == "target":
+                continue
             if feature not in self.features_spectra_dict:
                 feature_spectra_index = len(self.features_spectra_dict)
                 self.features_spectra_dict[feature] = feature_spectra_index, []

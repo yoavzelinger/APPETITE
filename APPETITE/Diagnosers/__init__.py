@@ -12,6 +12,7 @@ from .STAT_BARINEL_Paths_Difference import STAT_BARINEL_Paths_Difference
 from .FuzzySFLDT import FuzzySFLDT
 from .STAT_FuzzySFLDT import STAT_FuzzySFLDT
 from .BARINEL_Features import BARINEL_Features
+from .BARINEL_Features_STAT_SFLDT import BARINEL_Features_STAT_SFLDT
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {
@@ -28,6 +29,7 @@ diagnosers_dict = {
     "FuzzySFLDT": (FuzzySFLDT, (SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
     "STAT_FuzzySFLDT": (STAT_FuzzySFLDT, (SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
     "BARINEL_Features": (BARINEL_Features, ()),
+    "BARINEL_Features_STAT_SFLDT": (BARINEL_Features_STAT_SFLDT, ()),
 }
 
 def get_diagnoser(diagnoser_name: str, 

@@ -1,6 +1,7 @@
 from numpy import zeros, clip
 from pandas import DataFrame, Series
 
+from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .SFLDT import SFLDT
 from .FuzzySFLDT import FuzzySFLDT
@@ -9,6 +10,9 @@ from .BARINEL_Paths_After import BARINEL_Paths_After
 from .BARINEL_Paths_Difference import BARINEL_Paths_Difference
 
 class BARINEL_Features(BARINEL):
+    
+    diagnoser_type = MULTIPLE_DIAGNOSER_TYPE_NAME
+
     def __init__(self,
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,

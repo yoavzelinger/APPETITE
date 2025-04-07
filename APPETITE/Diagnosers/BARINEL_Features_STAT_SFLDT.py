@@ -20,7 +20,10 @@ class BARINEL_Features_STAT_SFLDT(BARINEL_Features):
     def convert_features_diagnosis_to_nodes_diagnosis(self,
             features_diagnosis: list[int]
             ) -> list[int]:
-        nodes_rank_dict = dict(self.single_diagnoser.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=True))
+        nodes_rank_dict = {}
+        for node_index, node_rank in self.single_diagnoser.get_diagnoses(retrieve_ranks=True):
+            spectra_index = self.mapped_tree.convert_node_index_to_spectra_index(node_index)
+            nodes_rank_dict[spectra_index] = node_rank
         nodes_diagnosis = []
         for feature_spectra_index in features_diagnosis:
             feature = self.spectra_features_dict[feature_spectra_index]

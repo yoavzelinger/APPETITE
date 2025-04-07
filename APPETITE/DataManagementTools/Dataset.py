@@ -146,14 +146,14 @@ class Dataset:
         return multiple_features_concept_drift_generator(data, drift_features_dict)
 
     def drift_generator(self,
-                                  drift_features: str | list[str],
+                                  drift_features: str | set[str],
                                   partition: str = "after"
      ) -> Generator[tuple[tuple[DataFrame, Series], str, list[str]], None, None]:
         """
         Drift generator for a specific partition
         
         Parameters:
-            drift_features (str or list): single feature or list of features to drift
+            drift_features (str or list): single feature or set of features to drift
             partition (str): The partition to drift
 
         Returns:

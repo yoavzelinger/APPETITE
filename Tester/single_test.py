@@ -24,7 +24,7 @@ def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
 def drift_single_tree_feature(mapped_tree: MappedDecisionTree, 
                               dataset: Dataset):
     """
-    Generate a drifted in a single tree that is used in the tree structure.
+    Generate a drifted in a single feature
     """
     tree_features_set = mapped_tree.tree_features_set
     for drifting_feature in tree_features_set:
@@ -34,12 +34,30 @@ def drift_single_tree_feature(mapped_tree: MappedDecisionTree,
         for ((X_after_drifted, y_after), after_drift_description, drifted_features), ((X_test_drifted, y_test), _, _) in zip(after_drift_generator, test_drift_generator):
             yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], drifted_features[0], drifted_feature_type
 
+def drift_pair_tree_features(mapped_tree: MappedDecisionTree,
+                                 dataset: Dataset):
+    """
+    Generate a drifted in a multiple features
+    """
+    tree_features_set = mapped_tree.tree_features_set
+    for drifting_feature1 in tree_features_set:
+        drifted_features_types = [dataset.feature_types[drifting_feature1]]
+        for drifting_feature2 in tree_features_set.difference([drifting_feature1]):
+            drifted_features_types.append(dataset.feature_types[drifting_feature2])
+            drifting_features = [drifting_feature1, drifting_feature2]
+            after_drift_generator = dataset.drift_generator(drifting_features, partition="after")
+            test_drift_generator = dataset.drift_generator(drifting_features, partition="test")
+            for ((X_after_drifted, y_after), after_drift_description, drifted_features), ((X_test_drifted, y_test), _, _) in zip(after_drift_generator, test_drift_generator):
+                yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], set(drifted_features), drifted_features_types
+
 def drift_tree(mapped_tree: MappedDecisionTree,
                dataset: Dataset
                ):
     assert CURRENT_DRIFT_TYPE in SUPPORTED_DRIFT_TYPES, f"{CURRENT_DRIFT_TYPE} drift type is not supported. Supported drift types: {SUPPORTED_DRIFT_TYPES}"
     if CURRENT_DRIFT_TYPE == SINGLE_DRIFT_TYPE:
         yield from drift_single_tree_feature(mapped_tree, dataset)
+    elif CURRENT_DRIFT_TYPE == PAIR_DRIFT_TYPE:
+        yield from drift_pair_tree_features(mapped_tree, dataset)
     else:
         raise NotImplementedError(f"{CURRENT_DRIFT_TYPE} drift type is not implemented.")
 

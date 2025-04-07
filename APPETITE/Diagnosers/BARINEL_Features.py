@@ -8,7 +8,7 @@ from .BARINEL import BARINEL
 from .BARINEL_Paths_After import BARINEL_Paths_After
 from .BARINEL_Paths_Difference import BARINEL_Paths_Difference
 
-class BARINEL_Features(BARINEL_Paths_Difference):
+class BARINEL_Features(BARINEL):
     def __init__(self,
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,

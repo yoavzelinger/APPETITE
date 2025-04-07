@@ -30,7 +30,8 @@ class BARINEL_Features(BARINEL):
                 self.features_spectra_dict[feature] = feature_spectra_index, []
                 self.spectra_features_dict[feature_spectra_index] = feature
             self.features_spectra_dict[feature][1].append(node_spectra_index)
-        spectra = zeros((len(self.features_spectra_dict), self.spectra.shape[1]))
+        self.components_count = len(self.features_spectra_dict)
+        spectra = zeros((self.components_count, self.spectra.shape[1]))
         for feature_spectra_index, feature_nodes_spectra_indices in self.features_spectra_dict.values():
             spectra[feature_spectra_index] = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
         self.spectra = spectra

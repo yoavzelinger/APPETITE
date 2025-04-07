@@ -67,7 +67,7 @@ class BARINEL_Paths(BARINEL):
         """
         paths_dict = {}
         node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))
-        for sample_id in range(self.sample_count):
+        for sample_id in range(self.tests_count):
             participated_nodes = node_indicator.indices[
                 node_indicator.indptr[sample_id] : node_indicator.indptr[sample_id + 1]
             ]
@@ -86,9 +86,9 @@ class BARINEL_Paths(BARINEL):
             paths_dict[spectra_participation] = (classified_correctly_count + int(path_terminal.class_name == y[sample_id]), total_count + 1, path_before_accuracy)
         
         self.paths_count = len(paths_dict)
-        self.spectra = zeros((self.node_count, self.paths_count))
+        self.spectra = zeros((self.components_count, self.paths_count))
         self.error_vector = zeros(self.paths_count)
-        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.node_count)])
+        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
         self.paths_depths_vector = zeros(self.paths_count)
         before_accuracy_vector, current_accuracy_vector = zeros(self.paths_count), zeros(self.paths_count)
         for path_index, (path, (classified_correctly_count, total_count, path_before_accuracy)) in enumerate(paths_dict.items()):

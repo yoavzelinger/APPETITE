@@ -50,10 +50,10 @@ class SFLDT(ADiagnoser):
         similarity_measure (str): The similarity measure to use.
         """
         super().__init__(mapped_tree, X, y)
-        self.node_count = mapped_tree.node_count
-        self.sample_count = len(X)
-        self.spectra = zeros((self.node_count, self.sample_count))
-        self.error_vector = zeros(self.sample_count)
+        self.components_count = mapped_tree.node_count
+        self.tests_count = len(X)
+        self.spectra = zeros((self.components_count, self.tests_count))
+        self.error_vector = zeros(self.tests_count)
         self.similarity_measure = similarity_measure
         self.fill_spectra_and_error_vector(X, y)
 
@@ -73,11 +73,11 @@ class SFLDT(ADiagnoser):
         X (DataFrame): The data.
         y (Series): The target column.
         """
-        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.node_count)])
-        self.paths_depths_vector = zeros(self.sample_count)
+        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
+        self.paths_depths_vector = zeros(self.tests_count)
         # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
         node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))
-        for sample_id in range(self.sample_count):
+        for sample_id in range(self.tests_count):
             participated_nodes = node_indicator.indices[
                 node_indicator.indptr[sample_id] : node_indicator.indptr[sample_id + 1]
             ]
@@ -123,7 +123,7 @@ class SFLDT(ADiagnoser):
         """
         if self.diagnoses is None:
             similarity_measure_function = SFLDT.similarity_measure_functions_dict[self.similarity_measure]
-            self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.node_count)]
+            self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.components_count)]
             self.sort_diagnoses()
         diagnoses = self.get_diagnoses_with_return_indices(retrieve_spectra_indices)
         return super().get_diagnoses(retrieve_ranks, diagnoses)

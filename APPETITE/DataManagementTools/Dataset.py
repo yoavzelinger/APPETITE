@@ -1,3 +1,4 @@
+from os import path as os_path
 from pandas import read_csv, DataFrame, Series, Categorical, get_dummies
 from scipy.io.arff import loadarff
 from typing import Generator
@@ -33,11 +34,10 @@ class Dataset:
         """
         # Get data
         if type(source) == str:    # Path to the file
-            file_name = source.split("\\")[-1]
-            self.name, source_format = file_name.split(".")
-            if source_format in ("csv", "data", "txt"):
+            self.name, source_format = os_path.splitext(os_path.basename(source))
+            if source_format in (".csv", ".data", ".txt"):
                 source = read_csv(source)
-            elif source_format == "arff":
+            elif source_format == ".arff":
                 data, _ = loadarff(source)
                 source = DataFrame(data)
         assert isinstance(source, DataFrame)

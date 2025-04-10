@@ -1,3 +1,4 @@
+from os import path as os_path
 from sys import argv as sys_argv
 from pandas import concat as pd_concat
 from sklearn.metrics import accuracy_score
@@ -12,7 +13,8 @@ def get_dataset(directory: str,
                 proportions_tuple: int | tuple[float] = PROPORTIONS_TUPLE,
                 after_window_size: float = AFTER_WINDOW_SIZE
                 )-> Dataset:
-    return Dataset(directory + file_name, proportions_tuple, after_window_size)
+    source = os_path.join(directory, file_name)
+    return Dataset(source, proportions_tuple, after_window_size)
 
 def get_sklearn_tree(X_train,
                      y_train):

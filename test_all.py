@@ -41,6 +41,7 @@ if RUNNING_PREFIXES:
     print(f"Running tests with prefixes: {RUNNING_PREFIXES}")
     prefixes_str = "-".join(RUNNING_PREFIXES)
     RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{prefixes_str}", f"{ERRORS_FILE_PATH_PREFIX}_{prefixes_str}"
+    RUNNING_PREFIXES = list(map(lambda prefix: prefix.lower(), RUNNING_PREFIXES))
 
 raw_results_columns = ["drift description", "drifted features types", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]
@@ -67,7 +68,7 @@ with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
         if not datasets_count:
             break
         dataset_name = dataset_description["name"]
-        if not any(map(lambda prefix: dataset_name.startswith(prefix), RUNNING_PREFIXES)):
+        if not any(map(lambda prefix: dataset_name.lower().startswith(prefix), RUNNING_PREFIXES)):
             continue
         datasets_count -= 1
         drifts_count = 0

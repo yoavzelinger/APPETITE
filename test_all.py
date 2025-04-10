@@ -25,7 +25,7 @@ parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help=f"List of di
 parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception, default is false and writing the errors to errors file", default=STOP_ON_EXCEPTION)
 parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
 parser.add_argument("-n", "--name", type=str, help="Name of the dataset to run, use only if you want to run a specific test")
-parser.add_argument("-p", "--prefix", type=str, nargs="+", help="prefixes to datasets to run, default is all", default=[""])
+parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all", default=[""])
 
 args = parser.parse_args()
 RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{args.output}", f"{ERRORS_FILE_PATH_PREFIX}_{args.output}"
@@ -36,7 +36,7 @@ datasets_count = args.count
 if args.name:
     single_test.sanity_run(file_name=args.name + ".csv", diagnoser_names=DEFAULT_TESTING_DIAGNOSER)
     exit(0)
-RUNNING_PREFIXES = args.letters
+RUNNING_PREFIXES = args.prefixes
 if RUNNING_PREFIXES:
     print(f"Running tests with prefixes: {RUNNING_PREFIXES}")
     prefixes_str = "-".join(RUNNING_PREFIXES)

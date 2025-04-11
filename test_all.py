@@ -40,7 +40,7 @@ if RUNNING_PREFIXES:
     print(f"Running tests with prefixes: {RUNNING_PREFIXES}")
     RUNNING_PREFIXES = list(map(lambda prefix: prefix.lower(), RUNNING_PREFIXES))
 
-raw_results_columns = ["drift description", "drifted features types", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
+raw_results_columns = ["after window size", "drift description", "drifted features types", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]

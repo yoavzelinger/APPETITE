@@ -2,6 +2,7 @@ from os import path as os_path
 from sys import argv as sys_argv
 from pandas import concat as pd_concat
 from sklearn.metrics import accuracy_score
+from itertools import combinations
 
 from APPETITE import *
 
@@ -23,48 +24,24 @@ def get_sklearn_tree(X_train,
 def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
     return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types, X=X_train, y=y_train)
 
-def drift_single_tree_feature(mapped_tree: MappedDecisionTree, 
-                              dataset: Dataset):
-    """
-    Generate a drifted in a single feature
-    """
-    tree_features_set = mapped_tree.tree_features_set
-    for drifting_feature in tree_features_set:
-        drifted_feature_type = dataset.feature_types[drifting_feature]
-        after_drift_generator = dataset.drift_generator(drifting_feature, partition="after")
-        test_drift_generator = dataset.drift_generator(drifting_feature, partition="test")
-        for ((X_after_drifted, y_after), after_drift_description, drifted_features), ((X_test_drifted, y_test), _, _) in zip(after_drift_generator, test_drift_generator):
-            yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], drifted_features[0], drifted_feature_type
-
-def drift_pair_tree_features(mapped_tree: MappedDecisionTree,
-                                 dataset: Dataset):
+def drift_tree(mapped_tree: MappedDecisionTree,
+                        dataset: Dataset,
+                        max_drift_amount: int = MAX_DRIFT_AMOUNT,
+                        ):
     """
     Generate a drifted in a multiple features
     """
-    tree_features_set = mapped_tree.tree_features_set
-    drifted_pairs = set()
-    for drifting_feature1 in tree_features_set:
-        for drifting_feature2 in tree_features_set.difference([drifting_feature1]):
-            if (drifting_feature1, drifting_feature2) in drifted_pairs or (drifting_feature2, drifting_feature1) in drifted_pairs:
-                continue
-            drifted_pairs.add((drifting_feature1, drifting_feature2))
-            drifted_features_types = [dataset.feature_types[drifting_feature1], dataset.feature_types[drifting_feature2]]
-            drifting_features = [drifting_feature1, drifting_feature2]
-            after_drift_generator = dataset.drift_generator(drifting_features, partition="after")
-            test_drift_generator = dataset.drift_generator(drifting_features, partition="test")
-            for ((X_after_drifted, y_after), after_drift_description, drifted_features), ((X_test_drifted, y_test), _, _) in zip(after_drift_generator, test_drift_generator):
-                yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], set(drifted_features), drifted_features_types
+    max_drift_amount = min(len(mapped_tree.tree_features_set), max_drift_amount) if max_drift_amount > 0 else len(mapped_tree.tree_features_set)
+    for after_window_test_size in AFTER_WINDOW_TEST_SIZES:
+        dataset.after_window_size = after_window_test_size
+        for drift_amount in range(1, max_drift_amount + 1):
+            for drifting_features in combinations(mapped_tree.tree_features_set, drift_amount):
+                drifted_features_types = [dataset.feature_types[drifting_feature] for drifting_feature in drifting_features]
+                after_drift_generator = dataset.drift_generator(drifting_features, partition="after")
+                test_drift_generator = dataset.drift_generator(drifting_features, partition="test")
+                for ((X_after_drifted, y_after), after_drift_description, drifted_features), ((X_test_drifted, y_test), _, _) in zip(after_drift_generator, test_drift_generator):
+                    yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], set(drifted_features), drifted_features_types
 
-def drift_tree(mapped_tree: MappedDecisionTree,
-               dataset: Dataset
-               ):
-    assert CURRENT_DRIFT_TYPE in SUPPORTED_DRIFT_TYPES, f"{CURRENT_DRIFT_TYPE} drift type is not supported. Supported drift types: {SUPPORTED_DRIFT_TYPES}"
-    if CURRENT_DRIFT_TYPE == SINGLE_DRIFT_TYPE:
-        yield from drift_single_tree_feature(mapped_tree, dataset)
-    elif CURRENT_DRIFT_TYPE == PAIR_DRIFT_TYPE:
-        yield from drift_pair_tree_features(mapped_tree, dataset)
-    else:
-        raise NotImplementedError(f"{CURRENT_DRIFT_TYPE} drift type is not implemented.")
 
 def get_wasted_effort(mapped_tree: MappedDecisionTree,
                                diagnosed_faulty_nodes_indices: list[int],
@@ -108,7 +85,7 @@ def get_accuracy(model, X, y):
     y_predicted = model.predict(X)
     return accuracy_score(y, y_predicted)
 
-def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, max_drift_amount=MAX_DRIFT_AMOUNT, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
@@ -124,8 +101,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
     original_after_accuracy, original_test_accuracy = get_accuracy(sklearn_tree_model, X_after, y_after), get_accuracy(sklearn_tree_model, X_test, y_test)
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
-
-    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_features, drifted_features_types in drift_tree(mapped_tree, dataset):
+    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_features, drifted_features_types in drift_tree(mapped_tree, dataset, max_drift_amount):
         try:
             drifted_after_accuracy, drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after), get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
             drifted_after_accuracy_drop, drifted_test_accuracy_drop = original_after_accuracy - drifted_after_accuracy, original_test_accuracy - drifted_test_accuracy
@@ -146,6 +122,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
             before_after_retrained_accuracy_bump = before_after_retrained_accuracy - drifted_test_accuracy
 
             current_results_dict = {
+                "after window size": dataset.after_window_size,
                 "drift description": drift_description,
                 "drifted features types": ", ".join(drifted_features_types),
                 "tree size": mapped_tree.node_count,

@@ -12,12 +12,6 @@ try:
 except TypeError:
     DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
 
-SINGLE_DRIFT_TYPE = "single_drift"
-PAIR_DRIFT_TYPE = "pair_drift"
-MULTIPLE_DRIFT_TYPE = "multiple_drift"
-SUPPORTED_DRIFT_TYPES = (SINGLE_DRIFT_TYPE, PAIR_DRIFT_TYPE)
-CURRENT_DRIFT_TYPE = PAIR_DRIFT_TYPE
-
 
 STOP_ON_EXCEPTION = False
 
@@ -37,3 +31,7 @@ RESULTS_FILE_NAME_PREFIX = "results"
 ERRORS_FILE_NAME_PREFIX = "errors"
 
 EXAMPLE_FILE_NAME = "bank"
+
+MAX_DRIFT_AMOUNT = -1 # max amount of featuers to drift, -1 means all features
+
+AFTER_WINDOW_TEST_SIZES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]

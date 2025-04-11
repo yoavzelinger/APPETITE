@@ -10,3 +10,4 @@ APPETITE/Fixers/__pycache__
 /APPETITE/Diagnosers/barinel_utils/DDIFMAS/__pycache__
 /*.sh
 /*.out
+.nfs

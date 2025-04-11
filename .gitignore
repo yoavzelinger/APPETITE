@@ -8,3 +8,5 @@ APPETITE/Fixers/__pycache__
 /.vscode
 /APPETITE/Diagnosers/barinel_utils/__pycache__
 /APPETITE/Diagnosers/barinel_utils/DDIFMAS/__pycache__
+/*.sh
+/*.out

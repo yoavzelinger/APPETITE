@@ -180,6 +180,13 @@ class MappedDecisionTree:
                 self.correct_classifications_count = (y == self.class_name).sum()
                 self.misclassifications_count = (y != self.class_name).sum()
 
+        def __eq__(self, other):
+            if isinstance(other, MappedDecisionTree.DecisionTreeNode):
+                return self.sk_index == other.sk_index
+            if isinstance(other, int):
+                return self.sk_index == other
+            return False
+
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,
                  feature_types: dict[str, str] = None,
@@ -342,7 +349,8 @@ class MappedDecisionTree:
         self.sk_features[parent_index] = self.sk_features[sibling.sk_index]
         self.sk_thresholds[parent_index] = sibling.threshold
         self.sk_values[parent_index] = self.sk_values[sibling.sk_index]
-        return parent
+        if parent.is_terminal():
+            return parent
     
     def prune_tree(self) -> None:
         leaf_nodes = [node for node in self.tree_dict.values() if node.is_terminal()]
@@ -355,11 +363,16 @@ class MappedDecisionTree:
             if sibling is None: # Root
                 continue
             if sibling.is_terminal() and current_leaf.class_name == sibling.class_name: # Sibling is a leaf with the same class
-                tree_changed = True
+                # leaf_nodes = [leaf_node for leaf_node in leaf_nodes if leaf_node.sk_index != sibling.sk_index] # Remove sibling from the list
+                if sibling in leaf_nodes:
+                    leaf_nodes.remove(sibling)
                 leaf_nodes += [self.prune_sibling_leaves(current_leaf, sibling)]
-            if hasattr(current_leaf, "reached_samples_count") and not current_leaf.reached_samples_count: # Redundant leaf
                 tree_changed = True
-                leaf_nodes += [self.prune_leaf(current_leaf)]
+            elif hasattr(current_leaf, "reached_samples_count") and not current_leaf.reached_samples_count: # Redundant leaf
+                new_leaf = self.prune_leaf(current_leaf)
+                tree_changed = True
+                if new_leaf:
+                    leaf_nodes += [new_leaf]
             
         if tree_changed: # Attributes changed
             self.update_tree_attributes()

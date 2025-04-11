@@ -65,7 +65,7 @@ with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
         if not datasets_count:
             break
         dataset_name = dataset_description["name"]
-        if not any(map(lambda prefix: dataset_name.lower().startswith(prefix), RUNNING_PREFIXES)):
+        if RUNNING_PREFIXES and not any(map(lambda prefix: dataset_name.lower().startswith(prefix), RUNNING_PREFIXES)):
             continue
         datasets_count -= 1
         drifts_count = 0

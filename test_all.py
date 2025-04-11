@@ -28,7 +28,6 @@ parser.add_argument("-n", "--name", type=str, help="Name of the dataset to run, 
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all", default=[])
 
 args = parser.parse_args()
-RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{args.output}", f"{ERRORS_FILE_PATH_PREFIX}_{args.output}"
 DEFAULT_TESTING_DIAGNOSER = args.diagnosers
 print(f"Running tests with diagnosers: {DEFAULT_TESTING_DIAGNOSER}")
 STOP_ON_EXCEPTION = args.stop
@@ -39,8 +38,6 @@ if args.name:
 RUNNING_PREFIXES = args.prefixes
 if RUNNING_PREFIXES:
     print(f"Running tests with prefixes: {RUNNING_PREFIXES}")
-    prefixes_str = "-".join(RUNNING_PREFIXES)
-    RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{prefixes_str}", f"{ERRORS_FILE_PATH_PREFIX}_{prefixes_str}"
     RUNNING_PREFIXES = list(map(lambda prefix: prefix.lower(), RUNNING_PREFIXES))
 
 raw_results_columns = ["drift description", "drifted features types", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
@@ -127,11 +124,21 @@ for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
 
 aggregated_results = aggregated_results._append(aggregating_total_row, ignore_index=True)
 
-if not os.path.exists(RESULTS_FULL_PATH):
-    os.mkdir(RESULTS_FULL_PATH)
+if RUNNING_PREFIXES:
+    RESULTS_FULL_PATH = TEMP_RESULTS_FULL_PATH
+os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
 
-aggregated_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_aggregated.csv", index=False)
+RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, RESULTS_FILE_NAME_PREFIX)
+ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, ERRORS_FILE_NAME_PREFIX)
+
+RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{args.output}", f"{ERRORS_FILE_PATH_PREFIX}_{args.output}"
+prefixes_str = ("_" + "-".join(RUNNING_PREFIXES)) if RUNNING_PREFIXES else ""
+RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}{prefixes_str}", f"{ERRORS_FILE_PATH_PREFIX}{prefixes_str}"
+
+if not RUNNING_PREFIXES:
+    aggregated_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_aggregated.csv", index=False)
 raw_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_raw.csv", index=False)
+
 if not errors.empty:
     errors.to_csv(f"{ERRORS_FILE_PATH_PREFIX}.csv", index=False)
 elif os.path.exists(f"{ERRORS_FILE_PATH_PREFIX}.csv"):

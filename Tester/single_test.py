@@ -42,8 +42,12 @@ def drift_pair_tree_features(mapped_tree: MappedDecisionTree,
     Generate a drifted in a multiple features
     """
     tree_features_set = mapped_tree.tree_features_set
+    drifted_pairs = set()
     for drifting_feature1 in tree_features_set:
         for drifting_feature2 in tree_features_set.difference([drifting_feature1]):
+            if (drifting_feature1, drifting_feature2) in drifted_pairs or (drifting_feature2, drifting_feature1) in drifted_pairs:
+                continue
+            drifted_pairs.add((drifting_feature1, drifting_feature2))
             drifted_features_types = [dataset.feature_types[drifting_feature1], dataset.feature_types[drifting_feature2]]
             drifting_features = [drifting_feature1, drifting_feature2]
             after_drift_generator = dataset.drift_generator(drifting_features, partition="after")

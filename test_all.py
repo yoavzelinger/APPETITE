@@ -137,7 +137,8 @@ RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}
 
 if not RUNNING_PREFIXES:
     aggregated_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_aggregated.csv", index=False)
-raw_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_raw.csv", index=False)
+if not raw_results.empty:
+    raw_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_raw.csv", index=False)
 
 if not errors.empty:
     errors.to_csv(f"{ERRORS_FILE_PATH_PREFIX}.csv", index=False)

@@ -2,8 +2,9 @@ from os import path as os_path
 from pandas import read_csv, DataFrame, Series, Categorical, get_dummies
 from scipy.io.arff import loadarff
 from typing import Generator
+from math import ceil
 
-from APPETITE.Constants import BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION, PROPORTIONS_TUPLE, AFTER_WINDOW_SIZE,RANDOM_STATE
+from APPETITE.Constants import BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION, PROPORTIONS_TUPLE, AFTER_WINDOW_SIZE,RANDOM_STATE, VALIDATION_SIZE as TREE_VALIDATION_SIZE
 
 from .DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
@@ -115,7 +116,7 @@ class Dataset:
     
     def get_after_concept(self) -> tuple[DataFrame, Series]:
         after_concept_data = self.data.iloc[self.before_size: self.before_size + 
-                                            max(int(self.after_size * self.after_window_size), 1)]
+                                            ceil(max(self.after_size * self.after_window_size, 1 / TREE_VALIDATION_SIZE))]
         return self.split_features_targets(after_concept_data)
     
     def get_test_concept(self) -> tuple[DataFrame, Series]:

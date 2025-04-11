@@ -120,20 +120,21 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
     if original_accuracy < MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
         # print(f"Original model is not good enough, accuracy: {original_accuracy}")
         return
+    
+    original_after_accuracy, original_test_accuracy = get_accuracy(sklearn_tree_model, X_after, y_after), get_accuracy(sklearn_tree_model, X_test, y_test)
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
     for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_features, drifted_features_types in drift_tree(mapped_tree, dataset):
         try:
-            drift_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, pd_concat([X_after_drifted, X_test_drifted]), pd_concat([y_after, y_test]))
-            drift_accuracy_drop = original_accuracy - drift_accuracy
-            if drift_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
-            # print(f"Drift is insignificant, accuracy drop: {drift_accuracy_drop}")
+            drifted_after_accuracy, drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after), get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
+            drifted_after_accuracy_drop, drifted_test_accuracy_drop = original_after_accuracy - drifted_after_accuracy, original_test_accuracy - drifted_test_accuracy
+            if drifted_after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP or drifted_test_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
+                # print(f"Drift is insignificant, accuracy drop: after: {drifted_after_accuracy_drop}, test: {drifted_test_accuracy_drop}")
                 continue
 
             drifted_features_types = [drifted_features_types] if isinstance(drifted_features_types, str) else drifted_features_types
 
-            drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
 
             after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after)
             after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)

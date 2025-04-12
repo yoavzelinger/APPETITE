@@ -202,7 +202,7 @@ class Fixer:
             self.faulty_nodes = [faulty_node]
         data_reached_faulty_node = self._filter_data_reached_single_fault()
         faulty_node_index = self.faulty_nodes[0]
-        print(f"Fixing faulty node: {faulty_node_index}")
+        # print(f"Fixing faulty node: {faulty_node_index}")
         self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         return self._create_fixed_mapped_tree(), faulty_node_index
 
@@ -219,7 +219,7 @@ class Fixer:
             self.faulty_nodes = self.diagnoser.get_diagnoses()[0]
         else:
             self.faulty_nodes = faulty_nodes
-        print(f"Fixing faulty nodes: {self.faulty_nodes}")
+        # print(f"Fixing faulty nodes: {self.faulty_nodes}")
         for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):  
             self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
         return self._create_fixed_mapped_tree(), self.faulty_nodes

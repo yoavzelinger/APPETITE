@@ -33,9 +33,12 @@ def drift_tree(mapped_tree: MappedDecisionTree,
     """
     max_drift_amount = min(len(mapped_tree.tree_features_set), max_drift_amount) if max_drift_amount > 0 else len(mapped_tree.tree_features_set)
     for after_window_test_size in AFTER_WINDOW_TEST_SIZES:
+        print(f"\tAfter size: {after_window_test_size}%")
         dataset.after_window_size = after_window_test_size
         for drift_amount in range(1, max_drift_amount + 1):
+            print(f"\t\tDrift size: {drift_amount} / {max_drift_amount} features")
             for drifting_features in combinations(mapped_tree.tree_features_set, drift_amount):
+                print(f"\t\t\tDrifting {", ".join(drifting_features)}")
                 drifted_features_types = [dataset.feature_types[drifting_feature] for drifting_feature in drifting_features]
                 after_drift_generator = dataset.drift_generator(drifting_features, partition="after")
                 test_drift_generator = dataset.drift_generator(drifting_features, partition="test")

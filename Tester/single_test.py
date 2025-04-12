@@ -155,8 +155,8 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
             exception_class = e.__class__.__name__
             tb = traceback.extract_tb(e.__traceback__)
             error_line, error_file = tb[-1].lineno, tb[-1].filename
-            diagnoser_info = f", diagnoser: {diagnoser_name}" if diagnoser_name else ""
-            raise Exception(f"{exception_class} in {drift_description} ({error_file}, line {error_line}{diagnoser_info}): {e}")
+            diagnoser_info = f", diagnoser: {diagnoser_name}" if ('diagnoser_name' in locals() and diagnoser_name) else ""
+            raise Exception(f"{exception_class} in {drift_description}, after window size: {dataset.after_window_size} ({error_file}, line {error_line}{diagnoser_info}): {e}")
         
 def get_example_mapped_tree(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name + ".csv")

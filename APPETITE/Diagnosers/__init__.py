@@ -10,7 +10,6 @@ from .BARINEL_Paths_Difference import BARINEL_Paths_Difference
 from .STAT_BARINEL_Paths_After import STAT_BARINEL_Paths_After
 from .STAT_BARINEL_Paths_Difference import STAT_BARINEL_Paths_Difference
 from .BARINEL_Features import BARINEL_Features
-from .BARINEL_Features_STAT_SFLDT import BARINEL_Features_STAT_SFLDT
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {
@@ -25,7 +24,6 @@ diagnosers_dict = {
     "STAT_BARINEL_Paths_After": (STAT_BARINEL_Paths_After, ()),
     "STAT_BARINEL_Paths_Difference": (STAT_BARINEL_Paths_Difference, ()),
     "BARINEL_Features": (BARINEL_Features, ()),
-    "BARINEL_Features_STAT_SFLDT": (BARINEL_Features_STAT_SFLDT, ()),
 }
 
 def get_diagnoser(diagnoser_name: str, 

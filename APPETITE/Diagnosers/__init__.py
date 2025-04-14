@@ -18,7 +18,6 @@ diagnosers_dict = {
     "STAT_SFLDT": (STAT_SFLDT, (SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
     "BARINEL": (BARINEL, ()),
     "STAT_BARINEL": (STAT_BARINEL, ()),
-    "BARINEL_Paths": (BARINEL_Paths, ()),
     "BARINEL_Paths_After": (BARINEL_Paths_After, ()),
     "BARINEL_Paths_Difference": (BARINEL_Paths_Difference, ()),
     "STAT_BARINEL_Paths_After": (STAT_BARINEL_Paths_After, ()),

@@ -30,12 +30,12 @@ def drift_tree(mapped_tree: MappedDecisionTree,
     """
     Generate a drifted in a multiple features
     """
-    max_drift_amount = min(len(mapped_tree.tree_features_set), MAX_DRIFT_AMOUNT) if MAX_DRIFT_AMOUNT > 0 else len(mapped_tree.tree_features_set)
+    max_drift_size = min(len(mapped_tree.tree_features_set), MAX_DRIFT_SIZE) if MAX_DRIFT_SIZE > 0 else len(mapped_tree.tree_features_set)
     for after_window_test_size in AFTER_WINDOW_TEST_SIZES:
         print(f"\tAfter size: {after_window_test_size}%")
         dataset.after_window_size = after_window_test_size
-        for drift_size in range(MIN_DRIFT_AMOUNT, max_drift_amount + 1):
-            print(f"\t\tDrift size: {drift_size} / {max_drift_amount} features")
+        for drift_size in range(MIN_DRIFT_SIZE, max_drift_size + 1):
+            print(f"\t\tDrift size: {drift_size} / {max_drift_size} features")
             for drifting_features in combinations(mapped_tree.tree_features_set, drift_size):
                 print(f"\t\t\tDrifting {', '.join(drifting_features)}")
                 drifted_features_types = [dataset.feature_types[drifting_feature] for drifting_feature in drifting_features]

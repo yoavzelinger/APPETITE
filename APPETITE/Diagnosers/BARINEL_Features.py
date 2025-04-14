@@ -38,14 +38,11 @@ class BARINEL_Features(BARINEL_Paths_After):
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series,
-                                      diagnosis_algorithm: str = DIAGNOSIS_ALGORITHM,
                                       use_fuzzy_error: bool = USE_FUZZY_ERROR
      ) -> None:
-        if diagnosis_algorithm == "BARINEL" and use_fuzzy_error:
+        if use_fuzzy_error:
             return BARINEL_Paths.fill_spectra_and_error_vector(self, X, y)
-        elif diagnosis_algorithm == "SFLDT":
-            return SFLDT.fill_spectra_and_error_vector(self, X, y)
-        raise ValueError(f"Unknown DIAGNOSIS_ALGORITHM: {diagnosis_algorithm}. Use 'BARINEL' or 'SFLDT'.")
+        return SFLDT.fill_spectra_and_error_vector(self, X, y)
     
     def update_fuzzy_participation(self) -> None:
         if USE_FUZZY_PARTICIPATION:
@@ -81,9 +78,9 @@ class BARINEL_Features(BARINEL_Paths_After):
                       diagnosis_algorithm: str = DIAGNOSIS_ALGORITHM,
      ) -> list[list[int]] | list[tuple[list[int], float]]:
         if diagnosis_algorithm == "BARINEL":
-            BARINEL_Paths.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=True)
+            BARINEL_Paths.get_diagnoses(self, retrieve_ranks=True, retrieve_spectra_indices=True)
         elif diagnosis_algorithm == "SFLDT":
-            SFLDT.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=True)
+            SFLDT.get_diagnoses(self, retrieve_ranks=True, retrieve_spectra_indices=True)
         else:
             raise ValueError(f"Unknown DIAGNOSIS_ALGORITHM: {diagnosis_algorithm}. Use 'BARINEL' or 'SFLDT'.")
         for diagnosis_index, (features_diagnosis, rank) in enumerate(self.diagnoses):

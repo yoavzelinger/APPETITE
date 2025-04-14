@@ -1,9 +1,8 @@
 from pandas import DataFrame, Series
 
-
 from .BARINEL_Features import BARINEL_Features
 
-class BARINEL_Features_Paths_After(BARINEL_Features):
+class BARINEL_Features_Paths_Difference(BARINEL_Features):
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series

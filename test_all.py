@@ -135,8 +135,9 @@ os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
 RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, RESULTS_FILE_NAME_PREFIX)
 ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, ERRORS_FILE_NAME_PREFIX)
 
+fuzzy_participation_prefix = "fuzzy_participation_" if USE_FUZZY_PARTICIPATION else ""
 file_name_suffix = "-".join(RUNNING_PREFIXES) if RUNNING_PREFIXES else args.output
-RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{file_name_suffix}", f"{ERRORS_FILE_PATH_PREFIX}_{file_name_suffix}"
+RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{fuzzy_participation_prefix}{file_name_suffix}", f"{ERRORS_FILE_PATH_PREFIX}_{fuzzy_participation_prefix}{file_name_suffix}"
 
 if not RUNNING_PREFIXES:
     aggregated_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_aggregated.csv", index=False)

@@ -1,7 +1,7 @@
 from numpy import zeros, clip
 from pandas import DataFrame, Series
 
-from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME, USE_FUZZY_PARTICIPATION
+from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME, DIAGNOSIS_ALGORITHM, USE_FUZZY_PARTICIPATION, USE_FUZZY_ERROR, BARINEL_PATHS_TYPE
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .SFLDT import SFLDT
 from .BARINEL_Paths import BARINEL_Paths

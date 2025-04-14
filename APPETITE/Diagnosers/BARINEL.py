@@ -37,7 +37,7 @@ def get_barinel_diagnoses(spectra: ndarray,
 
 class BARINEL(SFLDT):
 
-    diagnoser_type = MULTIPLE_DIAGNOSER_TYPE_NAME
+    diagnoser_type = constants.MULTIPLE_DIAGNOSER_TYPE_NAME
 
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,

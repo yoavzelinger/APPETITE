@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from pandas import DataFrame, Series
 
-from APPETITE.Constants import SINGLE_DIAGNOSER_TYPE_NAME, MULTIPLE_DIAGNOSER_TYPE_NAME, DIAGNOSER_TYPES
+from APPETITE import Constants as constants
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
 class ADiagnoser(ABC):
@@ -13,7 +13,7 @@ class ADiagnoser(ABC):
         Returns:
         str: The diagnoser type.
         """
-        assert self.diagnoser_type in DIAGNOSER_TYPES, "DIAGNOSER_TYPE must be defined"
+        assert self.diagnoser_type in constants.DIAGNOSER_TYPES, "DIAGNOSER_TYPE must be defined"
         return self.diagnoser_type
     
     def __init__(self, 

@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 
 from scipy.optimize import minimize
 
-from APPETITE.Constants import BARINEL_COMPONENT_PRIOR_PROBABILITY
+from APPETITE import Constants as constants
 
 def get_total_likelihood(diagnosis: NDArray,
                          healthiness_probabilities: NDArray,
@@ -84,5 +84,5 @@ def rank_diagnoses(spectrum: NDArray,
     """
     spectrum, fuzzy_error_vector = spectrum[:, :-1], spectrum[:, -1]
     if components_prior_probabilities is None:
-        components_prior_probabilities = full(spectrum.shape[1], BARINEL_COMPONENT_PRIOR_PROBABILITY)
+        components_prior_probabilities = full(spectrum.shape[1], constants.BARINEL_COMPONENT_PRIOR_PROBABILITY)
     return [(diagnosis, rank_diagnosis(diagnosis, spectrum, fuzzy_error_vector, components_prior_probabilities)) for diagnosis in diagnoses]

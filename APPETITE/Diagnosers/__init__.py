@@ -1,6 +1,7 @@
+from APPETITE import Constants as constants
 from .ADiagnoser import ADiagnoser
 from .STAT import STAT
-from .SFLDT import SFLDT, SFLDT_DEFAULT_SIMILARITY_MEASURES
+from .SFLDT import SFLDT
 from .STAT_SFLDT import STAT_SFLDT
 from .BARINEL import BARINEL, get_barinel_diagnoses
 from .STAT_BARINEL import STAT_BARINEL
@@ -16,9 +17,9 @@ from .SFLDT_Features import SFLDT_Features
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {
-    "SFLDT": (SFLDT, (SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
+    "SFLDT": (SFLDT, (constants.SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
     "STAT": (STAT, ()),
-    "STAT_SFLDT": (STAT_SFLDT, (SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
+    "STAT_SFLDT": (STAT_SFLDT, (constants.SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
     "BARINEL": (BARINEL, ()),
     "STAT_BARINEL": (STAT_BARINEL, ()),
     "BARINEL_Paths_After": (BARINEL_Paths_After, ()),

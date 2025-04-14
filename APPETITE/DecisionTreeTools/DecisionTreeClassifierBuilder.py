@@ -4,7 +4,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score
 
-from APPETITE.Constants import VALIDATION_SIZE, CROSS_VALIDATION_SPLIT_COUNT as DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, RANDOM_STATE, PARAM_GRID
+from APPETITE import Constants as constants
 
 def build_tree(
         X_train: DataFrame,
@@ -26,9 +26,9 @@ def build_tree(
     Returns:
         DecisionTreeClassifier: The decision tree classifier.
     """
-    numpy_seed(RANDOM_STATE)
+    numpy_seed(constants.RANDOM_STATE)
     if X_validation is None:
-        X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=VALIDATION_SIZE, random_state=RANDOM_STATE)
+        X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=constants.VALIDATION_SIZE, random_state=constants.RANDOM_STATE)
     assert set(X_train.columns) == set(X_validation.columns), "Validation data must have the same columns as the training data"
 
     # Grid search modification
@@ -41,18 +41,18 @@ def build_tree(
             sample_filter = (modified_y_train == class_name)
             modified_X_train = concat([modified_X_train, modified_X_train[sample_filter]], ignore_index=True)
             modified_y_train = concat([modified_y_train, Series([class_name])], ignore_index=True)
-    cross_validation_split_count = min(DEFAULT_CROSS_VALIDATION_SPLIT_COUNT, modified_y_train.value_counts().min())
+    cross_validation_split_count = min(constants.CROSS_VALIDATION_SPLIT_COUNT , modified_y_train.value_counts().min())
 
     decision_tree_classifier = DecisionTreeClassifier()
     # Find best parameters using grid search cross validation (on training data)
     grid_search_classifier = GridSearchCV(estimator=decision_tree_classifier, 
-                                     param_grid=PARAM_GRID, 
+                                     param_grid=constants.PARAM_GRID, 
                                      cv=cross_validation_split_count)
     grid_search_classifier.fit(modified_X_train, modified_y_train)
     grid_search_best_params = grid_search_classifier.best_params_ # Hyperparameters
     decision_tree_classifier = DecisionTreeClassifier(criterion=grid_search_best_params["criterion"], 
                                                       max_leaf_nodes=grid_search_best_params["max_leaf_nodes"],
-                                                      random_state=RANDOM_STATE
+                                                      random_state=constants.RANDOM_STATE
                                                       )
     pruning_path = decision_tree_classifier.cost_complexity_pruning_path(X_train, y_train)
     ccp_alphas = set(pruning_path.ccp_alphas) # TODO - Understand what is it
@@ -63,7 +63,7 @@ def build_tree(
         current_decision_tree = DecisionTreeClassifier(criterion=grid_search_best_params["criterion"], 
                                                       max_leaf_nodes=grid_search_best_params["max_leaf_nodes"], 
                                                       ccp_alpha=ccp_alpha,
-                                                      random_state=RANDOM_STATE
+                                                      random_state=constants.RANDOM_STATE
                                                       )
         current_decision_tree.fit(X_train, y_train)
         current_predictions = current_decision_tree.predict(X_validation)

@@ -7,7 +7,7 @@ class STAT_BARINEL_Paths_After(STAT_BARINEL):
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 stat_type: str = BARINEL_STAT_TYPE
+                 stat_type: str = constants.BARINEL_STAT_TYPE
     ):
         """
         Initialize the diagnoser.

@@ -1,7 +1,7 @@
-from numpy import zeros, clip
+from numpy import zeros, clip, newaxis
 from pandas import DataFrame, Series
 
-from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME, DIAGNOSIS_ALGORITHM, USE_FUZZY_PARTICIPATION, USE_FUZZY_ERROR
+from APPETITE import Constants as constants
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .SFLDT import SFLDT
 from .BARINEL_Paths import BARINEL_Paths
@@ -10,7 +10,7 @@ from .BARINEL_Paths_Difference import BARINEL_Paths_Difference
 
 class BARINEL_Features(BARINEL_Paths_After):
     
-    diagnoser_type = MULTIPLE_DIAGNOSER_TYPE_NAME
+    diagnoser_type = constants.MULTIPLE_DIAGNOSER_TYPE_NAME
 
     def __init__(self,
                  mapped_tree: MappedDecisionTree,
@@ -38,16 +38,16 @@ class BARINEL_Features(BARINEL_Paths_After):
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series,
-                                      use_fuzzy_error: bool = USE_FUZZY_ERROR
+                                      use_fuzzy_error: bool = constants.USE_FUZZY_ERROR
      ) -> None:
         if use_fuzzy_error:
             return BARINEL_Paths.fill_spectra_and_error_vector(self, X, y)
         return SFLDT.fill_spectra_and_error_vector(self, X, y)
     
     def update_fuzzy_participation(self) -> None:
-        if USE_FUZZY_PARTICIPATION:
+        if constants.USE_FUZZY_PARTICIPATION:
             if len(self.spectra) == len(self.components_depths_vector):
-                self.spectra = self.spectra / self.components_depths_vector
+                self.spectra = self.spectra / self.components_depths_vector[:, newaxis]
         else:
             self.spectra = clip(self.spectra, 0, 1)
         super().update_fuzzy_participation()
@@ -75,7 +75,7 @@ class BARINEL_Features(BARINEL_Paths_After):
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
                       retrieve_spectra_indices: bool = False,
-                      diagnosis_algorithm: str = DIAGNOSIS_ALGORITHM,
+                      diagnosis_algorithm: str = constants.DIAGNOSIS_ALGORITHM,
      ) -> list[list[int]] | list[tuple[list[int], float]]:
         if diagnosis_algorithm == "BARINEL":
             BARINEL_Paths.get_diagnoses(self, retrieve_ranks=True, retrieve_spectra_indices=True)

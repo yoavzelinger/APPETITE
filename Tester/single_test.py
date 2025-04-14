@@ -6,13 +6,13 @@ from itertools import combinations
 
 from APPETITE import *
 
-from Tester.Constants import *
+import Tester.TesterConstants as tester_constants
 import traceback
 
 def get_dataset(directory: str,
                 file_name: str,
-                proportions_tuple: int | tuple[float] = PROPORTIONS_TUPLE,
-                after_window_size: float = AFTER_WINDOW_SIZE
+                proportions_tuple: int | tuple[float] = constants.PROPORTIONS_TUPLE,
+                after_window_size: float = constants.AFTER_WINDOW_SIZE
                 )-> Dataset:
     source = os_path.join(directory, file_name)
     return Dataset(source, proportions_tuple, after_window_size)
@@ -30,11 +30,11 @@ def drift_tree(mapped_tree: MappedDecisionTree,
     """
     Generate a drifted in a multiple features
     """
-    max_drift_size = min(len(mapped_tree.tree_features_set), MAX_DRIFT_SIZE) if MAX_DRIFT_SIZE > 0 else len(mapped_tree.tree_features_set)
-    for after_window_test_size in AFTER_WINDOW_TEST_SIZES:
+    max_drift_size = min(len(mapped_tree.tree_features_set), tester_constants.MAX_DRIFT_SIZE) if tester_constants.MAX_DRIFT_SIZE > 0 else len(mapped_tree.tree_features_set)
+    for after_window_test_size in tester_constants.AFTER_WINDOW_TEST_SIZES:
         print(f"\tAfter size: {after_window_test_size}%")
         dataset.after_window_size = after_window_test_size
-        for drift_size in range(MIN_DRIFT_SIZE, max_drift_size + 1):
+        for drift_size in range(tester_constants.MIN_DRIFT_SIZE, max_drift_size + 1):
             print(f"\t\tDrift size: {drift_size} / {max_drift_size} features")
             for drifting_features in combinations(mapped_tree.tree_features_set, drift_size):
                 print(f"\t\t\tDrifting {', '.join(drifting_features)}")
@@ -87,7 +87,7 @@ def get_accuracy(model, X, y):
     y_predicted = model.predict(X)
     return accuracy_score(y, y_predicted)
 
-def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_size=constants.AFTER_WINDOW_SIZE, diagnoser_names=tester_constants.constants.DEFAULT_FIXING_DIAGNOSER, *diagnoser_parameters):
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
@@ -96,7 +96,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
     X_after, y_after = dataset.get_after_concept()
     X_test, y_test = dataset.get_test_concept()
     original_accuracy = get_accuracy(sklearn_tree_model, pd_concat([X_after, X_test]), pd_concat([y_after, y_test]))
-    if original_accuracy < MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
+    if original_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
         # print(f"Original model is not good enough, accuracy: {original_accuracy}")
         return
     
@@ -107,7 +107,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
         try:
             drifted_after_accuracy, drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after), get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
             drifted_after_accuracy_drop, drifted_test_accuracy_drop = original_after_accuracy - drifted_after_accuracy, original_test_accuracy - drifted_test_accuracy
-            if drifted_after_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP or drifted_test_accuracy_drop < MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
+            if drifted_after_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or drifted_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 # print(f"Drift is insignificant, accuracy drop: after: {drifted_after_accuracy_drop}, test: {drifted_test_accuracy_drop}")
                 continue
 
@@ -145,8 +145,8 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
                 drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
-                wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_features, WASTED_EFFORT_REQUIRE_FULL_FIX)
-                diagnosers_keys_prefix = "fuzzy participation " if USE_FUZZY_PARTICIPATION else ""
+                wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_features, tester_constants.WASTED_EFFORT_REQUIRE_FULL_FIX)
+                diagnosers_keys_prefix = "fuzzy participation " if constants.USE_FUZZY_PARTICIPATION else ""
                 current_results_dict.update({
                     f"{diagnosers_keys_prefix}{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
                     f"{diagnosers_keys_prefix}{diagnoser_name} faulty features": ", ".join(faulty_features),
@@ -162,16 +162,16 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
             diagnoser_info = f", diagnoser: {diagnoser_name}" if ('diagnoser_name' in locals() and diagnoser_name) else ""
             raise Exception(f"{exception_class} in {drift_description}, after window size: {dataset.after_window_size} ({error_file}, line {error_line}{diagnoser_info}): {e}")
         
-def get_example_mapped_tree(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME):
+def get_example_mapped_tree(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name + ".csv")
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
-def sanity_run(directory=DATASETS_FULL_PATH, file_name=EXAMPLE_FILE_NAME, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+def sanity_run(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME, diagnoser_names=tester_constants.constants.DEFAULT_FIXING_DIAGNOSER, *diagnoser_parameters):
     for result in run_single_test(directory, file_name):
         print(result)
         
 if __name__ == "__main__":
-    file_name = EXAMPLE_FILE_NAME if len(sys_argv) < 2 else sys_argv[1]
-    sanity_run(DATASETS_FULL_PATH, file_name + ".csv")
+    file_name = tester_constants.EXAMPLE_FILE_NAME if len(sys_argv) < 2 else sys_argv[1]
+    sanity_run(tester_constants.DATASETS_FULL_PATH, file_name + ".csv")

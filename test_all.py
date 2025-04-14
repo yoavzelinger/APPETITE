@@ -5,7 +5,6 @@ from datetime import datetime
 from csv import DictReader
 from pandas import DataFrame
 
-from APPETITE.Constants import USE_FUZZY_PARTICIPATION
 from Tester import *
 
 from warnings import simplefilter as warnings_simplefilter
@@ -22,21 +21,21 @@ AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_N
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m_%H-%M-%S')}")
-parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help=f"List of diagnosers, default is {DEFAULT_TESTING_DIAGNOSER}", default=DEFAULT_TESTING_DIAGNOSER)
-parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception, default is false and writing the errors to errors file", default=STOP_ON_EXCEPTION)
+parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help=f"List of diagnosers, default is {constants.DEFAULT_FIXING_DIAGNOSER}", default=constants.DEFAULT_FIXING_DIAGNOSER)
+parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception, default is false and writing the errors to errors file", default=tester_constants.STOP_ON_EXCEPTION)
 parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
 parser.add_argument("-n", "--name", type=str, help="Name of the dataset to run, use only if you want to run a specific test")
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all", default=[])
-parser.add_argument("-f", "--fuzzy", action="store_true", help="Use fuzzy participation matrix, default is false", default=USE_FUZZY_PARTICIPATION)
+parser.add_argument("-f", "--fuzzy", action="store_true", help="Use fuzzy participation matrix, default is false", default=constants.USE_FUZZY_PARTICIPATION)
 
 args = parser.parse_args()
-USE_FUZZY_PARTICIPATION = args.fuzzy
-DEFAULT_TESTING_DIAGNOSER = args.diagnosers
-print(f"Running tests with diagnosers: {DEFAULT_TESTING_DIAGNOSER}")
+constants.USE_FUZZY_PARTICIPATION = args.fuzzy
+constants.DEFAULT_FIXING_DIAGNOSER = args.diagnosers
+print(f"Running tests with diagnosers: {constants.DEFAULT_FIXING_DIAGNOSER}")
 STOP_ON_EXCEPTION = args.stop
 datasets_count = args.count
 if args.name:
-    single_test.sanity_run(file_name=args.name + ".csv", diagnoser_names=DEFAULT_TESTING_DIAGNOSER)
+    single_test.sanity_run(file_name=args.name + ".csv", diagnoser_names=constants.DEFAULT_FIXING_DIAGNOSER)
     exit(0)
 RUNNING_PREFIXES = args.prefixes
 if RUNNING_PREFIXES:
@@ -47,8 +46,8 @@ raw_results_columns = ["after size", "drift amount", "drift description", "drift
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
-diagnosers_columns_prefix = "fuzzy participation " if USE_FUZZY_PARTICIPATION else ""
-for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
+diagnosers_columns_prefix = "fuzzy participation " if constants.USE_FUZZY_PARTICIPATION else ""
+for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
     raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FAULTY_NODES_NAME_SUFFIX)
     raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX)
@@ -63,7 +62,7 @@ raw_results = DataFrame(columns=raw_results_columns)
 aggregated_results = DataFrame(columns=aggregated_groupby_columns + aggregated_summarizes_columns)
 errors = DataFrame(columns=["name", "error"])
 
-with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
+with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
     descriptions_reader = DictReader(descriptions_file)
     for dataset_description in descriptions_reader:
         if not datasets_count:
@@ -86,7 +85,7 @@ with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
         print(f"Running tests for {dataset_name}")
         try:
-            for test_result in run_single_test(DATASETS_FULL_PATH, dataset_name + ".csv", diagnoser_names=DEFAULT_TESTING_DIAGNOSER):
+            for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name + ".csv", diagnoser_names=constants.DEFAULT_FIXING_DIAGNOSER):
                 drifts_count += 1
                 current_aggregated_row_dict["tree size"] = test_result["tree size"]
                 current_aggregated_row_dict["average after accuracy decrease"] += test_result["after accuracy decrease"]
@@ -94,10 +93,10 @@ with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
                 current_aggregated_row_dict["average after retrain accuracy increase"] += test_result["after retrain accuracy increase"]
                 current_aggregated_row_dict["average before after retrain accuracy"] += test_result["before after retrain accuracy"]
                 current_aggregated_row_dict["average before after retrain accuracy increase"] += test_result["before after retrain accuracy increase"]
-                for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
-                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
+                for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
+                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
                 raw_results = raw_results._append(test_result, ignore_index=True)
             if drifts_count == 0:
                 continue
@@ -121,7 +120,7 @@ aggregating_total_row = {
     "average before after retrain accuracy": raw_results["before after retrain accuracy"].mean(),
     "average before after retrain accuracy increase": raw_results["before after retrain accuracy increase"].mean()
 }
-for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
+for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
     aggregating_total_row[diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] = raw_results[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX].mean()
     aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] = raw_results[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX].mean()
     aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] = raw_results[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()
@@ -129,13 +128,13 @@ for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
 aggregated_results = aggregated_results._append(aggregating_total_row, ignore_index=True)
 
 if RUNNING_PREFIXES:
-    RESULTS_FULL_PATH = TEMP_RESULTS_FULL_PATH
+    RESULTS_FULL_PATH = tester_constants.TEMP_RESULTS_FULL_PATH
 os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
 
-RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, RESULTS_FILE_NAME_PREFIX)
-ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, ERRORS_FILE_NAME_PREFIX)
+RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.RESULTS_FILE_NAME_PREFIX)
+ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.ERRORS_FILE_NAME_PREFIX)
 
-fuzzy_participation_prefix = "fuzzy_participation_" if USE_FUZZY_PARTICIPATION else ""
+fuzzy_participation_prefix = "fuzzy_participation_" if constants.DEFAULT_FIXING_DIAGNOSER else ""
 file_name_suffix = "-".join(RUNNING_PREFIXES) if RUNNING_PREFIXES else args.output
 RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{fuzzy_participation_prefix}{file_name_suffix}", f"{ERRORS_FILE_PATH_PREFIX}_{fuzzy_participation_prefix}{file_name_suffix}"
 
@@ -150,5 +149,5 @@ elif os.path.exists(f"{ERRORS_FILE_PATH_PREFIX}.csv"):
     os.remove(f"{ERRORS_FILE_PATH_PREFIX}.csv")
 
 print("All tests are done! average accuracy and the incremental:")
-for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
+for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
     print(f"{diagnoser_name}: {aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX]}%, {aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX]}%")

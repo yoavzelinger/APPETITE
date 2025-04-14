@@ -21,7 +21,7 @@ def get_candidates(spectrum):
 """
 New BARINEL implementation with fuzzy support.
 """
-from APPETITE.Constants import GRADIENT_STEP, BARINEL_RANKING_ALGORITHM
+from APPETITE import Constants as constants
 from .ranking_utils import rank_diagnoses as rank_diagnoses_v2
 
 def rank_diagnoses(spectrum, diagnoses, components_prior_probabilities=None):
@@ -36,8 +36,8 @@ def rank_diagnoses(spectrum, diagnoses, components_prior_probabilities=None):
     Returns:
         ndarray: The ranked diagnoses.
     """
-    if BARINEL_RANKING_ALGORITHM == "V1":
-        return rank_diagnoses_v1(spectrum, diagnoses, GRADIENT_STEP)
+    if constants.BARINEL_RANKING_ALGORITHM == "V1":
+        return rank_diagnoses_v1(spectrum, diagnoses, constants.GRADIENT_STEP)
     return rank_diagnoses_v2(spectrum, diagnoses, components_prior_probabilities)
 
 

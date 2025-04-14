@@ -1,7 +1,7 @@
 from numpy import zeros, array as np_array, ones, newaxis, max
 
 from .ADiagnoser import *
-from APPETITE.Constants import SFLDT_DEFAULT_SIMILARITY_MEASURES, USE_FUZZY_PARTICIPATION
+from APPETITE import Constants as constants
 
 def get_faith_similarity(participation_vector: Series,
                          error_vector: Series
@@ -28,7 +28,7 @@ def get_faith_similarity(participation_vector: Series,
 
 class SFLDT(ADiagnoser):
 
-    diagnoser_type = SINGLE_DIAGNOSER_TYPE_NAME
+    diagnoser_type = constants.SINGLE_DIAGNOSER_TYPE_NAME
 
     similarity_measure_functions_dict = {
         "faith": get_faith_similarity
@@ -38,7 +38,7 @@ class SFLDT(ADiagnoser):
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 similarity_measure: str = SFLDT_DEFAULT_SIMILARITY_MEASURES
+                 similarity_measure: str = constants.SFLDT_DEFAULT_SIMILARITY_MEASURES
     ):
         """
         Initialize the SFLDT diagnoser.
@@ -61,7 +61,7 @@ class SFLDT(ADiagnoser):
      ) -> None:
         assert self.components_depths_vector.all()
         assert self.paths_depths_vector.all()
-        if not USE_FUZZY_PARTICIPATION:
+        if not constants.USE_FUZZY_PARTICIPATION:
             return
         if len(self.spectra.shape) > len(self.components_depths_vector.shape):
             self.components_depths_vector = self.components_depths_vector[:, newaxis]

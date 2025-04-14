@@ -1,16 +1,16 @@
 from os import path as os_path
-from APPETITE.Constants import DEFAULT_FIXING_DIAGNOSER as DEFAULT_TESTING_DIAGNOSER
+import APPETITE.Constants as constants
 
 MINIMUM_ORIGINAL_ACCURACY = 0.75
 MINIMUM_DRIFT_ACCURACY_DROP = 0.1
 
 # Transform the diagnoser to iterable
 try:
-    iter(DEFAULT_TESTING_DIAGNOSER)
-    if isinstance(DEFAULT_TESTING_DIAGNOSER, str):
+    iter(constants.DEFAULT_FIXING_DIAGNOSER)
+    if isinstance(constants.DEFAULT_FIXING_DIAGNOSER, str):
         raise TypeError
 except TypeError:
-    DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
+    constants.DEFAULT_FIXING_DIAGNOSER = (constants.DEFAULT_FIXING_DIAGNOSER, )
 
 
 STOP_ON_EXCEPTION = False

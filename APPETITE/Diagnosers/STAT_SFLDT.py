@@ -1,19 +1,19 @@
+from APPETITE import Constants as constants
 from .ADiagnoser import *
 from .STAT import STAT
-from .SFLDT import SFLDT, SFLDT_DEFAULT_SIMILARITY_MEASURES
-
+from .SFLDT import SFLDT
 class STAT_SFLDT(ADiagnoser):
     """
     The diagnoser that combines the STAT and SFLDT diagnosers.
     """
 
-    diagnoser_type = SINGLE_DIAGNOSER_TYPE_NAME
+    diagnoser_type = constants.SINGLE_DIAGNOSER_TYPE_NAME
 
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 similarity_measure: str = SFLDT_DEFAULT_SIMILARITY_MEASURES
+                 similarity_measure: str = constants.SFLDT_DEFAULT_SIMILARITY_MEASURES
     ):
         """
         Initialize the diagnoser.

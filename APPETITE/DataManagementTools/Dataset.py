@@ -4,7 +4,7 @@ from scipy.io.arff import loadarff
 from typing import Generator
 from math import ceil
 
-from APPETITE.Constants import BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION, PROPORTIONS_TUPLE, AFTER_WINDOW_SIZE,RANDOM_STATE, VALIDATION_SIZE as TREE_VALIDATION_SIZE
+from APPETITE import Constants as constants
 
 from .DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
@@ -13,8 +13,8 @@ class Dataset:
 
     def __init__(self, 
                  source: str | DataFrame,
-                 size: int | tuple[float] = PROPORTIONS_TUPLE,
-                 after_window_size: float = AFTER_WINDOW_SIZE,
+                 size: int | tuple[float] = constants.PROPORTIONS_TUPLE,
+                 after_window_size: float = constants.AFTER_WINDOW_SIZE,
                  to_shuffle: bool = True,
                  one_hot_encoding: bool = True
     ):
@@ -72,12 +72,12 @@ class Dataset:
         self.data[self.target_name] = self.data[self.target_name].cat.codes
 
         if to_shuffle:  # shuffle data - same shuffle always
-            self.data = self.data.sample(frac=1, random_state=RANDOM_STATE).reset_index(drop=True)
+            self.data = self.data.sample(frac=1, random_state=constants.RANDOM_STATE).reset_index(drop=True)
 
         self.data.attrs["name"] = self.name
 
         n_samples = len(self.data)
-        before_proportion, after_proportion, test_proportion = BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION
+        before_proportion, after_proportion, test_proportion = constants.BEFORE_PROPORTION, constants.AFTER_PROPORTION, constants.TEST_PROPORTION
         if isinstance(size, int):   # Concept size
             self.before_size = size
             before_proportion = 1.0 * self.before_size / n_samples
@@ -117,7 +117,7 @@ class Dataset:
     
     def get_after_concept(self) -> tuple[DataFrame, Series]:
         after_concept_data = self.data.iloc[self.before_size: self.before_size + 
-                                            ceil(max(self.after_size * self.after_window_size, 1 / TREE_VALIDATION_SIZE))]
+                                            ceil(max(self.after_size * self.after_window_size, 1 / constants.VALIDATION_SIZE))]
         return self.split_features_targets(after_concept_data)
     
     def get_test_concept(self) -> tuple[DataFrame, Series]:

@@ -3,9 +3,9 @@ from pandas.api.types import is_numeric_dtype
 from random import seed, choices
 from typing import Callable, Generator
 
-from APPETITE.Constants import NUMERIC_DRIFT_SEVERITIES as NUMERIC_DRIFT_SIZES, CATEGORICAL_DRIFT_SEVERITIES as CATEGORICAL_PROPORTIONS, RANDOM_STATE
+from APPETITE import Constants as constants
 
-from .lazy_utils import lazy_product, SINGLE_ARGUMENT_EACH_GENERATOR
+from . import lazy_utils
 
 """
 This module is responsible for simulating concept drifts in a given dataset.
@@ -67,7 +67,7 @@ def _numeric_drift_generator(
         return (column + k * feature_std, f"NumericFeature[{column.name};{'+' if k >= 0 else ''}{k}std]")
     
     #   Using it in iterations
-    for k in NUMERIC_DRIFT_SIZES:
+    for k in constants.NUMERIC_DRIFT_SEVERITIES:
         yield simulate_numeric_drift_of_size_k(k)
 
 
@@ -121,7 +121,7 @@ def _categorical_drift_generator(
             remaining_indices = column != fixed_value
             remaining_count = remaining_indices.values.sum()
             remaining_indices = column[remaining_indices].index.values
-            seed(RANDOM_STATE)
+            seed(constants.RANDOM_STATE)
             fixed_indices = choices(remaining_indices, k=int(remaining_count * p))
             drifted_column[fixed_indices] = fixed_value
 
@@ -130,7 +130,7 @@ def _categorical_drift_generator(
         #   Using the doubly nested function
         return (
             simulate_categorical_drift_in_value_proportion(p)
-            for p in CATEGORICAL_PROPORTIONS
+            for p in constants.CATEGORICAL_DRIFT_SEVERITIES
         )
     
     # Using the intermediate generator
@@ -178,7 +178,7 @@ def multiple_features_concept_drift_generator(
                            for column, feature_type in zip(features_columns, drifting_features.values())]
 
     # Get the cartesian product of all drifts
-    cartesian_products = lazy_product(generator_functions, args_lists=features_columns, args_type=SINGLE_ARGUMENT_EACH_GENERATOR)
+    cartesian_products = lazy_utils.lazy_product(generator_functions, args_lists=features_columns, args_type=lazy_utils.SINGLE_ARGUMENT_EACH_GENERATOR)
     for drifts in cartesian_products:
         drifted_df = original_df.copy()
         drift_description = original_df.attrs.get("name", "") + '_'

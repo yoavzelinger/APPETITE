@@ -6,14 +6,14 @@ from copy import deepcopy
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from APPETITE.Diagnosers import *
 
-from APPETITE.Constants import DEFAULT_FIXING_DIAGNOSER, SINGLE_DIAGNOSER_TYPE_NAME, MULTIPLE_DIAGNOSER_TYPE_NAME
+from APPETITE import Constants as constants
 
 class Fixer:
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 diagnoser_name: str = DEFAULT_FIXING_DIAGNOSER,
+                 diagnoser_name: str = constants.DEFAULT_FIXING_DIAGNOSER,
                  *diagnoser_parameters: tuple[object]
     ):
         """
@@ -238,7 +238,7 @@ class Fixer:
         """
         if self.tree_already_fixed:
             return self.mapped_tree
-        if self.diagnoser.diagnoser_type == SINGLE_DIAGNOSER_TYPE_NAME:
+        if self.diagnoser.diagnoser_type == constants.SINGLE_DIAGNOSER_TYPE_NAME:
             diagnosis = self.fix_single_fault(faulty_nodes)
             if type(diagnosis) is tuple:
                 diagnosis = diagnosis[0], [diagnosis[1]]

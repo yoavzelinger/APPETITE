@@ -1,2 +1,2 @@
 from .single_test import *
-from .Constants import *
+import Tester.TesterConstants as tester_constants

@@ -3,20 +3,20 @@ from .ADiagnoser import *
 from .STAT import STAT
 from .BARINEL import BARINEL
 
-from APPETITE.Constants import BARINEL_STAT_TYPE
+from APPETITE import Constants as constants
 
 class STAT_BARINEL(ADiagnoser):
     """
     The diagnoser that combines the STAT and BARINEL diagnosers.
     """
 
-    diagnoser_type = MULTIPLE_DIAGNOSER_TYPE_NAME
+    diagnoser_type = constants.MULTIPLE_DIAGNOSER_TYPE_NAME
 
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 stat_type: str = BARINEL_STAT_TYPE
+                 stat_type: str = constants.BARINEL_STAT_TYPE
     ):
         """
         Initialize the diagnoser.

@@ -1,7 +1,7 @@
 from numpy import zeros, clip
 from pandas import DataFrame, Series
 
-from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME, DIAGNOSIS_ALGORITHM, USE_FUZZY_PARTICIPATION, USE_FUZZY_ERROR, BARINEL_PATHS_TYPE
+from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME, DIAGNOSIS_ALGORITHM, USE_FUZZY_PARTICIPATION, USE_FUZZY_ERROR
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .SFLDT import SFLDT
 from .BARINEL_Paths import BARINEL_Paths
@@ -58,7 +58,7 @@ class BARINEL_Features(BARINEL_Paths_After):
     def get_fuzzy_error_data(self,
                        before_accuracy_vector: Series,
                        current_accuracy_vector: Series,
-                       barinel_paths_type: str = BARINEL_PATHS_TYPE
+                       barinel_paths_type: str
     ) -> tuple[Series, float, float]:
         if barinel_paths_type == "AFTER":
             return BARINEL_Paths_After.get_fuzzy_error_data(self, before_accuracy_vector, current_accuracy_vector)

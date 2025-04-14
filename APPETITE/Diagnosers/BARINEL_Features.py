@@ -4,12 +4,11 @@ from pandas import DataFrame, Series
 from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME, USE_FUZZY_PARTICIPATION
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .SFLDT import SFLDT
-from .FuzzySFLDT import FuzzySFLDT
-from .BARINEL import BARINEL
+from .BARINEL_Paths import BARINEL_Paths
 from .BARINEL_Paths_After import BARINEL_Paths_After
 from .BARINEL_Paths_Difference import BARINEL_Paths_Difference
 
-class BARINEL_Features(BARINEL):
+class BARINEL_Features(BARINEL_Paths_After):
     
     diagnoser_type = MULTIPLE_DIAGNOSER_TYPE_NAME
 
@@ -36,6 +35,18 @@ class BARINEL_Features(BARINEL):
             spectra[feature_spectra_index] = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
         self.spectra = spectra
     
+    def fill_spectra_and_error_vector(self, 
+                                      X: DataFrame, 
+                                      y: Series,
+                                      diagnosis_algorithm: str = DIAGNOSIS_ALGORITHM,
+                                      use_fuzzy_error: bool = USE_FUZZY_ERROR
+     ) -> None:
+        if diagnosis_algorithm == "BARINEL" and use_fuzzy_error:
+            return BARINEL_Paths.fill_spectra_and_error_vector(self, X, y)
+        elif diagnosis_algorithm == "SFLDT":
+            return SFLDT.fill_spectra_and_error_vector(self, X, y)
+        raise ValueError(f"Unknown DIAGNOSIS_ALGORITHM: {diagnosis_algorithm}. Use 'BARINEL' or 'SFLDT'.")
+    
     def update_fuzzy_participation(self) -> None:
         if USE_FUZZY_PARTICIPATION:
             if len(self.spectra) == len(self.components_depths_vector):
@@ -43,6 +54,17 @@ class BARINEL_Features(BARINEL):
         else:
             self.spectra = clip(self.spectra, 0, 1)
         super().update_fuzzy_participation()
+
+    def get_fuzzy_error_data(self,
+                       before_accuracy_vector: Series,
+                       current_accuracy_vector: Series,
+                       barinel_paths_type: str = BARINEL_PATHS_TYPE
+    ) -> tuple[Series, float, float]:
+        if barinel_paths_type == "AFTER":
+            return BARINEL_Paths_After.get_fuzzy_error_data(self, before_accuracy_vector, current_accuracy_vector)
+        elif barinel_paths_type == "DIFFERENCE":
+            return BARINEL_Paths_Difference.get_fuzzy_error_data(self, before_accuracy_vector, current_accuracy_vector)
+        raise ValueError(f"Unknown BARINEL_PATHS_TYPE: {barinel_paths_type}. Use 'AFTER' or 'DIFFERENCE'.")
 
     def convert_features_diagnosis_to_nodes_diagnosis(self,
             features_diagnosis: list[int]
@@ -55,9 +77,15 @@ class BARINEL_Features(BARINEL):
 
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
-                      retrieve_spectra_indices: bool = False
+                      retrieve_spectra_indices: bool = False,
+                      diagnosis_algorithm: str = DIAGNOSIS_ALGORITHM,
      ) -> list[list[int]] | list[tuple[list[int], float]]:
-        super().get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=True)
+        if diagnosis_algorithm == "BARINEL":
+            BARINEL_Paths.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=True)
+        elif diagnosis_algorithm == "SFLDT":
+            SFLDT.get_diagnoses(retrieve_ranks=True, retrieve_spectra_indices=True)
+        else:
+            raise ValueError(f"Unknown DIAGNOSIS_ALGORITHM: {diagnosis_algorithm}. Use 'BARINEL' or 'SFLDT'.")
         for diagnosis_index, (features_diagnosis, rank) in enumerate(self.diagnoses):
             if isinstance(features_diagnosis, int):
                 features_diagnosis = [features_diagnosis]

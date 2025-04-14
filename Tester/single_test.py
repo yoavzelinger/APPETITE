@@ -88,6 +88,8 @@ def get_accuracy(model, X, y):
     return accuracy_score(y, y_predicted)
 
 def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_size=constants.AFTER_WINDOW_SIZE, diagnoser_names=tester_constants.constants.DEFAULT_FIXING_DIAGNOSER, *diagnoser_parameters):
+    if constants.USE_FUZZY_PARTICIPATION:
+        print("Using fuzzy participation")
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()

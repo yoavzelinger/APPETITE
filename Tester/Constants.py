@@ -34,4 +34,4 @@ EXAMPLE_FILE_NAME = "bank"
 
 MAX_DRIFT_AMOUNT = -1 # max amount of featuers to drift, -1 means all features
 
-AFTER_WINDOW_TEST_SIZES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+AFTER_WINDOW_TEST_SIZES = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]

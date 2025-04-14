@@ -34,7 +34,7 @@ def drift_tree(mapped_tree: MappedDecisionTree,
     for after_window_test_size in AFTER_WINDOW_TEST_SIZES:
         print(f"\tAfter size: {after_window_test_size}%")
         dataset.after_window_size = after_window_test_size
-        for drift_amount in range(1, max_drift_amount + 1):
+        for drift_amount in range(MIN_DRIFT_AMOUNT, max_drift_amount + 1):
             print(f"\t\tDrift size: {drift_amount} / {max_drift_amount} features")
             for drifting_features in combinations(mapped_tree.tree_features_set, drift_amount):
                 print(f"\t\t\tDrifting {', '.join(drifting_features)}")

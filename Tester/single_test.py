@@ -26,12 +26,11 @@ def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
 
 def drift_tree(mapped_tree: MappedDecisionTree,
                         dataset: Dataset,
-                        max_drift_amount: int = MAX_DRIFT_AMOUNT,
                         ):
     """
     Generate a drifted in a multiple features
     """
-    max_drift_amount = min(len(mapped_tree.tree_features_set), max_drift_amount) if max_drift_amount > 0 else len(mapped_tree.tree_features_set)
+    max_drift_amount = min(len(mapped_tree.tree_features_set), MAX_DRIFT_AMOUNT) if MAX_DRIFT_AMOUNT > 0 else len(mapped_tree.tree_features_set)
     for after_window_test_size in AFTER_WINDOW_TEST_SIZES:
         print(f"\tAfter size: {after_window_test_size}%")
         dataset.after_window_size = after_window_test_size
@@ -88,7 +87,7 @@ def get_accuracy(model, X, y):
     y_predicted = model.predict(X)
     return accuracy_score(y, y_predicted)
 
-def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, max_drift_amount=MAX_DRIFT_AMOUNT, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
+def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, after_window_size=AFTER_WINDOW_SIZE, diagnoser_names=DEFAULT_TESTING_DIAGNOSER, *diagnoser_parameters):
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
@@ -104,7 +103,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
     original_after_accuracy, original_test_accuracy = get_accuracy(sklearn_tree_model, X_after, y_after), get_accuracy(sklearn_tree_model, X_test, y_test)
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
-    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_features, drifted_features_types in drift_tree(mapped_tree, dataset, max_drift_amount):
+    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_features, drifted_features_types in drift_tree(mapped_tree, dataset):
         try:
             drifted_after_accuracy, drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after), get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
             drifted_after_accuracy_drop, drifted_test_accuracy_drop = original_after_accuracy - drifted_after_accuracy, original_test_accuracy - drifted_test_accuracy

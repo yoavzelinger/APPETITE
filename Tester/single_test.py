@@ -124,7 +124,7 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
             before_after_retrained_accuracy_bump = before_after_retrained_accuracy - drifted_test_accuracy
 
             current_results_dict = {
-                "after window size": dataset.after_window_size,
+                "after size": dataset.after_proportion * dataset.after_window_size * 100,
                 "drift size": drift_size,
                 "drift description": drift_description,
                 "drifted features types": ", ".join(drifted_features_types),

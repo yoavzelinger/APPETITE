@@ -85,6 +85,7 @@ class Dataset:
             after_proportion, test_proportion = after_proportion * total_post_proportion, test_proportion * total_post_proportion
         elif isinstance(size, tuple) and len(size) == 3: # (concept, after, test)
             before_proportion, after_proportion, test_proportion = size
+        self.before_proportion, self.after_proportion, self.test_proportion = before_proportion, after_proportion, test_proportion
         self.before_size = int(before_proportion*n_samples)
         self.after_size = int(after_proportion*n_samples)
         self.test_size = int(test_proportion*n_samples)

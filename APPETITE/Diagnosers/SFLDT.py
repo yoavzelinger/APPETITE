@@ -1,7 +1,7 @@
-from numpy import zeros, array as np_array
+from numpy import zeros, array as np_array, ones, newaxis, max
 
 from .ADiagnoser import *
-from APPETITE.Constants import SFLDT_DEFAULT_SIMILARITY_MEASURES
+from APPETITE.Constants import SFLDT_DEFAULT_SIMILARITY_MEASURES, USE_FUZZY_PARTICIPATION
 
 def get_faith_similarity(participation_vector: Series,
                          error_vector: Series
@@ -61,6 +61,14 @@ class SFLDT(ADiagnoser):
      ) -> None:
         assert self.components_depths_vector.all()
         assert self.paths_depths_vector.all()
+        if not USE_FUZZY_PARTICIPATION:
+            return
+        if len(self.spectra.shape) > len(self.components_depths_vector.shape):
+            self.components_depths_vector = self.components_depths_vector[:, newaxis]
+        if len(self.spectra) == len(self.components_depths_vector):
+            self.spectra = self.spectra * self.components_depths_vector
+        self.spectra = self.spectra / self.paths_depths_vector[newaxis, :]
+        assert max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {max(self.spectra)}"
 
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 

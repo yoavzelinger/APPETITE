@@ -1,7 +1,7 @@
 from numpy import zeros, clip
 from pandas import DataFrame, Series
 
-from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME
+from APPETITE.Constants import MULTIPLE_DIAGNOSER_TYPE_NAME, USE_FUZZY_PARTICIPATION
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 from .SFLDT import SFLDT
 from .FuzzySFLDT import FuzzySFLDT
@@ -37,10 +37,11 @@ class BARINEL_Features(BARINEL):
         self.spectra = spectra
     
     def update_fuzzy_participation(self) -> None:
-        if isinstance(self, SFLDT):
+        if USE_FUZZY_PARTICIPATION:
+            if len(self.spectra) == len(self.components_depths_vector):
+                self.spectra = self.spectra / self.components_depths_vector
+        else:
             self.spectra = clip(self.spectra, 0, 1)
-        elif isinstance(self, FuzzySFLDT) and len(self.spectra) == len(self.components_depths_vector):
-            self.spectra = self.spectra / self.components_depths_vector
         super().update_fuzzy_participation()
 
     def convert_features_diagnosis_to_nodes_diagnosis(self,

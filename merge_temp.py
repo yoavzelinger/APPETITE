@@ -13,10 +13,10 @@ parser.add_argument("-c", "--clear", action="store_true", help="Clear the tempor
 args = parser.parse_args()
 
 
-searching_directory = TEMP_RESULTS_FULL_PATH
-searching_file_prefix = RESULTS_FILE_NAME_PREFIX
+searching_directory = tester_constants.TEMP_RESULTS_FULL_PATH
+searching_file_prefix = tester_constants.RESULTS_FILE_NAME_PREFIX
 
-output_file_name = f"{RESULTS_FILE_NAME_PREFIX}_{args.output}.csv"
+output_file_name = f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.csv"
 
 # merge all files in the directory to a single file
 output_df = DataFrame()
@@ -35,6 +35,6 @@ for file_name in listdir(searching_directory):
 if output_df.empty:
     print("temp folder do not contain any results")
 else:
-    output_full_path = os_path.join(RESULTS_FULL_PATH, output_file_name)
+    output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, output_file_name)
     output_df.to_csv(output_full_path, index=False)
     print(f"Results merged to {output_full_path}")

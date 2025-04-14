@@ -47,15 +47,16 @@ raw_results_columns = ["after size", "drift amount", "drift description", "drift
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
+diagnosers_columns_prefix = "fuzzy participation " if USE_FUZZY_PARTICIPATION else ""
 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
-    raw_results_columns.append(diagnoser_name + FAULTY_NODES_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_name + FAULTY_FEATURES_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_name + WASTED_EFFORT_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_name + FIX_ACCURACY_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX)
+    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FAULTY_NODES_NAME_SUFFIX)
+    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FAULTY_FEATURES_NAME_SUFFIX)
+    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX)
+    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_NAME_SUFFIX)
+    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX)
 
 # Create DataFrame for the aggregated results
 raw_results = DataFrame(columns=raw_results_columns)
@@ -94,9 +95,9 @@ with open(DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
                 current_aggregated_row_dict["average before after retrain accuracy"] += test_result["before after retrain accuracy"]
                 current_aggregated_row_dict["average before after retrain accuracy increase"] += test_result["before after retrain accuracy increase"]
                 for diagnoser_name in DEFAULT_TESTING_DIAGNOSER:
-                    current_aggregated_row_dict[diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
                 raw_results = raw_results._append(test_result, ignore_index=True)
             if drifts_count == 0:
                 continue
@@ -140,7 +141,7 @@ RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}
 if not RUNNING_PREFIXES:
     aggregated_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_aggregated.csv", index=False)
 if not raw_results.empty:
-    raw_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_raw.csv", index=False)
+    raw_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}.csv", index=False)
 
 if not errors.empty:
     errors.to_csv(f"{ERRORS_FILE_PATH_PREFIX}.csv", index=False)

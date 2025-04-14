@@ -146,12 +146,13 @@ def run_single_test(directory, file_name, proportions_tuple=PROPORTIONS_TUPLE, a
                 test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
                 drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
                 wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_features, WASTED_EFFORT_REQUIRE_FULL_FIX)
+                diagnosers_keys_prefix = "fuzzy participation " if USE_FUZZY_PARTICIPATION else ""
                 current_results_dict.update({
-                    f"{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
-                    f"{diagnoser_name} faulty features": ", ".join(faulty_features),
-                    f"{diagnoser_name} wasted effort": wasted_effort,
-                    f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
-                    f"{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
+                    f"{diagnosers_keys_prefix}{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
+                    f"{diagnosers_keys_prefix}{diagnoser_name} faulty features": ", ".join(faulty_features),
+                    f"{diagnosers_keys_prefix}{diagnoser_name} wasted effort": wasted_effort,
+                    f"{diagnosers_keys_prefix}{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
+                    f"{diagnosers_keys_prefix}{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
                 })
             yield current_results_dict
         except Exception as e:

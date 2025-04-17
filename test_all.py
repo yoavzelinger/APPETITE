@@ -132,12 +132,11 @@ if SPECIFIC_DATASETS:
     RESULTS_FULL_PATH = tester_constants.TEMP_RESULTS_FULL_PATH
 os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
 
-RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.RESULTS_FILE_NAME_PREFIX)
-ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.ERRORS_FILE_NAME_PREFIX)
+RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.RESULTS_FILE_NAME_PREFIX if not constants.USE_FUZZY_PARTICIPATION else tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME)
+ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.ERRORS_FILE_NAME_PREFIX if not constants.USE_FUZZY_PARTICIPATION else tester_constants.ERRORS_FUZZY_PARTICIPATION_FILE_NAME)
 
-fuzzy_participation_prefix = "fuzzy_participation_" if constants.USE_FUZZY_PARTICIPATION else ""
 file_name_suffix = "-".join(SPECIFIC_DATASETS) if SPECIFIC_DATASETS else args.output
-RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{fuzzy_participation_prefix}{file_name_suffix}", f"{ERRORS_FILE_PATH_PREFIX}_{fuzzy_participation_prefix}{file_name_suffix}"
+RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{file_name_suffix}", f"{ERRORS_FILE_PATH_PREFIX}_{file_name_suffix}"
 
 if not SPECIFIC_DATASETS:
     aggregated_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_aggregated.csv", index=False)

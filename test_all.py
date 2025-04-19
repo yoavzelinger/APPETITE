@@ -32,6 +32,7 @@ parser.add_argument("-c", "--count", type=int, help="Number of tests to run, def
 parser.add_argument("-t", "--test", type=str, help="Test dataset to run if you want to run a specific test")
 
 args = parser.parse_args()
+print(f"Running config: {args}")
 constants.USE_FUZZY_PARTICIPATION = args.fuzzy
 constants.DEFAULT_FIXING_DIAGNOSER = args.diagnosers
 if args.after_window > 0:

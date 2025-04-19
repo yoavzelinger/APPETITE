@@ -34,7 +34,10 @@ parser.add_argument("-t", "--test", type=str, help="Test dataset to run if you w
 args = parser.parse_args()
 print(f"Running config: {args}")
 constants.USE_FUZZY_PARTICIPATION = args.fuzzy
-constants.DEFAULT_FIXING_DIAGNOSER = args.diagnosers
+diagnosers_string = ""
+if constants.DEFAULT_FIXING_DIAGNOSER != args.diagnosers:
+    constants.DEFAULT_FIXING_DIAGNOSER = args.diagnosers
+    diagnosers_string = "-".join(constants.DEFAULT_FIXING_DIAGNOSER)
 if args.after_window > 0:
     tester_constants.AFTER_WINDOW_TEST_SIZES = [args.after_window]
 if args.drift_size > 0:
@@ -143,8 +146,13 @@ RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.RESU
 ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.ERRORS_FILE_NAME_PREFIX if not constants.USE_FUZZY_PARTICIPATION else tester_constants.ERRORS_FUZZY_PARTICIPATION_FILE_NAME)
 if args.after_window > 0:
     RESULTS_FILE_PATH_PREFIX += f"_after_window_{args.after_window}"
+    ERRORS_FILE_PATH_PREFIX += f"_after_window_{args.after_window}"
 if args.drift_size > 0:
     RESULTS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"
+    ERRORS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"
+if diagnosers_string:
+    RESULTS_FILE_PATH_PREFIX += f"_{diagnosers_string}"
+    ERRORS_FILE_PATH_PREFIX += f"_{diagnosers_string}"
 
 file_name_suffix = "-".join(SPECIFIC_DATASETS) if SPECIFIC_DATASETS else args.output
 RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{file_name_suffix}", f"{ERRORS_FILE_PATH_PREFIX}_{file_name_suffix}"

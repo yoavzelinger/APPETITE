@@ -141,6 +141,10 @@ os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
 
 RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.RESULTS_FILE_NAME_PREFIX if not constants.USE_FUZZY_PARTICIPATION else tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME)
 ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.ERRORS_FILE_NAME_PREFIX if not constants.USE_FUZZY_PARTICIPATION else tester_constants.ERRORS_FUZZY_PARTICIPATION_FILE_NAME)
+if args.after_window > 0:
+    RESULTS_FILE_PATH_PREFIX += f"_after_window_{args.after_window}"
+if args.drift_size > 0:
+    RESULTS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"
 
 file_name_suffix = "-".join(SPECIFIC_DATASETS) if SPECIFIC_DATASETS else args.output
 RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{file_name_suffix}", f"{ERRORS_FILE_PATH_PREFIX}_{file_name_suffix}"

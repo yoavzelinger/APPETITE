@@ -23,15 +23,21 @@ parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m_%H-%M-%S')}")
 parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help=f"List of diagnosers, default is {constants.DEFAULT_FIXING_DIAGNOSER}", default=constants.DEFAULT_FIXING_DIAGNOSER)
 parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception, default is false and writing the errors to errors file", default=tester_constants.STOP_ON_EXCEPTION)
-parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
 parser.add_argument("-n", "--names", type=str, nargs="+", help="Specific datasets to run, default is all", default=[])
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all", default=[])
 parser.add_argument("-f", "--fuzzy", action="store_true", help="Use fuzzy participation matrix, default is false", default=constants.USE_FUZZY_PARTICIPATION)
+parser.add_argument("-a", "--after_window", type=float, help="After window size, default is all", default=-1)
+parser.add_argument("-m", "--drift_size", type=int, help=f"size of the drift, default is between {tester_constants.MIN_DRIFT_SIZE} and {tester_constants.MAX_DRIFT_SIZE}", default=-1)
+parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
 parser.add_argument("-t", "--test", type=str, help="Test dataset to run if you want to run a specific test")
 
 args = parser.parse_args()
 constants.USE_FUZZY_PARTICIPATION = args.fuzzy
 constants.DEFAULT_FIXING_DIAGNOSER = args.diagnosers
+if args.after_window > 0:
+    tester_constants.AFTER_WINDOW_TEST_SIZES = [args.after_window]
+if args.drift_size > 0:
+    tester_constants.MIN_DRIFT_SIZE, tester_constants.MAX_DRIFT_SIZE = args.drift_size, args.drift_size
 print(f"Running tests with diagnosers: {constants.DEFAULT_FIXING_DIAGNOSER}")
 STOP_ON_EXCEPTION = args.stop
 datasets_count = args.count

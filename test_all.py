@@ -152,7 +152,7 @@ if diagnosers_string:
 if args.drift_size > 0:
     RESULTS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"
     ERRORS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"
-if after_windows_string > 0:
+if after_windows_string:
     RESULTS_FILE_PATH_PREFIX += f"_after_window_{after_windows_string}"
     ERRORS_FILE_PATH_PREFIX += f"_after_window_{after_windows_string}"
 

@@ -26,7 +26,7 @@ diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort
 aggregated_columns, fuzzy_aggregated_columns = copy(common_aggregated_columns), copy(common_aggregated_columns)
 aggregating_functions_dict = {common_aggregated_column: "mean" for common_aggregated_column in common_aggregated_columns}
 fuzzy_aggregating_functions_dict = copy(aggregating_functions_dict)
-aggregating_functions_dict["count"], fuzzy_aggregating_functions_dict["count"] = "count", "count"
+aggregating_functions_dict["drift description"], fuzzy_aggregating_functions_dict["drift description"] = "count", "count"
 for diagnoser_name in tester_constants.constants.DEFAULT_FIXING_DIAGNOSER:
     for diagnoser_aggregated_column_suffix in diagnoser_aggregated_columns_suffixes:
         diagnoser_aggregated_column = f"{diagnoser_name} {diagnoser_aggregated_column_suffix}"
@@ -41,9 +41,9 @@ for current_file_index, current_file_name in enumerate(listdir(tester_constants.
     print("Working on file", current_file_index)
     if not current_file_name.startswith(tester_constants.RESULTS_FILE_NAME_PREFIX):
         continue
-    relevant_output_df, relevant_diagnosers_aggregated_columns = output_df, aggregated_columns
+    relevant_output_df, relevant_aggregating_functions_dict = output_df, aggregating_functions_dict
     if current_file_name.startswith(tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX):
-        relevant_output_df, relevant_aggregating_functions_dict = fuzzy_output_df, aggregating_functions_dict
+        relevant_output_df, relevant_aggregating_functions_dict = fuzzy_output_df, fuzzy_aggregating_functions_dict
     
     with open(os_path.join(tester_constants.TEMP_RESULTS_FULL_PATH, current_file_name), "r") as current_file:
         current_results_df = DataFrame(DictReader(current_file))

@@ -10,6 +10,7 @@ from Tester import tester_constants
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 parser.add_argument("-c", "--clear", action="store_true", help="Clear the temporary files after merging, default is false", default=False)
+parser.add_argument("-i", "diagnoser_index", type=int, help="Diagnoser index to merge, default is all", default=-1)
 args = parser.parse_args()
 
 searching_directory = tester_constants.TEMP_RESULTS_FULL_PATH
@@ -30,7 +31,7 @@ for prefix in prefixes:
     for diagnoser in diagnosers:
         print(diagnoser_index)
         diagnoser_index += 1
-        if diagnoser_index == 2:
+        if args.diagnoser_index != -1 and diagnoser_index != args.diagnoser_index:
             continue
         current_searching_file_prefix = f"{searching_file_prefix}_{prefix}{diagnoser}"
         column_prefix = "fuzzy participation" if prefix == "fuzzy_" else ""

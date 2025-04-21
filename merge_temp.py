@@ -33,7 +33,8 @@ for prefix in prefixes:
         diagnoser_index += 1
         if args.diagnoser_index != -1 and diagnoser_index != args.diagnoser_index:
             continue
-        current_searching_file_prefix = f"{searching_file_prefix}_{prefix}{diagnoser}"
+        current_diagnoser_prefix = f"{searching_file_prefix}_{prefix}{diagnoser}"
+        current_searching_file_prefix = f"{current_diagnoser_prefix}_drift"
         column_prefix = "fuzzy participation" if prefix == "fuzzy_" else ""
         current_diagnoser_columns = [f"{column_prefix} {diagnoser} {column}" for column in diagnoser_columns]
         current_output_df = DataFrame(columns=primary_key_columns + common_columns + current_diagnoser_columns)
@@ -61,5 +62,5 @@ for prefix in prefixes:
         current_output_df = current_output_df[ordered_columns]
         # save the current output to a file
         print(f"Saving results for {prefix}{diagnoser}")
-        output_full_path = os_path.join(tester_constants.TEMP_RESULTS_FULL_PATH, f"new_diagnoser_results_{current_searching_file_prefix}.csv")
+        output_full_path = os_path.join(tester_constants.TEMP_RESULTS_FULL_PATH, f"new_diagnoser_results_{current_diagnoser_prefix}.csv")
         current_output_df.to_csv(output_full_path)

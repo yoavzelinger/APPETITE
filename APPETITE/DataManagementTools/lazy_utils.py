@@ -48,11 +48,11 @@ SINGLE_ARGUMENT_EACH_GENERATOR = 2
 MULTIPLE_ARGUMENTS_EACH_GENERATOR = 3
 
 def lazy_product(
-        generators: list[Callable[[], Generator[object, object, None]]], 
-        args_lists: object | list[object] | list[list[object]] = [],
-        args_type: int = 1,
-        current_product=[]
- ) -> Generator[list[object], None, None]:
+        generators, 
+        args_lists = [],
+        args_type = 1,
+        current_product = []
+ ):
     """
     Generate the cartesian product of the given generators.
     The function is lazy and generates the product on the fly.

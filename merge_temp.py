@@ -26,8 +26,12 @@ for file_name in listdir(searching_directory):
         result_file_path = os_path.join(searching_directory, file_name)
         with open(result_file_path, "r") as file:
             result_df = DataFrame(DictReader(file))
-            result_df = result_df.set_index(primary_key_columns)
-            output_df = output_df.combine_first(result_df)
+            try:
+                result_df = result_df.set_index(primary_key_columns)
+                output_df = output_df.combine_first(result_df)
+            except:
+                print(f"Error while merging {file_name}, skipping")
+                continue
         if args.clear:
             print(f"Removing {result_file_path}")
             os_remove(result_file_path)

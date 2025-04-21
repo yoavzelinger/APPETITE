@@ -3,64 +3,54 @@ from csv import DictReader
 from pandas import DataFrame
 from argparse import ArgumentParser
 from datetime import datetime
-from os import listdir, path as os_path, remove as os_remove
+from os import listdir, path as os_path
+from copy import deepcopy as copy
 
 from Tester import tester_constants
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
-parser.add_argument("-c", "--clear", action="store_true", help="Clear the temporary files after merging, default is false", default=False)
-parser.add_argument("-i", "--diagnoser_index", type=int, help="Diagnoser index to merge, default is all", default=-1)
 args = parser.parse_args()
 
 searching_directory = tester_constants.TEMP_RESULTS_FULL_PATH
 searching_file_prefix = tester_constants.RESULTS_FILE_NAME_PREFIX
+searching_fuzzy_file_prefix = tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX
 
 output_file_name = f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.csv"
+fuzzy_output_file_name = f"{tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX}_{args.output}.csv"
 
-primary_key_columns = ["drift description", "after size"]
-common_columns = ["drift size", "drifted features types", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
-diagnoser_columns = ["faulty features", "faulty nodes indicies", "fix accuracy", "fix accuracy increase"]
+group_by_columns = ["drift description", "after size", "drift size", "drifted features types"]
+common_aggregated_columns = ["after accuracy decrease", "after retrain accuracy increase", "before after retrain accuracy increase"]
+diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort"]
 
-prefixes = ["", "fuzzy_participation_"]
-diagnosers = tester_constants.constants.DEFAULT_FIXING_DIAGNOSER
-diagnoser_columns = ["faulty features", "faulty nodes indicies", "fix accuracy", "fix accuracy increase"]
+aggregated_columns, fuzzy_aggregated_columns = copy(common_aggregated_columns), copy(common_aggregated_columns)
+aggregating_functions_dict = {common_aggregated_column: "mean" for common_aggregated_column in common_aggregated_columns}
+fuzzy_aggregating_functions_dict = copy(aggregating_functions_dict)
+aggregating_functions_dict["count"], fuzzy_aggregating_functions_dict["count"] = "count", "count"
+for diagnoser_name in tester_constants.constants.DEFAULT_FIXING_DIAGNOSER:
+    for diagnoser_aggregated_column_suffix in diagnoser_aggregated_columns_suffixes:
+        diagnoser_aggregated_column = f"{diagnoser_name} {diagnoser_aggregated_column_suffix}"
+        aggregated_columns.append(diagnoser_aggregated_column)
+        fuzzy_aggregated_columns.append(f"fuzzy participation {diagnoser_aggregated_column}")
+        aggregating_functions_dict[diagnoser_aggregated_column], fuzzy_aggregating_functions_dict[diagnoser_aggregated_column] = "mean", "mean"
 
-diagnoser_index = 1
-for prefix in prefixes:
-    for diagnoser in diagnosers:
-        print(diagnoser_index)
-        diagnoser_index += 1
-        if args.diagnoser_index != -1 and diagnoser_index != args.diagnoser_index:
-            continue
-        current_diagnoser_prefix = f"{searching_file_prefix}_{prefix}{diagnoser}"
-        current_searching_file_prefix = f"{current_diagnoser_prefix}_drift"
-        column_prefix = "fuzzy participation" if prefix == "fuzzy_participation_" else ""
-        current_diagnoser_columns = [f"{column_prefix} {diagnoser} {column}" for column in diagnoser_columns]
-        current_output_df = DataFrame(columns=primary_key_columns + common_columns + current_diagnoser_columns)
-        for file_index, file_name in enumerate(listdir(searching_directory), 1):
-            # print("\t", file_index)
-            if file_name.startswith(current_searching_file_prefix):
-                print(f"Processing {file_index}: {file_name}")
-                result_file_path = os_path.join(searching_directory, file_name)
-                with open(result_file_path, "r") as file:
-                    current_result_df = DataFrame(DictReader(file))
-                    # check if the df has the index columns
-                    if not all(column in current_result_df.columns for column in primary_key_columns):
-                        print(f"Error while merging {file_name}, skipping")
-                        continue
-                    # _append the current result to the output df
-                    current_output_df = current_output_df._append(current_result_df, ignore_index=True)
-        # save
-        if current_output_df.empty:
-            print(f"temp folder do not contain any results for {prefix}{diagnoser}")
-            continue
-        # reorder columns
-        ordered_columns = primary_key_columns + common_columns
-        ordered_columns += [column for column in current_output_df.columns if column not in primary_key_columns and column not in common_columns and "fuzzy" not in column]
-        ordered_columns += [column for column in current_output_df.columns if column not in ordered_columns]
-        current_output_df = current_output_df[ordered_columns]
-        # save the current output to a file
-        print(f"Saving results for {prefix}{diagnoser}")
-        output_full_path = os_path.join(tester_constants.TEMP_RESULTS_FULL_PATH, f"new_diagnoser_results_{current_diagnoser_prefix}.csv")
-        current_output_df.to_csv(output_full_path)
+
+output_df, fuzzy_output_df = DataFrame(columns=group_by_columns + aggregated_columns), DataFrame(columns=group_by_columns + fuzzy_aggregated_columns)
+
+for current_file_index, current_file_name in enumerate(listdir(tester_constants.TEMP_RESULTS_FULL_PATH), 1):
+    print("Working on file", current_file_index)
+    if not current_file_name.startswith(tester_constants.RESULTS_FILE_NAME_PREFIX):
+        continue
+    relevant_output_df, relevant_diagnosers_aggregated_columns = output_df, aggregated_columns
+    if current_file_name.startswith(tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX):
+        relevant_output_df, relevant_aggregating_functions_dict = fuzzy_output_df, aggregating_functions_dict
+    
+    with open(os_path.join(tester_constants.TEMP_RESULTS_FULL_PATH, current_file_name), "r") as current_file:
+        current_results_df = DataFrame(DictReader(current_file))
+        current_group_by_df = current_results_df.groupby(group_by_columns).agg(relevant_aggregating_functions_dict).reset_index()
+        relevant_output_df = relevant_output_df._append(current_group_by_df, ignore_index=True)
+
+print(f"Saving results")
+output_full_path, fuzzy_output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{output_file_name}.csv"), os_path.join(tester_constants.RESULTS_FULL_PATH, f"{output_file_name}.csv")
+output_df.to_csv(output_full_path)
+fuzzy_output_df.to_csv(fuzzy_output_full_path)

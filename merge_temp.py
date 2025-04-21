@@ -23,6 +23,7 @@ output_df = DataFrame(columns=primary_key_columns + common_columns).set_index(pr
 
 for file_name in listdir(searching_directory):
     if file_name.startswith(searching_file_prefix):
+        print(f"Processing {file_name}")
         result_file_path = os_path.join(searching_directory, file_name)
         with open(result_file_path, "r") as file:
             result_df = DataFrame(DictReader(file))

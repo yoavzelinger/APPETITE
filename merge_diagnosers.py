@@ -25,14 +25,12 @@ output_df = DataFrame(columns=primary_key_columns + common_columns + diagnoser_c
 # go over the files in the directory and find the ones that start with the searching_file_prefix
 file_names = [f for f in listdir(searching_directory) if os_path.isfile(os_path.join(searching_directory, f)) and f.startswith(searching_file_prefix)]
 for file_index, file_name in enumerate(file_names):
-    if file_index > 1:
-        break
     file_path = os_path.join(searching_directory, file_name)
     with open(file_path, "r") as file:
         # open df
         current_df = DataFrame(DictReader(file)).set_index(primary_key_columns)
         output_df = output_df.combine_first(current_df)
+    print(f"saving after {file_index + 1}/{len(file_names)}: {file_name}")
+    output_df.to_csv(os_path.join(tester_constants.RESULTS_FULL_PATH, output_file_name))
 
-# save
-print(f"Saving results to {output_file_name}")
-output_df.to_csv(os_path.join(tester_constants.RESULTS_FULL_PATH, output_file_name))
+print("done")

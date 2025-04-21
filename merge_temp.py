@@ -22,7 +22,7 @@ primary_key_columns = ["drift description", "after size"]
 common_columns = ["drift size", "drifted features types", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 diagnoser_columns = ["faulty features", "faulty nodes indicies", "fix accuracy", "fix accuracy increase"]
 
-prefixes = ["", "fuzzy_"]
+prefixes = ["", "fuzzy_participation_"]
 diagnosers = tester_constants.constants.DEFAULT_FIXING_DIAGNOSER
 diagnoser_columns = ["faulty features", "faulty nodes indicies", "fix accuracy", "fix accuracy increase"]
 
@@ -35,7 +35,7 @@ for prefix in prefixes:
             continue
         current_diagnoser_prefix = f"{searching_file_prefix}_{prefix}{diagnoser}"
         current_searching_file_prefix = f"{current_diagnoser_prefix}_drift"
-        column_prefix = "fuzzy participation" if prefix == "fuzzy_" else ""
+        column_prefix = "fuzzy participation" if prefix == "fuzzy_participation_" else ""
         current_diagnoser_columns = [f"{column_prefix} {diagnoser} {column}" for column in diagnoser_columns]
         current_output_df = DataFrame(columns=primary_key_columns + common_columns + current_diagnoser_columns)
         for file_index, file_name in enumerate(listdir(searching_directory), 1):

@@ -4,18 +4,22 @@ from argparse import ArgumentParser
 from datetime import datetime
 from os import listdir, path as os_path, remove as os_remove
 
-from Tester import tester_constants
-
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 parser.add_argument("-c", "--clear", action="store_true", help="Clear the temporary files after merging, default is false", default=False)
 args = parser.parse_args()
 
+DATA_DIRECTORY = "data"
+RESULTS_DIRECTORY = "results"
+RESULTS_FULL_PATH = os_path.join(DATA_DIRECTORY, RESULTS_DIRECTORY)
+TEMP_RESULTS_DIRECTORY = "temp"
+TEMP_RESULTS_FULL_PATH = os_path.join(RESULTS_FULL_PATH, TEMP_RESULTS_DIRECTORY)
+RESULTS_FILE_NAME_PREFIX = "results"
+RESULTS_FULL_PATH = os_path.join(DATA_DIRECTORY, RESULTS_DIRECTORY)
+searching_directory = TEMP_RESULTS_FULL_PATH
+searching_file_prefix = RESULTS_FILE_NAME_PREFIX
 
-searching_directory = tester_constants.TEMP_RESULTS_FULL_PATH
-searching_file_prefix = tester_constants.RESULTS_FILE_NAME_PREFIX
-
-output_file_name = f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.csv"
+output_file_name = f"{RESULTS_FILE_NAME_PREFIX}_{args.output}.csv"
 
 primary_key_columns = ["drift description", "after size"]
 common_columns = ["drift size", "drifted features types", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
@@ -46,6 +50,6 @@ output_df = output_df[ordered_columns]
 if output_df.empty:
     print("temp folder do not contain any results")
 else:
-    output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, output_file_name)
+    output_full_path = os_path.join(RESULTS_FULL_PATH, output_file_name)
     output_df.to_csv(output_full_path)
     print(f"Results merged to {output_full_path}")

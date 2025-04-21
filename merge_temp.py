@@ -10,7 +10,7 @@ from Tester import tester_constants
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 parser.add_argument("-c", "--clear", action="store_true", help="Clear the temporary files after merging, default is false", default=False)
-parser.add_argument("-i", "diagnoser_index", type=int, help="Diagnoser index to merge, default is all", default=-1)
+parser.add_argument("-i", "--diagnoser_index", type=int, help="Diagnoser index to merge, default is all", default=-1)
 args = parser.parse_args()
 
 searching_directory = tester_constants.TEMP_RESULTS_FULL_PATH

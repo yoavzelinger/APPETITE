@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from datetime import datetime
 from os import listdir, path as os_path, remove as os_remove
 
-from Tester import *
+from Tester import tester_constants
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")

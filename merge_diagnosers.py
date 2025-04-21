@@ -34,4 +34,5 @@ for file_index, file_name in enumerate(file_names):
         output_df = output_df.combine_first(current_df)
 
 # save
-output_df.to_csv(os_path.join(tester_constants.RESULTS_DIRECTORY, output_file_name))output_df.to_csv(os_path.join(tester_constants.RESULTS_FULL_PATH, output_file_name))output_df.to_csv(os_path.join(tester_constants.RESULTS_FULL_PATH, output_file_name))
+print(f"Saving results to {output_file_name}")
+output_df.to_csv(os_path.join(tester_constants.RESULTS_FULL_PATH, output_file_name))

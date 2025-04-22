@@ -34,7 +34,7 @@ columns_dtypes = {
 fuzzy_columns_dtypes = copy(columns_dtypes)
 
 aggregated_columns, fuzzy_aggregated_columns = copy(common_aggregated_columns), copy(common_aggregated_columns)
-aggregating_functions_dict = {common_aggregated_column: "mean" for common_aggregated_column in common_aggregated_columns}
+aggregating_functions_dict = {common_aggregated_column: "sum" for common_aggregated_column in common_aggregated_columns}
 fuzzy_aggregating_functions_dict = copy(aggregating_functions_dict)
 for diagnoser_name in tester_constants.constants.DEFAULT_FIXING_DIAGNOSER:
     for diagnoser_aggregated_column_suffix in diagnoser_aggregated_columns_suffixes:
@@ -42,7 +42,7 @@ for diagnoser_name in tester_constants.constants.DEFAULT_FIXING_DIAGNOSER:
         fuzzy_diagnoser_aggregated_column = f"fuzzy participation {diagnoser_aggregated_column}"
         aggregated_columns.append(diagnoser_aggregated_column)
         fuzzy_aggregated_columns.append(fuzzy_diagnoser_aggregated_column)
-        aggregating_functions_dict[diagnoser_aggregated_column], fuzzy_aggregating_functions_dict[fuzzy_diagnoser_aggregated_column] = "mean", "mean"
+        aggregating_functions_dict[diagnoser_aggregated_column], fuzzy_aggregating_functions_dict[fuzzy_diagnoser_aggregated_column] = "sum", "sum"
         columns_dtypes[diagnoser_aggregated_column], fuzzy_columns_dtypes[fuzzy_diagnoser_aggregated_column] = "float64", "float64"
 count_column_name = "drift description"
 aggregating_functions_dict[count_column_name], fuzzy_aggregating_functions_dict[count_column_name] = "count", "count"

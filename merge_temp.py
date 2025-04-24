@@ -61,21 +61,14 @@ for current_file_index, current_file_name in enumerate(listdir(tester_constants.
         current_group_by_df.rename(columns={count_column_name: "count"}, inplace=True)
         output_dfs[relevant_output_df_index] = output_dfs[relevant_output_df_index]._append(current_group_by_df, ignore_index=True)
 
-print(f"Saving results")
-# move count column to be after the group by columns
-for output_df, aggregated_columns, result_file_name_prefix in zip(output_dfs, [aggregated_columns, fuzzy_aggregated_columns], [tester_constants.RESULTS_FILE_NAME_PREFIX, tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX]):
-    output_df = output_df[group_by_columns + ["count"] + aggregated_columns]
-    output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{result_file_name_prefix}_{args.output}.csv")
-    output_df.to_csv(output_full_path, index=False)
+print("Merging regular and fuzzy results")
+for output_df_index, aggregated_columns in enumerate([aggregated_columns, fuzzy_aggregated_columns]):
+    output_dfs[output_df_index] = output_dfs[output_df_index][group_by_columns + ["count"] + aggregated_columns]
+    output_dfs[output_df_index].set_index(group_by_columns, inplace=True)
 
-# make group by columns the keys
-output_dfs[0].set_index(group_by_columns, inplace=True)
-output_dfs[1].set_index(group_by_columns, inplace=True)
-
-# combine the two dataframes using combine_first
 output_df = output_dfs[0].combine_first(output_dfs[1])
 output_df.reset_index(inplace=True)
 output_df = output_df[group_by_columns + ["count"] + aggregated_columns + fuzzy_aggregated_columns]
-output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"combined_{args.output}.csv")
+output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.csv")
 output_df.to_csv(output_full_path, index=False)
 print(f"Results saved to {output_full_path}")

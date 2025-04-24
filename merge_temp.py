@@ -11,10 +11,6 @@ parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 args = parser.parse_args()
 
-searching_directory = tester_constants.TEMP_RESULTS_FULL_PATH
-searching_file_prefix = tester_constants.RESULTS_FILE_NAME_PREFIX
-searching_fuzzy_file_prefix = tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX
-
 group_by_columns = ["after size", "drift size", "drifted features types"]
 common_aggregated_columns = ["after accuracy decrease", "after retrain accuracy increase", "before after retrain accuracy increase"]
 diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort"]

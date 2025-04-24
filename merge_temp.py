@@ -62,12 +62,13 @@ for current_file_index, current_file_name in enumerate(listdir(tester_constants.
         output_dfs[relevant_output_df_index] = output_dfs[relevant_output_df_index]._append(current_group_by_df, ignore_index=True)
 
 print("Merging regular and fuzzy results")
-for output_df_index, aggregated_columns in enumerate([aggregated_columns, fuzzy_aggregated_columns]):
-    output_dfs[output_df_index] = output_dfs[output_df_index][group_by_columns + ["count"] + aggregated_columns]
-    output_dfs[output_df_index].set_index(group_by_columns, inplace=True)
+for current_output_df_index, current_aggregated_columns in enumerate([aggregated_columns, fuzzy_aggregated_columns]):
+    output_dfs[current_output_df_index] = output_dfs[current_output_df_index][group_by_columns + ["count"] + current_aggregated_columns]
+    output_dfs[current_output_df_index].set_index(group_by_columns, inplace=True)
 
 output_df = output_dfs[0].combine_first(output_dfs[1])
 output_df.reset_index(inplace=True)
+fuzzy_aggregated_columns = [fuzzy_aggregated_column for fuzzy_aggregated_column in fuzzy_aggregated_columns if fuzzy_aggregated_column not in aggregated_columns]
 output_df = output_df[group_by_columns + ["count"] + aggregated_columns + fuzzy_aggregated_columns]
 output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.csv")
 output_df.to_csv(output_full_path, index=False)

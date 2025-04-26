@@ -46,9 +46,9 @@ def drift_tree(mapped_tree: MappedDecisionTree,
 
 
 def get_wasted_effort(mapped_tree: MappedDecisionTree,
-                               diagnosed_faulty_nodes_indices: list[int],
-                               true_faulty_features: set[str],
-                               require_full_fix = True
+                      diagnoses: list[list[int]],
+                      true_faulty_features: set[str],
+                      require_full_fix = True
  ) -> int:
     """
     Calculate the wasted effort of the diagnoser.
@@ -56,31 +56,35 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
 
     Parameters:
     mapped_tree (MappedDecisionTree): The mapped decision tree.
-    diagnosed_faulty_nodes_indices (list[int]): The indices of the diagnosed faulty nodes.
+    diagnoses (list[list[int]]): The diagnoses of the nodes.
     true_faulty_features (list[str]): The true faulty features.
 
     Returns:
     int: The wasted effort.
     """
-    get_node_feature_func = lambda node: node.feature if node.feature is not None else node.parent.feature
     # Get node's feature or it's parent's feature if it's None
+    get_node_feature_func = lambda node: node.feature if node.feature is not None else node.parent.feature
     # If not require_full_fix, then the faulty feature will be counted only as one
-    faulty_features_nodes_counts = {true_faulty_feature : int(not require_full_fix) for true_faulty_feature in true_faulty_features}
-    for tree_node in mapped_tree.tree_dict.values():
+    faulty_features_nodes = {true_faulty_feature : [] for true_faulty_feature in true_faulty_features}
+    for node_index, tree_node in mapped_tree.tree_dict.items():
         tree_node_feature = get_node_feature_func(tree_node)
         if tree_node_feature in true_faulty_features:
-            if require_full_fix:
-                faulty_features_nodes_counts[tree_node_feature] += 1
+            faulty_features_nodes[tree_node_feature].append(node_index)
 
     wasted_effort = 0
-    for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosed_faulty_nodes_indices):
-        diagnosed_faulty_feature = get_node_feature_func(diagnosed_faulty_node)
-        if diagnosed_faulty_feature in true_faulty_features:
-            faulty_features_nodes_counts[diagnosed_faulty_feature] -= 1
-            if not any(faulty_features_nodes_counts.values()):
-                break
-        else:
-            wasted_effort += 1
+    all_faults_detected = lambda: not any(faulty_features_nodes.values())
+    for diagnosis in diagnoses:
+        for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosis):
+            diagnosed_faulty_feature = get_node_feature_func(diagnosed_faulty_node)
+            if diagnosed_faulty_feature not in true_faulty_features: # a wasted effort
+                wasted_effort += 1
+            else:
+                if require_full_fix and diagnosed_faulty_node.sk_index in faulty_features_nodes[diagnosed_faulty_feature]:
+                    faulty_features_nodes[diagnosed_faulty_feature].remove(diagnosed_faulty_node.sk_index)
+                else:
+                    faulty_features_nodes[diagnosed_faulty_feature] = []
+        if all_faults_detected():
+            break
     return wasted_effort
 
 def get_accuracy(model, X, y):
@@ -162,7 +166,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
                 drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
-                wasted_effort = get_wasted_effort(mapped_tree, fixer.faulty_nodes, drifted_features, tester_constants.WASTED_EFFORT_REQUIRE_FULL_FIX)
+                wasted_effort = get_wasted_effort(mapped_tree, fixer.diagnoses, drifted_features, tester_constants.WASTED_EFFORT_REQUIRE_FULL_FIX)
                 diagnosers_keys_prefix = "fuzzy participation " if constants.USE_FUZZY_PARTICIPATION else ""
                 current_results_dict.update({
                     f"{diagnosers_keys_prefix}{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),

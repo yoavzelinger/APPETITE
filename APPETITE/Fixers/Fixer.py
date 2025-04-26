@@ -57,15 +57,6 @@ class Fixer:
                 faulty_node = faulty_node.parent
                 filtered_data = faulty_node.get_data_reached_node(self.X)
             yield filtered_data
-    
-    def _filter_data_reached_single_fault(self) -> DataFrame:
-        """
-        Filter the data that reached a single faulty node.
-
-        Returns:
-            DataFrame: The data that reached the faulty node.
-        """
-        return next(self._filter_data_reached_faults_generator(1))
 
     def _fix_terminal_faulty_node(self,
                                  faulty_node_index: int,
@@ -83,7 +74,6 @@ class Fixer:
         reached_labels = self.y[data_reached_faulty_node.index]
         
         values = self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index]
-        old_values = deepcopy(values)
 
         if len(reached_labels):
             # Get the most common class in the data that reached the faulty node
@@ -184,63 +174,21 @@ class Fixer:
         self.mapped_tree = fixed_mapped_decision_tree
         self.tree_already_fixed = True
         return fixed_mapped_decision_tree
-
-    def fix_single_fault(self, 
-                         faulty_node: int = None
-     ) -> tuple[MappedDecisionTree, int]:
-        """
-        Fix the decision tree under the assumption that there is a single faulty node in the tree.
-
-        Parameters:
-            faulty_node (int): The index of the faulty node. If None, the faulty node will be detected using the diagnoser.
-        Returns:
-            MappedDecisionTree: The fixed decision tree and the faulty node index.
-        """
-        if faulty_node is None:
-            self.faulty_nodes = self.diagnoser.get_diagnoses()
-        else:
-            self.faulty_nodes = [faulty_node]
-        data_reached_faulty_node = self._filter_data_reached_single_fault()
-        faulty_node_index = self.faulty_nodes[0]
-        # print(f"Fixing faulty node: {faulty_node_index}")
-        self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
-        return self._create_fixed_mapped_tree(), faulty_node_index
-
-    def fix_multiple_faults(self,
-                            faulty_nodes: list[int] = None
-                            ) -> tuple[MappedDecisionTree, list[int]]:
-        """
-        Fix all the faulty nodes in the decision tree.
-
-        Returns:
-            MappedDecisionTree: The fixed decision tree.
-        """
-        if faulty_nodes is None:
-            self.faulty_nodes = self.diagnoser.get_diagnoses()[0]
-        else:
-            self.faulty_nodes = faulty_nodes
-        # print(f"Fixing faulty nodes: {self.faulty_nodes}")
-        for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):  
-            self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
-        return self._create_fixed_mapped_tree(), self.faulty_nodes
     
-    def fix_tree(self,
-                 faulty_nodes: list[int] = None
-        ) -> tuple[MappedDecisionTree, int | list[int]]:
+    def fix_tree(self
+     ) -> tuple[MappedDecisionTree, list[int]]:
         """
         Fix the decision tree.
 
-        Parameters:
-            faulty_nodes (int | list[int]): The indices of the faulty nodes.
-
         Returns:
             MappedDecisionTree: The fixed decision tree.
+            list[int]: The indices of the faulty nodes.
         """
-        if self.tree_already_fixed:
-            return self.mapped_tree
+        self.diagnoses = self.diagnoser.get_diagnoses()
         if self.diagnoser.diagnoser_type == constants.SINGLE_DIAGNOSER_TYPE_NAME:
-            diagnosis = self.fix_single_fault(faulty_nodes)
-            if type(diagnosis) is tuple:
-                diagnosis = diagnosis[0], [diagnosis[1]]
-            return diagnosis
-        return self.fix_multiple_faults(faulty_nodes)
+            self.diagnoses = map(lambda faulty_node: [faulty_node], self.faulty_nodes)
+        self.faulty_nodes = self.diagnoses[0]
+        # print(f"Fixing faulty nodes: {self.faulty_nodes}")
+        for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):
+            self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
+        return self._create_fixed_mapped_tree(), self.faulty_nodes

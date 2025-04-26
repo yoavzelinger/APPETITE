@@ -186,7 +186,7 @@ class Fixer:
         """
         self.diagnoses = self.diagnoser.get_diagnoses()
         if self.diagnoser.diagnoser_type == constants.SINGLE_DIAGNOSER_TYPE_NAME:
-            self.diagnoses = map(lambda faulty_node: [faulty_node], self.faulty_nodes)
+            self.diagnoses = [[faulty_node] for faulty_node in self.diagnoses]
         self.faulty_nodes = self.diagnoses[0]
         # print(f"Fixing faulty nodes: {self.faulty_nodes}")
         for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):

@@ -87,6 +87,20 @@ def get_accuracy(model, X, y):
     y_predicted = model.predict(X)
     return accuracy_score(y, y_predicted)
 
+def is_drift_contains_numeric_features(drifted_features_types):
+    return any(map(lambda feature_type: feature_type == "numeric", drifted_features_types))
+
+def is_drift_contains_binary_features(drifted_features_types):
+    return any(map(lambda feature_type: feature_type == "binary", drifted_features_types))
+
+def get_total_drift_types(drifted_features_types):
+    drift_contains_numeric_features, drift_contains_binary_features = is_drift_contains_numeric_features(drifted_features_types), is_drift_contains_binary_features(drifted_features_types)
+    if drift_contains_numeric_features and drift_contains_binary_features:
+        return "mixed"
+    if drift_contains_numeric_features:
+        return "numeric"
+    return "binary"
+
 def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_size=constants.AFTER_WINDOW_SIZE, diagnoser_names=tester_constants.constants.DEFAULT_FIXING_DIAGNOSER, *diagnoser_parameters):
     if constants.USE_FUZZY_PARTICIPATION:
         print("Using fuzzy participation")
@@ -130,6 +144,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 "drift size": drift_size,
                 "drift description": drift_description,
                 "drifted features types": ", ".join(drifted_features_types),
+                "total drift type": get_total_drift_types(drifted_features_types),
                 "tree size": mapped_tree.node_count,
                 "after accuracy decrease": drifted_test_accuracy * 100,
                 "after retrain accuracy": after_retrained_accuracy * 100,

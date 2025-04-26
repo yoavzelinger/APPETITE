@@ -59,7 +59,7 @@ for current_file_index, current_file_name in enumerate(listdir(tester_constants.
         current_group_by_df = current_results_df.groupby(group_by_columns).agg(relevant_aggregating_functions_dict)
         current_group_by_df.rename(columns={count_column_name: "count"}, inplace=True)
         assert all(current_group_by_df.columns == output_dfs[relevant_output_df_index].columns), f"Columns mismatch in {current_file_name}"
-        assert all(current_group_by_df.index.names == output_dfs[relevant_output_df_index].index.names), f"Index names mismatch in {current_file_name}"
+        assert current_group_by_df.index.names == output_dfs[relevant_output_df_index].index.names, f"Index names mismatch in {current_file_name}"
         output_dfs[relevant_output_df_index] = output_dfs[relevant_output_df_index].add(current_group_by_df, fill_value=0)
 
 print("Merging regular and fuzzy results")

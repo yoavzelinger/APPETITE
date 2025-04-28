@@ -51,8 +51,8 @@ for diagnoser_name in tester_constants.constants.DEFAULT_FIXING_DIAGNOSER:
         diagnoser_column = f"{diagnoser_name} {diagnoser_column_suffix}"
         fuzzy_diagnoser_column = f"fuzzy participation {diagnoser_column}"
         columns_dtypes[diagnoser_column], fuzzy_columns_dtypes[fuzzy_diagnoser_column] = diagnoser_column_dtype, diagnoser_column_dtype
-count_column_name = "drift description"
-aggregating_functions_dict[count_column_name], fuzzy_aggregating_functions_dict[count_column_name] = "count", "count"
+aggregated_count_column_name = "drift description"
+aggregating_functions_dict[aggregated_count_column_name], fuzzy_aggregating_functions_dict[aggregated_count_column_name] = "count", "count"
 
 
 output_dfs = [DataFrame(columns=group_by_columns + aggregated_columns + ["count"]).set_index(group_by_columns), DataFrame(columns=group_by_columns + fuzzy_aggregated_columns + ["count"]).set_index(group_by_columns)]
@@ -68,18 +68,23 @@ for current_file_index, current_file_name in enumerate(listdir(tester_constants.
     with open(os_path.join(tester_constants.TEMP_RESULTS_FULL_PATH, current_file_name), "r") as current_file:
         current_results_df = read_csv(current_file, dtype=relevant_columns_dtypes)
         current_group_by_df = current_results_df.groupby(group_by_columns).agg(relevant_aggregating_functions_dict)
-        current_group_by_df.rename(columns={count_column_name: "count"}, inplace=True)
+        current_group_by_df.rename(columns={aggregated_count_column_name: "count"}, inplace=True)
         assert all(current_group_by_df.columns == output_dfs[relevant_output_df_index].columns), f"Columns mismatch in {current_file_name}"
         assert current_group_by_df.index.names == output_dfs[relevant_output_df_index].index.names, f"Index names mismatch in {current_file_name}"
         output_dfs[relevant_output_df_index] = output_dfs[relevant_output_df_index].add(current_group_by_df, fill_value=0)
 
 print("Merging regular and fuzzy results")
-for current_output_df_index, current_aggregated_columns in enumerate([aggregated_columns, fuzzy_aggregated_columns]):
-    output_dfs[current_output_df_index] = output_dfs[current_output_df_index][["count"] + current_aggregated_columns]
 
-output_df = output_dfs[0]._append(output_dfs[1])
+# regular adjustments
+output_dfs[0] = output_dfs[0][["count"] + aggregated_columns]
+
+# fuzzy adjustments
+output_dfs[1]["fuzzy count"] = output_dfs[1]["count"]
+output_dfs[1] = output_dfs[1][["count", "fuzzy count"] + fuzzy_aggregated_columns]
+
+output_df = output_dfs[0].combine_first(output_dfs[1])
 fuzzy_aggregated_columns = [fuzzy_aggregated_column for fuzzy_aggregated_column in fuzzy_aggregated_columns if fuzzy_aggregated_column not in aggregated_columns]
-output_df = output_df[["count"] + aggregated_columns + fuzzy_aggregated_columns]
+output_df = output_df[["count"] + aggregated_columns + ["fuzzy count"] + fuzzy_aggregated_columns]
 output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.csv")
 output_df.to_csv(output_full_path)
 print(f"Results saved to {output_full_path}")

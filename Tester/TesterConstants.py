@@ -15,7 +15,7 @@ except TypeError:
 
 STOP_ON_EXCEPTION = False
 
-WASTED_EFFORT_REQUIRE_FULL_FIX = True # Fix all faulty features
+WASTED_EFFORT_REQUIRE_FULL_FIX = False # Fix all faulty features
 
 DATA_DIRECTORY = "data"
 DATASET_DESCRIPTION_FILE_NAME = "all_datasets"

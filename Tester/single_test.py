@@ -78,7 +78,7 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
             diagnosed_faulty_feature = get_node_feature_func(diagnosed_faulty_node)
             if diagnosed_faulty_feature not in true_faulty_features: # a wasted effort
                 wasted_effort += 1
-            else:
+            else:   # relevant fix
                 if require_full_fix and diagnosed_faulty_node.sk_index in faulty_features_nodes[diagnosed_faulty_feature]:
                     faulty_features_nodes[diagnosed_faulty_feature].remove(diagnosed_faulty_node.sk_index)
                 else:

@@ -16,7 +16,7 @@ class Dataset:
                  size: int | tuple[float] = constants.PROPORTIONS_TUPLE,
                  after_window_size: float = constants.AFTER_WINDOW_SIZE,
                  to_shuffle: bool = True,
-                 one_hot_encoding: bool = True
+                 one_hot_encoding: bool = constants.one_hot_encoding
     ):
         """
         source: str or DataFrame

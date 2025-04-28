@@ -10,6 +10,9 @@ VALIDATION_SIZE = 0.2
 # Random state
 RANDOM_STATE = 7
 
+# one hot encode categorical features to modify decision trees creation
+one_hot_encoding = False
+
 # Grid search parameters
 CROSS_VALIDATION_SPLIT_COUNT = 5
 _CRITERIONS = ["gini", "entropy"]

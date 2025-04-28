@@ -16,16 +16,23 @@ common_aggregated_columns = ["after accuracy decrease", "after retrain accuracy 
 diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort"]
 
 columns_dtypes = {
-    "drift description": "string",
     "after size": "float64",
     "drift size": "int64",
+    "drift description": "string",
     "drifted features types": "string",
     "total drift type": "string",
+    "tree size": "int64",
     "after accuracy decrease": "float64",
     "after retrain accuracy increase": "float64",
-    "before after retrain accuracy increase": "float64",
-    "fix accuracy increase": "float64",
-    "wasted effort": "int64"
+    "before after retrain accuracy increase": "float64"
+}
+
+diagnoser_dtypes_suffixes = {
+    "faulty nodes indicies": "string",
+    "faulty features": "string",
+    "wasted effort": "int64",
+    "fix accuracy": "float64",
+    "fix accuracy increase": "float64"
 }
 
 fuzzy_columns_dtypes = copy(columns_dtypes)
@@ -40,7 +47,10 @@ for diagnoser_name in tester_constants.constants.DEFAULT_FIXING_DIAGNOSER:
         aggregated_columns.append(diagnoser_aggregated_column)
         fuzzy_aggregated_columns.append(fuzzy_diagnoser_aggregated_column)
         aggregating_functions_dict[diagnoser_aggregated_column], fuzzy_aggregating_functions_dict[fuzzy_diagnoser_aggregated_column] = "sum", "sum"
-        columns_dtypes[diagnoser_aggregated_column], fuzzy_columns_dtypes[fuzzy_diagnoser_aggregated_column] = "float64", "float64"
+    for diagnoser_column_suffix, diagnoser_column_dtype in diagnoser_dtypes_suffixes.items():
+        diagnoser_column = f"{diagnoser_name} {diagnoser_column_suffix}"
+        fuzzy_diagnoser_column = f"fuzzy participation {diagnoser_column}"
+        columns_dtypes[diagnoser_column], fuzzy_columns_dtypes[fuzzy_diagnoser_column] = diagnoser_column_dtype, diagnoser_column_dtype
 count_column_name = "drift description"
 aggregating_functions_dict[count_column_name], fuzzy_aggregating_functions_dict[count_column_name] = "count", "count"
 

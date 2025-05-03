@@ -29,9 +29,9 @@ class STAT_BARINEL(ADiagnoser):
         super().__init__(mapped_tree, X, y)
         self.stat = STAT(mapped_tree, X, y)
         self.barinel = BARINEL(mapped_tree, X, y)
-        self.get_stat_violation = self.get_stat_type(stat_type)
+        self.get_STAT_violation = self.get_STAT_type(stat_type)
     
-    def get_stat_type(self,
+    def get_STAT_type(self,
                       type: str
     ):
         if type == "BEFORE":

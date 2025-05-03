@@ -27,8 +27,8 @@ class STAT(ADiagnoser):
         samples_reached_node_count = node.reached_samples_count
         if samples_reached_node_count == 0:
             return 0.0
-        violated_samples_count = node.misclassifications_count if node.is_terminal() else node.left_child.reached_samples_count
-        return 1.0 * violated_samples_count / samples_reached_node_count
+        violated_samples_count = node.misclassifications_count if node.is_terminal() else node.right_child.reached_samples_count
+        return violated_samples_count / samples_reached_node_count
 
     def get_before_violation(self,
                              node_index: int

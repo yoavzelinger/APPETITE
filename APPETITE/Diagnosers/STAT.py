@@ -58,11 +58,9 @@ class STAT(ADiagnoser):
         float: The violation of the node after the drift.
         """
         node = self.mapped_tree.get_node(node_index)
+        # copy the node and calculate the violation for it
         node_after = deepcopy(node)
         node_after.update_node_data_attributes(self.X_after, self.y_after)
-        if not node.is_terminal():
-            node_after.left_child = deepcopy(node.left_child)
-            node_after.left_child.update_node_data_attributes(self.X_after, self.y_after)
         return STAT.get_violation_ratio(node_after)
     
     def get_node_violation_difference(self,

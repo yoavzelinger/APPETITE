@@ -175,10 +175,18 @@ class MappedDecisionTree:
             self.reached_samples_count = len(X)
             if self.feature_type == "numeric":
                 self.feature_average_value = X[self.feature].mean()
-            if self.is_terminal() and y is not None:
+            if not self.is_terminal():
+                # update the descendant stats
+                self.left_child.update_node_data_attributes(X, y)
+                self.right_child.update_node_data_attributes(X, y)
+            if y is not None:
                 # count correct classifications
-                self.correct_classifications_count = (y == self.class_name).sum()
-                self.misclassifications_count = (y != self.class_name).sum()
+                if self.is_terminal():
+                    self.correct_classifications_count = (y == self.class_name).sum()
+                    self.misclassifications_count = (y != self.class_name).sum()
+                else:
+                    self.correct_classifications_count = self.left_child.correct_classifications_count + self.right_child.correct_classifications_count
+                    self.misclassifications_count = self.left_child.misclassifications_count + self.right_child.misclassifications_count
 
         def __eq__(self, other):
             if isinstance(other, MappedDecisionTree.DecisionTreeNode):
@@ -238,8 +246,8 @@ class MappedDecisionTree:
                 self.tree_features_set.add(node.feature)
             if node.class_name:
                 self.classes_set.add(node.class_name)
-            if X is not None:
-                node.update_node_data_attributes(X, y)
+        if X is not None:
+            self.root.update_node_data_attributes(X, y)
         self.spectra_dict = {node.spectra_index: node for node in self.tree_dict.values()}
 
     def map_tree(self, 

@@ -13,7 +13,7 @@ args = parser.parse_args()
 
 group_by_columns = ["after size", "drift size", "drifted features types", "total drift type"]
 common_aggregated_columns = ["after accuracy decrease", "after retrain accuracy increase", "before after retrain accuracy increase"]
-diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort"]
+diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort", "correctly_identified"]
 
 columns_dtypes = {
     "after size": "float64",
@@ -31,6 +31,7 @@ diagnoser_dtypes_suffixes = {
     "faulty nodes indices": "string",
     "faulty features": "string",
     "wasted effort": "int64",
+    "correctly_identified": "float64",
     "fix accuracy": "float64",
     "fix accuracy increase": "float64"
 }

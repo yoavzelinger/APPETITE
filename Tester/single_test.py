@@ -87,6 +87,12 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
             break
     return wasted_effort
 
+def get_correctly_identified_ratio(detected_faulty_features: set[str],
+                                    true_faulty_features: set[str]
+                                    ) -> float:
+    identified_features = map(lambda feature: feature in detected_faulty_features, true_faulty_features)
+    return sum(identified_features) / len(identified_features)
+
 def get_accuracy(model, X, y):
     y_predicted = model.predict(X)
     return accuracy_score(y, y_predicted)
@@ -160,18 +166,20 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 diagnoser_names = (diagnoser_names, )
             for diagnoser_name in diagnoser_names:
                 fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
-                faulty_features = [faulty_node.feature if (faulty_node.feature or not faulty_node.is_terminal()) else "target" for faulty_node in faulty_nodes]
                 fixed_mapped_tree, faulty_nodes_indices = fixer.fix_tree()
                 faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
+                detected_faulty_features = set([faulty_node.feature if (faulty_node.feature or not faulty_node.is_terminal()) else "target" for faulty_node in faulty_nodes])
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
                 drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
                 wasted_effort = get_wasted_effort(mapped_tree, fixer.diagnoses, drifted_features, tester_constants.WASTED_EFFORT_REQUIRE_FULL_FIX)
+                correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
                 diagnosers_keys_prefix = "fuzzy participation " if constants.USE_FUZZY_PARTICIPATION else ""
                 current_results_dict.update({
                     f"{diagnosers_keys_prefix}{diagnoser_name} faulty nodes indices": ", ".join(map(str, faulty_nodes_indices)),
-                    f"{diagnosers_keys_prefix}{diagnoser_name} faulty features": ", ".join(faulty_features),
+                    f"{diagnosers_keys_prefix}{diagnoser_name} faulty features": ", ".join(detected_faulty_features),
                     f"{diagnosers_keys_prefix}{diagnoser_name} wasted effort": wasted_effort,
+                    f"{diagnosers_keys_prefix}{diagnoser_name} correctly_identified": correctly_identified,
                     f"{diagnosers_keys_prefix}{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
                     f"{diagnosers_keys_prefix}{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
                 })

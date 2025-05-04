@@ -10,10 +10,12 @@ from Tester import *
 from warnings import simplefilter as warnings_simplefilter
 warnings_simplefilter(action='ignore', category=FutureWarning)
 
-FAULTY_NODES_NAME_SUFFIX = " faulty nodes indicies"
+FAULTY_NODES_NAME_SUFFIX = " faulty nodes indices"
 FAULTY_FEATURES_NAME_SUFFIX = " faulty features"
 WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
+CORRECTLY_IDENTIFIED_NAME_SUFFIX = " correctly_identified"
 AVERAGE_WASTED_EFFORT_NAME_SUFFIX = " average" + WASTED_EFFORT_NAME_SUFFIX
+AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX = " average" + CORRECTLY_IDENTIFIED_NAME_SUFFIX
 FIX_ACCURACY_NAME_SUFFIX = " fix accuracy"
 AVERAGE_FIX_ACCURACY_NAME_SUFFIX = " average" + FIX_ACCURACY_NAME_SUFFIX
 FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
@@ -64,9 +66,11 @@ for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
     raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FAULTY_NODES_NAME_SUFFIX)
     raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX)
+    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX)
     raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_NAME_SUFFIX)
     raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
     aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX)
     aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX)
     aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX)
 
@@ -108,6 +112,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
                 current_aggregated_row_dict["average before after retrain accuracy increase"] += test_result["before after retrain accuracy increase"]
                 for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
                     current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX]
                     current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
                     current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
                 raw_results = raw_results._append(test_result, ignore_index=True)
@@ -135,6 +140,7 @@ aggregating_total_row = {
 }
 for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
     aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] = raw_results[diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX].mean()
+    aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] = raw_results[diagnosers_columns_prefix + diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX].mean()
     aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] = raw_results[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_NAME_SUFFIX].mean()
     aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] = raw_results[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()
 

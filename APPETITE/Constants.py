@@ -11,7 +11,7 @@ VALIDATION_SIZE = 0.2
 RANDOM_STATE = 7
 
 # one hot encode categorical features to modify decision trees creation
-one_hot_encoding = False
+one_hot_encoding = True
 
 # Grid search parameters
 CROSS_VALIDATION_SPLIT_COUNT = 5

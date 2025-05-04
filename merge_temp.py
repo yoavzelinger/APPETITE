@@ -1,5 +1,5 @@
 print("Starting import")
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, ExcelWriter
 from argparse import ArgumentParser
 from datetime import datetime
 from os import listdir, path as os_path
@@ -86,6 +86,7 @@ output_dfs[1] = output_dfs[1][["count", "fuzzy count"] + fuzzy_aggregated_column
 output_df = output_dfs[0].combine_first(output_dfs[1])
 fuzzy_aggregated_columns = [fuzzy_aggregated_column for fuzzy_aggregated_column in fuzzy_aggregated_columns if fuzzy_aggregated_column not in aggregated_columns]
 output_df = output_df[["count"] + aggregated_columns + ["fuzzy count"] + fuzzy_aggregated_columns]
-output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.csv")
-output_df.to_csv(output_full_path)
+output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
+with ExcelWriter(output_full_path, mode='a', engine='openpyxl', if_sheet_exists='replace') as excel_writer:
+    output_df.to_excel(excel_writer, sheet_name='merged_results')
 print(f"Results saved to {output_full_path}")

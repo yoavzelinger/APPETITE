@@ -160,16 +160,16 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 diagnoser_names = (diagnoser_names, )
             for diagnoser_name in diagnoser_names:
                 fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
-                fixed_mapped_tree, faulty_nodes_indicies = fixer.fix_tree()
-                faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indicies]
                 faulty_features = [faulty_node.feature if (faulty_node.feature or not faulty_node.is_terminal()) else "target" for faulty_node in faulty_nodes]
+                fixed_mapped_tree, faulty_nodes_indices = fixer.fix_tree()
+                faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
                 drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
                 wasted_effort = get_wasted_effort(mapped_tree, fixer.diagnoses, drifted_features, tester_constants.WASTED_EFFORT_REQUIRE_FULL_FIX)
                 diagnosers_keys_prefix = "fuzzy participation " if constants.USE_FUZZY_PARTICIPATION else ""
                 current_results_dict.update({
-                    f"{diagnosers_keys_prefix}{diagnoser_name} faulty nodes indicies": ", ".join(map(str, faulty_nodes_indicies)),
+                    f"{diagnosers_keys_prefix}{diagnoser_name} faulty nodes indices": ", ".join(map(str, faulty_nodes_indices)),
                     f"{diagnosers_keys_prefix}{diagnoser_name} faulty features": ", ".join(faulty_features),
                     f"{diagnosers_keys_prefix}{diagnoser_name} wasted effort": wasted_effort,
                     f"{diagnosers_keys_prefix}{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,

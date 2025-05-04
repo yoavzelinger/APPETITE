@@ -91,7 +91,7 @@ def get_correctly_identified_ratio(detected_faulty_features: set[str],
                                     true_faulty_features: set[str]
                                     ) -> float:
     identified_features = map(lambda feature: feature in detected_faulty_features, true_faulty_features)
-    return sum(identified_features) / len(identified_features)
+    return sum(identified_features) / len(true_faulty_features)
 
 def get_accuracy(model, X, y):
     y_predicted = model.predict(X)

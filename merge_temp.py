@@ -28,7 +28,7 @@ columns_dtypes = {
 }
 
 diagnoser_dtypes_suffixes = {
-    "faulty nodes indicies": "string",
+    "faulty nodes indices": "string",
     "faulty features": "string",
     "wasted effort": "int64",
     "fix accuracy": "float64",

@@ -39,7 +39,7 @@ CATEGORICAL_DRIFT_SEVERITIES = (
 
 SFLDT_DEFAULT_SIMILARITY_MEASURES = "faith"
 DEFAULT_FIXING_DIAGNOSER = ("SFLDT", "STAT_SFLDT", "SFLDT_Features")    # SFLDT Types
-# DEFAULT_FIXING_DIAGNOSER = ("STAT_SFLDT", "BARINEL", "BARINEL_Paths_After", "STAT_BARINEL_Paths_After", "BARINEL_Paths_Difference", "STAT_BARINEL_Paths_Difference", "BARINEL_Features", "BARINEL_Features_Paths_After", "BARINEL_Features_Paths_Difference", "SFLDT_Features") # All relevants
+# DEFAULT_FIXING_DIAGNOSER = ("STAT_SFLDT", "BARINEL", "BARINEL_Paths_After", "STAT_BARINEL_Paths_After", "BARINEL_Paths_Difference", "STAT_BARINEL_Paths_Difference", "BARINEL_Features", "BARINEL_Features_Paths_After", "BARINEL_Features_Paths_Difference", "SFLDT_Features") # All relevant diagnosers
 
 BARINEL_COMPONENT_PRIOR_PROBABILITY = 1 / 1000
 

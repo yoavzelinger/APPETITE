@@ -35,7 +35,7 @@ ERRORS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX = f"{ERRORS_FILE_NAME_PREFIX}_{FUZZY
 
 EXAMPLE_FILE_NAME = "bank"
 
-MIN_DRIFT_SIZE = 1 # min amount of featuers to drift
-MAX_DRIFT_SIZE = 4 # max amount of featuers to drift, -1 means all features
+MIN_DRIFT_SIZE = 1 # min amount of features to drift
+MAX_DRIFT_SIZE = 4 # max amount of features to drift, -1 means all features
 
 AFTER_WINDOW_TEST_SIZES = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]

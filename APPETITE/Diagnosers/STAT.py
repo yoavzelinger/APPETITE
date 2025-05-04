@@ -25,10 +25,10 @@ class STAT(ADiagnoser):
         float: The violation ratio of the node.
         """
         if node.is_terminal():
-            return node.reached_samples_count
+            return 0
         samples_reached_node_count = node.reached_samples_count
         if samples_reached_node_count == 0:
-            return 0.0
+            return 0
         violated_samples_count = node.right_child.reached_samples_count
         return violated_samples_count / samples_reached_node_count
 

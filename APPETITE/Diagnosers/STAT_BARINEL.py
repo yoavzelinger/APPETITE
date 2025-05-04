@@ -15,8 +15,7 @@ class STAT_BARINEL(ADiagnoser):
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
-                 y: Series,
-                 stat_type: str = constants.BARINEL_STAT_TYPE
+                 y: Series
     ):
         """
         Initialize the diagnoser.

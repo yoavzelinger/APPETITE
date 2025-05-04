@@ -6,8 +6,7 @@ class STAT_BARINEL_Paths_Difference(STAT_BARINEL):
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
-                 y: Series,
-                 stat_type: str = constants.BARINEL_STAT_TYPE
+                 y: Series
     ):
         """
         Initialize the diagnoser.
@@ -17,5 +16,5 @@ class STAT_BARINEL_Paths_Difference(STAT_BARINEL):
         X (DataFrame): The data.
         y (Series): The target column.
         """
-        super().__init__(mapped_tree, X, y, stat_type)
+        super().__init__(mapped_tree, X, y)
         self.barinel = BARINEL_Paths_Difference(mapped_tree, X, y)

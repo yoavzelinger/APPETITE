@@ -8,7 +8,7 @@ from .BARINEL_Paths import BARINEL_Paths
 from .BARINEL_Paths_After import BARINEL_Paths_After
 from .BARINEL_Paths_Difference import BARINEL_Paths_Difference
 
-class BARINEL_Features(BARINEL_Paths_After):
+class BARINEL_Features(BARINEL_Paths):
     
     diagnoser_type = constants.MULTIPLE_DIAGNOSER_TYPE_NAME
 

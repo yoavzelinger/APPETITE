@@ -131,8 +131,7 @@ class SFLDT(ADiagnoser):
         """
         if self.diagnoses is None:
             similarity_measure_function = SFLDT.similarity_measure_functions_dict[self.similarity_measure]
-            is_internal_node = lambda spectra_index: not self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).is_terminal()
-            self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector) if is_internal_node(spectra_index) else 0) for spectra_index in range(self.components_count)]
+            self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.components_count)]
             self.sort_diagnoses()
         diagnoses = self.get_diagnoses_with_return_indices(retrieve_spectra_indices)
         return super().get_diagnoses(retrieve_ranks, diagnoses)

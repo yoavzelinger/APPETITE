@@ -89,7 +89,7 @@ fuzzy_aggregated_columns = [fuzzy_aggregated_column for fuzzy_aggregated_column 
 output_df = output_df[["count"] + aggregated_columns + ["fuzzy count"] + fuzzy_aggregated_columns]
 output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
 merged_results_sheet_name = "merged_results"
-with ExcelWriter(output_full_path, mode='a', engine="openpyxl", if_sheet_exists="replace") as excel_writer:
+with ExcelWriter(output_full_path, mode=('a' if os.path.exists(excel_path) else 'w'), engine="openpyxl", if_sheet_exists="replace") as excel_writer:
     output_df.to_excel(excel_writer, sheet_name=merged_results_sheet_name, merge_cells=False)
 output_workbook = load_workbook(output_full_path)
 output_workbook[merged_results_sheet_name].sheet_view.rightToLeft = True

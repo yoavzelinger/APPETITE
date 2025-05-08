@@ -228,8 +228,8 @@ class SFLDT(ADiagnoser):
           where the first element is the index and the second is the similarity rank.
         """
         if self.diagnoses is None:
-            example_participation_vector1 = self.spectra[1] # Not using the 0 (root) because participated in all the tests
-            example_participation_vector2 = self.spectra[2] # Not using the 0 (root) because participated in all the tests
+            example_participation_vector1 = self.spectra[1]
+            example_participation_vector2 = self.spectra[2]
             similarity_measure_function = get_relevant_similarity_function(example_participation_vector1, example_participation_vector2, self.error_vector)
             is_internal_node = lambda spectra_index: not self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).is_terminal()
             self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector) if is_internal_node(spectra_index) else 0) for spectra_index in range(self.components_count)]

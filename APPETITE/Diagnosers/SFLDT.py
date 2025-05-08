@@ -63,11 +63,8 @@ class SFLDT(ADiagnoser):
         assert self.paths_depths_vector.all()
         if not constants.USE_FUZZY_PARTICIPATION:
             return
-        if len(self.spectra.shape) > len(self.components_depths_vector.shape):
-            self.components_depths_vector = self.components_depths_vector[:, newaxis]
-        if len(self.spectra) == len(self.components_depths_vector):
-            self.spectra = self.spectra * self.components_depths_vector
-        self.spectra = self.spectra / self.paths_depths_vector[newaxis, :]
+        self.components_depths_vector = self.components_depths_vector[:, None]
+        self.spectra = (self.spectra * self.components_depths_vector) / self.paths_depths_vector
         assert max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {max(self.spectra)}"
 
     def fill_spectra_and_error_vector(self, 
@@ -90,12 +87,10 @@ class SFLDT(ADiagnoser):
                 node_indicator.indptr[sample_id] : node_indicator.indptr[sample_id + 1]
             ]
             for node in map(self.mapped_tree.get_node, participated_nodes):
-                node_spectra_index = node.spectra_index
-                self.spectra[node_spectra_index, sample_id] = 1
+                self.spectra[node.spectra_index, sample_id] = 1
                 if node.is_terminal():
                     self.paths_depths_vector[sample_id] = node.depth + 1
-                    error = node.class_name != y[sample_id]
-                    self.error_vector[sample_id] = int(error)
+                    self.error_vector[sample_id] = int(node.class_name != y[sample_id])
         self.update_fuzzy_participation()
 
     def get_diagnoses_with_return_indices(self,

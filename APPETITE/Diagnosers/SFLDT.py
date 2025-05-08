@@ -1,20 +1,25 @@
-from numpy import zeros, array as np_array, max
+from numpy import zeros, array as np_array, max as np_max, ndarray, exp as np_exp, unique as np_unique, clip, mean as np_mean, log as np_log
+from sklearn.metrics.pairwise import cosine_similarity
+from scipy.stats import pearsonr as pearson_correlation
+
+from sys import float_info
+EPSILON = float_info.epsilon
 
 from .ADiagnoser import *
 from APPETITE import Constants as constants
 
-def get_faith_similarity(participation_vector: Series,
-                         error_vector: Series
+def get_faith_similarity(participation_vector: ndarray,
+                         error_vector: ndarray
  ) -> float:
     """
-    Get the faith similarity of the node to the error vector.
+    Get the faith similarity of the component to the error vector.
 
     The similarity is calculated by
         (error_participation +  0.5 * accurate_nonparticipation) /
         (error_participation + accurate_participation + error_nonparticipation + accurate_nonparticipation)
     Parameters:
-        participation_vector (Series): The participation vector, where high value (1) represent high participation in the sample classification.
-        error_vector (Series): The error vector, where high value (1) represent that the sample classified incorrectly.
+        participation_vector (ndarray): The participation vector, where high value (1) represent high participation in the sample classification.
+        error_vector (ndarray): The error vector, where high value (1) represent that the sample classified incorrectly.
 
     Returns:
         float: The faith similarity between the vectors
@@ -26,6 +31,71 @@ def get_faith_similarity(participation_vector: Series,
     
     return (n11 +  0.5 * n00) / (n11 + n10 + n01 + n00)
 
+def get_cosine_similarity(participation_vector: ndarray,
+                          error_vector: ndarray
+ ) -> float:
+    """
+    Get the cosine similarity of the component to the error vector.
+    Parameters:
+        participation_vector (ndarray): The participation vector, where high value (1) represent high participation in the sample classification.
+        error_vector (ndarray): The error vector, where high value (1) represent that the sample classified incorrectly.
+
+    Returns:
+        float: The cosine similarity between the vectors.
+    """
+    participation_vector, error_vector = participation_vector[None, :], error_vector[None, :]
+    return cosine_similarity(participation_vector, error_vector)[0][0]
+
+def get_correlation(participation_vector: ndarray,
+                    error_vector: ndarray
+ ) -> float:
+    """
+    Get the correlation of the component to the error vector.
+    Parameters:
+        participation_vector (ndarray): The participation vector, where high value (1) represent high participation in the sample classification.
+        error_vector (ndarray): The error vector, where high value (1) represent that the sample classified incorrectly.
+
+    Returns:
+        float: The correlation similarity between the vectors.
+    """
+    print("using correlation")
+    return pearson_correlation(participation_vector, error_vector)[0]
+
+def get_BCE_similarity(participation_vector: ndarray,
+                       error_vector: ndarray
+ ) -> float:
+    """
+    Get binary-cross-entropy similarity between the two vectors.
+    for this similarity one of the vectors should be binary.
+    the similarity is calculated as e^(-BCE) so high value means strong relationship.
+    Parameters:
+        participation_vector (ndarray): The participation vector, where high value (1) represent high participation in the sample classification.
+        error_vector (ndarray): The error vector, where high value (1) represent that the sample classified incorrectly.
+
+    Returns:
+        float: The binary-cross-entropy similarity between the vectors.
+    """
+    print("using BCE")
+    def get_binary_continuous_vectors(participation_vector: ndarray,
+                                      error_vector: ndarray
+     ) -> tuple[ndarray]:
+        """
+        determine which vector is binary and which is continuous.
+        Parameters:
+            participation_vector (ndarray): The participation vector, where high value (1) represent high participation in the sample classification.
+            error_vector (ndarray): The error vector, where high value (1) represent that the sample classified incorrectly.
+        
+        Returns:
+            ndarray: the binary vector.
+            ndarray: the continuous vector.
+        """
+        is_participation_binary = np_unique(participation_vector).size == 2
+        is_error_binary = np_unique(error_vector).size == 2
+        is_binaries = is_participation_binary, is_error_binary
+        print(is_binaries)
+        assert not all(is_binaries), "Only one of the vectors should be binary"
+    Get the relevant similarity function based of the type of the vectors:
+    if both are binary - use faith similarity.
 class SFLDT(ADiagnoser):
 
     diagnoser_type = constants.SINGLE_DIAGNOSER_TYPE_NAME

@@ -12,8 +12,7 @@ class STAT_SFLDT(ADiagnoser):
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
-                 y: Series,
-                 similarity_measure: str = constants.SFLDT_DEFAULT_SIMILARITY_MEASURES
+                 y: Series
     ):
         """
         Initialize the diagnoser.
@@ -26,7 +25,7 @@ class STAT_SFLDT(ADiagnoser):
         """
         super().__init__(mapped_tree, X, y)
         self.stat = STAT(mapped_tree, X, y)
-        self.sfldt = SFLDT(mapped_tree, X, y, similarity_measure)
+        self.sfldt = SFLDT(mapped_tree, X, y)
 
     def get_diagnoses(self,
                       retrieve_ranks=False

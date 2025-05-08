@@ -185,7 +185,7 @@ class Fixer:
             list[int]: The indices of the faulty nodes.
         """
         self.diagnoses = self.diagnoser.get_diagnoses()
-        if self.diagnoser.diagnoser_type == constants.SINGLE_DIAGNOSER_TYPE_NAME:
+        if self.diagnoser.get_diagnoser_type() == constants.SINGLE_DIAGNOSER_TYPE_NAME:
             self.diagnoses = [[faulty_node] for faulty_node in self.diagnoses]
         self.faulty_nodes = self.diagnoses[0]
         # print(f"Fixing faulty nodes: {self.faulty_nodes}")

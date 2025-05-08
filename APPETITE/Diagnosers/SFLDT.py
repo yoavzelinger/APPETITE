@@ -1,4 +1,4 @@
-from numpy import zeros, array as np_array, ones, newaxis, max
+from numpy import zeros, array as np_array, max
 
 from .ADiagnoser import *
 from APPETITE import Constants as constants

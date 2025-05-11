@@ -1,6 +1,7 @@
 from numpy import zeros, array as np_array, max as np_max, ndarray, exp as np_exp, unique as np_unique, clip, mean as np_mean, log as np_log
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.stats import pearsonr as pearson_correlation
+from collections import defaultdict
 
 from sys import float_info
 EPSILON = float_info.epsilon
@@ -135,6 +136,18 @@ class SFLDT(ADiagnoser):
         self.spectra = (self.spectra * self.components_depths_vector) / self.paths_depths_vector
         assert np_max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {np_max(self.spectra)}"
 
+    def update_fuzzy_error(self
+    ) -> None:
+        path_tests_indices = defaultdict(list)
+        for test_index in range(self.tests_count):
+            test_participation_vector = tuple(self.spectra[:, test_index])
+            path_tests_indices[test_participation_vector].append(test_index)
+
+        self.spectra = np_array(list(path_tests_indices.keys())).T
+        self.error_vector = np_array([self.error_vector[test_indices].mean() for test_indices in path_tests_indices.values()])
+        self.tests_count = self.error_vector.shape[0]
+
+
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
@@ -163,6 +176,9 @@ class SFLDT(ADiagnoser):
         assert self.paths_depths_vector.all()
         if constants.USE_FUZZY_PARTICIPATION:
             self.update_fuzzy_participation()
+        if constants.USE_FUZZY_ERROR:
+            self.update_fuzzy_error()
+        
 
     def get_diagnoses_with_return_indices(self,
                                           retrieve_spectra_indices: bool = False

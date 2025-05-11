@@ -102,36 +102,6 @@ def get_BCE_similarity(participation_vector: ndarray,
     bce_loss = -np_mean(binary_vector * np_log(continuous_vector) + (1 - binary_vector) * np_log(1 - continuous_vector))
     return np_exp(-bce_loss)
 
-def get_relevant_similarity_function(example_participation_vector1: ndarray,
-                                     example_participation_vector2: ndarray,
-                                     error_vector: ndarray
- ):
-    """
-    Get the relevant similarity function based of the type of the vectors:
-    if both are binary - use faith similarity.
-    if both are continuous - use correlation.
-    if one is binary and the other continuous - use BCE similarity.
-    Parameters:
-        example_participation_vector1 (ndarray): The first participation vector.
-        example_participation_vector2 (ndarray): The participation participation vector.
-            * Using two participation vectors that aren't on the same path to avoid wrong function due to all samples classified using the same path.
-        error_vector (ndarray): The error vector.
-    
-    Returns:
-        The relevant similarity function
-    """
-    is_participation1_binary = np_unique(example_participation_vector1).size <= 2
-    is_participation2_binary = np_unique(example_participation_vector2).size <= 2
-    is_participation_binary = all((is_participation1_binary, is_participation2_binary))
-    is_error_binary = np_unique(error_vector).size <= 2
-    is_binaries = is_participation_binary, is_error_binary
-    if all(is_binaries): # both binary
-        return get_faith_similarity
-    if any(is_binaries): # one binary one continuous
-        return get_BCE_similarity
-    # both continuous
-    return get_correlation
-
 class SFLDT(ADiagnoser):
 
     diagnoser_type = constants.SINGLE_DIAGNOSER_TYPE_NAME
@@ -208,6 +178,27 @@ class SFLDT(ADiagnoser):
             returned_diagnoses.append((diagnosis, rank))
         return returned_diagnoses
     
+    def get_relevant_similarity_function(self):
+        """
+        Get the relevant similarity function based of the type of the vectors (participation and error).:
+        if both are binary - use faith similarity.
+        if both are continuous - use correlation.
+        if one is binary and the other continuous - use BCE similarity.
+        Parameters:
+        
+        Returns:
+            The relevant similarity function
+        """
+        are_continuous = constants.USE_FUZZY_PARTICIPATION, constants.USE_FUZZY_ERROR
+        if all(are_continuous): # both continuous
+            if self.tests_count < 2:    # not enough samples for correlation measure
+                return get_cosine_similarity
+            return get_correlation
+        if any(are_continuous): # one binary one continuous
+            return get_BCE_similarity
+        # both binary
+        return get_faith_similarity
+    
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
                       retrieve_spectra_indices: bool = False
@@ -225,11 +216,9 @@ class SFLDT(ADiagnoser):
           where the first element is the index and the second is the similarity rank.
         """
         if self.diagnoses is None:
-            example_participation_vector1 = self.spectra[1]
-            example_participation_vector2 = self.spectra[2]
-            similarity_measure_function = get_relevant_similarity_function(example_participation_vector1, example_participation_vector2, self.error_vector)
             is_internal_node = lambda spectra_index: not self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).is_terminal()
             self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector) if is_internal_node(spectra_index) else 0) for spectra_index in range(self.components_count)]
+            similarity_measure_function = self.get_relevant_similarity_function()
             self.sort_diagnoses()
         diagnoses = self.get_diagnoses_with_return_indices(retrieve_spectra_indices)
         return super().get_diagnoses(retrieve_ranks, diagnoses)

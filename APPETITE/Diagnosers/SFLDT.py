@@ -25,7 +25,6 @@ def get_faith_similarity(participation_vector: ndarray,
     Returns:
         float: The faith similarity between the vectors.
     """
-    print("using faith")
     n11 = participation_vector @ error_vector
     n10 = participation_vector @ (1 - error_vector)
     n01 = (1 - participation_vector) @ error_vector
@@ -60,7 +59,6 @@ def get_correlation(participation_vector: ndarray,
     Returns:
         float: The correlation similarity between the vectors.
     """
-    print("using correlation")
     # check if the participation vector is all 0
     if all(participation_vector == 0):  # constant participation, cannot calculate correlation, using cosine similarity instead
         return get_cosine_similarity(participation_vector, error_vector)
@@ -80,7 +78,6 @@ def get_BCE_similarity(participation_vector: ndarray,
     Returns:
         float: The binary-cross-entropy similarity between the vectors.
     """
-    print("using BCE")
     def get_binary_continuous_vectors(participation_vector: ndarray,
                                       error_vector: ndarray
      ) -> tuple[ndarray]:

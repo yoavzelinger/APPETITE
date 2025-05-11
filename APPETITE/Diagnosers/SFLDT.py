@@ -127,12 +127,10 @@ class SFLDT(ADiagnoser):
         self.error_vector = zeros(self.tests_count)
         self.fill_spectra_and_error_vector(X, y)
 
-    def update_fuzzy_participation(self,
-     ) -> None:
+    def update_fuzzy_participation(self
+    ) -> None:
         assert self.components_depths_vector.all()
         assert self.paths_depths_vector.all()
-        if not constants.USE_FUZZY_PARTICIPATION:
-            return
         self.components_depths_vector = self.components_depths_vector[:, None]
         self.spectra = (self.spectra * self.components_depths_vector) / self.paths_depths_vector
         assert np_max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {np_max(self.spectra)}"
@@ -140,7 +138,7 @@ class SFLDT(ADiagnoser):
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
-     ) -> None:
+    ) -> None:
         """
         Fill the spectra matrix and the error vector.
 
@@ -161,7 +159,10 @@ class SFLDT(ADiagnoser):
                 if node.is_terminal():
                     self.paths_depths_vector[sample_id] = node.depth + 1
                     self.error_vector[sample_id] = int(node.class_name != y[sample_id])
-        self.update_fuzzy_participation()
+        assert self.components_depths_vector.all()
+        assert self.paths_depths_vector.all()
+        if constants.USE_FUZZY_PARTICIPATION:
+            self.update_fuzzy_participation()
 
     def get_diagnoses_with_return_indices(self,
                                           retrieve_spectra_indices: bool = False

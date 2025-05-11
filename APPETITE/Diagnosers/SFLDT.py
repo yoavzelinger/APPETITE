@@ -93,13 +93,7 @@ def get_BCE_similarity(participation_vector: ndarray,
             ndarray: the binary vector.
             ndarray: the continuous vector.
         """
-        is_participation_binary = np_unique(participation_vector).size == 2
-        is_error_binary = np_unique(error_vector).size == 2
-        is_binaries = is_participation_binary, is_error_binary
-        print(is_binaries)
-        assert not all(is_binaries), "Only one of the vectors should be binary"
-        assert any(is_binaries), "One of the vectors should be binary"
-        if is_participation_binary:
+        if constants.USE_FUZZY_PARTICIPATION:
             return participation_vector, error_vector
         return error_vector, participation_vector
     

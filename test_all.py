@@ -27,7 +27,8 @@ parser.add_argument("-d", "--diagnosers", type=str, nargs="+", help=f"List of di
 parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception, default is false and writing the errors to errors file", default=tester_constants.STOP_ON_EXCEPTION)
 parser.add_argument("-n", "--names", type=str, nargs="+", help="Specific datasets to run, default is all", default=[])
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all", default=[])
-parser.add_argument("-f", "--fuzzy", action="store_true", help="Use fuzzy participation matrix, default is false", default=constants.USE_FUZZY_PARTICIPATION)
+parser.add_argument("-fp", "--fuzzy_participation", action="store_true", help=f"Use fuzzy participation matrix, default is {constants.USE_FUZZY_PARTICIPATION}", default=constants.USE_FUZZY_PARTICIPATION)
+parser.add_argument("-fe", "--fuzzy_error", action="store_true", help=f"Use fuzzy error vector, default is {constants.USE_FUZZY_ERROR}", default=constants.USE_FUZZY_ERROR)
 parser.add_argument("-a", "--after_window", type=float, nargs="+", help="After window sizes, default is all", default=tester_constants.AFTER_WINDOW_TEST_SIZES)
 parser.add_argument("-m", "--drift_size", type=int, help=f"size of the drift, default is between {tester_constants.MIN_DRIFT_SIZE} and {tester_constants.MAX_DRIFT_SIZE}", default=-1)
 parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
@@ -35,7 +36,8 @@ parser.add_argument("-t", "--test", type=str, help="Test dataset to run if you w
 
 args = parser.parse_args()
 print(f"Running config: {args}")
-constants.USE_FUZZY_PARTICIPATION = args.fuzzy
+constants.USE_FUZZY_PARTICIPATION = args.fuzzy_participation
+constants.USE_FUZZY_ERROR = args.fuzzy_error
 diagnosers_string = ""
 if constants.DEFAULT_FIXING_DIAGNOSER != args.diagnosers:
     constants.DEFAULT_FIXING_DIAGNOSER = args.diagnosers

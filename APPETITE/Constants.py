@@ -54,6 +54,7 @@ BARINEL_STAT_TYPE = "DIFFERENCE" # in ["BEFORE", "AFTER", "DIFFERENCE"]
 DIAGNOSIS_ALGORITHM = "BARINEL" # in ["SFLDT", "BARINEL"]
 DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
 DEFAULT_FUZZY_ERROR = False # Use fuzzy error vector
+DEFAULT_FEATURE_COMPONENTS = False # Use features components
 
 BARINEL_STD_THRESHOLD = 0.5
 

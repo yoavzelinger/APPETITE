@@ -109,7 +109,8 @@ class SFLDT(ADiagnoser):
                  X: DataFrame,
                  y: Series,
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
-                 use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR
+                 use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR,
+                 use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS
     ):
         """
         Initialize the SFLDT diagnoser.
@@ -127,6 +128,7 @@ class SFLDT(ADiagnoser):
         self.error_vector = zeros(self.tests_count)
         self.paths_depths_vector = zeros(self.tests_count)
         self.use_fuzzy_participation, self.use_fuzzy_error = use_fuzzy_participation, use_fuzzy_error
+        self.use_feature_components = use_feature_components
         self.fill_spectra_and_error_vector(X, y)
 
     def update_fuzzy_participation(self,
@@ -150,6 +152,28 @@ class SFLDT(ADiagnoser):
         self.spectra = np_array(list(path_tests_indices.keys())).T
         self.error_vector = np_array([self.error_vector[test_indices].mean() for test_indices in path_tests_indices.values()])
         self.tests_count = self.error_vector.shape[0]
+
+    def update_feature_components(self
+    ) -> None:
+        self.feature_to_spectra_dict = {}  # {feature: feature_spectra_index, [node_spectra_indices]}
+        self.spectra_index_to_features_dict = {}  # {feature_spectra_index: feature}
+        for node_spectra_index, node in self.mapped_tree.spectra_dict.items():
+            if node.is_terminal():
+                continue
+            if node.feature not in self.feature_to_spectra_dict:
+                feature_spectra_index = len(self.feature_to_spectra_dict)
+                self.feature_to_spectra_dict[node.feature] = feature_spectra_index, []
+                self.spectra_index_to_features_dict[feature_spectra_index] = node.feature
+            self.feature_to_spectra_dict[node.feature][1].append(node_spectra_index)
+        self.components_count = len(self.feature_to_spectra_dict)
+        features_spectra = zeros((self.components_count, self.spectra.shape[1]))
+        features_count_vector = zeros(self.components_count)
+        for feature_spectra_index, feature_nodes_spectra_indices in self.feature_to_spectra_dict.values():
+            features_spectra[feature_spectra_index] = 1
+            features_count_vector = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
+        self.spectra = features_spectra
+        if self.use_fuzzy_participation:
+            self.update_fuzzy_participation(components_depths_vector=features_count_vector)
 
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
@@ -176,7 +200,9 @@ class SFLDT(ADiagnoser):
         assert self.paths_depths_vector.all()
         if self.use_fuzzy_error:
             self.update_fuzzy_error()
-        if self.use_fuzzy_participation:
+        if self.use_feature_components:
+            self.update_feature_components()
+        elif self.use_fuzzy_participation:
             self.update_fuzzy_participation()
         
 

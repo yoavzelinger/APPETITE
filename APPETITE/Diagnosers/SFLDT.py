@@ -125,26 +125,19 @@ class SFLDT(ADiagnoser):
         self.tests_count = len(X)
         self.spectra = zeros((self.components_count, self.tests_count))
         self.error_vector = zeros(self.tests_count)
+        self.paths_depths_vector = zeros(self.tests_count)
         self.use_fuzzy_participation, self.use_fuzzy_error = use_fuzzy_participation, use_fuzzy_error
         self.fill_spectra_and_error_vector(X, y)
 
     def update_fuzzy_participation(self,
-                                   components_depths_vector: ndarray = None,
-                                   paths_depths_vector: ndarray = None
+                                   components_depths_vector: ndarray = None
 
     ) -> None:
         if components_depths_vector is None:
             components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
-        if paths_depths_vector is None:
-            paths_depths_vector = zeros(self.tests_count)
-            for test_index in range(self.tests_count):
-                test_participation_vector = tuple(self.spectra[:, test_index])
-                test_participated_nodes = np_where(test_participation_vector)[0]
-                paths_depths_vector[test_index] = len(test_participated_nodes)
         assert components_depths_vector.all()
-        assert paths_depths_vector.all()
         components_depths_vector = components_depths_vector[:, None]
-        self.spectra = (self.spectra * components_depths_vector) / paths_depths_vector
+        self.spectra = (self.spectra * components_depths_vector) / self.paths_depths_vector
         assert np_max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {np_max(self.spectra)}"
 
     def update_fuzzy_error(self
@@ -179,6 +172,8 @@ class SFLDT(ADiagnoser):
                 self.spectra[node.spectra_index, test_index] = 1
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
+                    self.paths_depths_vector[test_index] = node.depth + 1
+        assert self.paths_depths_vector.all()
         if self.use_fuzzy_error:
             self.update_fuzzy_error()
         if self.use_fuzzy_participation:

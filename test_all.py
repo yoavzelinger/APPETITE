@@ -148,8 +148,7 @@ for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
 
 aggregated_results = aggregated_results._append(aggregating_total_row, ignore_index=True)
 
-if SPECIFIC_DATASETS:
-    RESULTS_FULL_PATH = tester_constants.TEMP_RESULTS_FULL_PATH
+RESULTS_FULL_PATH = tester_constants.TEMP_RESULTS_FULL_PATH if SPECIFIC_DATASETS else tester_constants.RESULTS_FULL_PATH
 os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
 
 RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.RESULTS_FILE_NAME_PREFIX if not constants.USE_FUZZY_PARTICIPATION else tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX)

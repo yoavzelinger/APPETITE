@@ -91,7 +91,7 @@ def get_BCE_similarity(participation_vector: ndarray,
             ndarray: the binary vector.
             ndarray: the continuous vector.
         """
-        if constants.USE_FUZZY_PARTICIPATION:
+        if constants.DEFAULT_FUZZY_PARTICIPATION:
             return participation_vector, error_vector
         return error_vector, participation_vector
     
@@ -203,7 +203,7 @@ class SFLDT(ADiagnoser):
         Returns:
             The relevant similarity function
         """
-        are_continuous = constants.USE_FUZZY_PARTICIPATION, constants.USE_FUZZY_ERROR
+        are_continuous = self.use_fuzzy_participation, self.use_fuzzy_error
         if all(are_continuous): # both continuous
             if self.tests_count < 2:    # not enough samples for correlation measure
                 return get_cosine_similarity

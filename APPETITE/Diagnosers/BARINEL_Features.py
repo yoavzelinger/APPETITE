@@ -38,14 +38,14 @@ class BARINEL_Features(BARINEL_Paths):
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series,
-                                      use_fuzzy_error: bool = constants.USE_FUZZY_ERROR
+                                      use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR
      ) -> None:
         if use_fuzzy_error:
             return BARINEL_Paths.fill_spectra_and_error_vector(self, X, y)
         return SFLDT.fill_spectra_and_error_vector(self, X, y)
     
     def update_fuzzy_participation(self) -> None:
-        if constants.USE_FUZZY_PARTICIPATION:
+        if constants.DEFAULT_FUZZY_PARTICIPATION:
             if len(self.spectra) == len(self.components_depths_vector):
                 self.spectra = self.spectra / self.components_depths_vector[:, newaxis]
         else:

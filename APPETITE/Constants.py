@@ -52,8 +52,8 @@ GRADIENT_STEP = 0.5
 BARINEL_STAT_TYPE = "DIFFERENCE" # in ["BEFORE", "AFTER", "DIFFERENCE"]
 
 DIAGNOSIS_ALGORITHM = "BARINEL" # in ["SFLDT", "BARINEL"]
-USE_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
-USE_FUZZY_ERROR = False # Use fuzzy error vector
+DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
+DEFAULT_FUZZY_ERROR = False # Use fuzzy error vector
 
 BARINEL_STD_THRESHOLD = 0.5
 

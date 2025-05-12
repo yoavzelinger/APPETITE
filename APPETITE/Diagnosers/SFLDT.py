@@ -1,4 +1,4 @@
-from numpy import zeros, array as np_array, max as np_max, ndarray, exp as np_exp, unique as np_unique, clip, mean as np_mean, log as np_log
+from numpy import zeros, array as np_array, max as np_max, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, where as np_where
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.stats import pearsonr as pearson_correlation
 from collections import defaultdict

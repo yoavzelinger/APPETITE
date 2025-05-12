@@ -112,8 +112,6 @@ def get_total_drift_types(drifted_features_types):
     return "binary"
 
 def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_size=constants.AFTER_WINDOW_SIZE, diagnoser_names=tester_constants.constants.DEFAULT_FIXING_DIAGNOSER, *diagnoser_parameters):
-    if constants.USE_FUZZY_PARTICIPATION:
-        print("Using fuzzy participation")
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
@@ -174,14 +172,13 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
                 wasted_effort = get_wasted_effort(mapped_tree, fixer.diagnoses, drifted_features, tester_constants.WASTED_EFFORT_REQUIRE_FULL_FIX)
                 correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
-                diagnosers_keys_prefix = "fuzzy participation " if constants.USE_FUZZY_PARTICIPATION else ""
                 current_results_dict.update({
-                    f"{diagnosers_keys_prefix}{diagnoser_name} faulty nodes indices": ", ".join(map(str, faulty_nodes_indices)),
-                    f"{diagnosers_keys_prefix}{diagnoser_name} faulty features": ", ".join(detected_faulty_features),
-                    f"{diagnosers_keys_prefix}{diagnoser_name} wasted effort": wasted_effort,
-                    f"{diagnosers_keys_prefix}{diagnoser_name} correctly_identified": correctly_identified,
-                    f"{diagnosers_keys_prefix}{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
-                    f"{diagnosers_keys_prefix}{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
+                    f"{diagnoser_name} faulty nodes indices": ", ".join(map(str, faulty_nodes_indices)),
+                    f"{diagnoser_name} faulty features": ", ".join(detected_faulty_features),
+                    f"{diagnoser_name} wasted effort": wasted_effort,
+                    f"{diagnoser_name} correctly_identified": correctly_identified,
+                    f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
+                    f"{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
                 })
             yield current_results_dict
         except Exception as e:

@@ -63,18 +63,17 @@ raw_results_columns = ["after size", "drift size", "drift description", "drifted
 aggregated_groupby_columns = ["name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
-diagnosers_columns_prefix = "fuzzy participation " if constants.USE_FUZZY_PARTICIPATION else ""
 for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
-    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FAULTY_NODES_NAME_SUFFIX)
-    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FAULTY_FEATURES_NAME_SUFFIX)
-    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX)
-    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX)
-    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_NAME_SUFFIX)
-    raw_results_columns.append(diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + FAULTY_FEATURES_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + WASTED_EFFORT_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + FAULTY_NODES_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + FIX_ACCURACY_NAME_SUFFIX)
+    raw_results_columns.append(diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX)
+    aggregated_summarizes_columns.append(diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX)
 
 # Create DataFrame for the aggregated results
 raw_results = DataFrame(columns=raw_results_columns)
@@ -113,10 +112,10 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
                 current_aggregated_row_dict["average before after retrain accuracy"] += test_result["before after retrain accuracy"]
                 current_aggregated_row_dict["average before after retrain accuracy increase"] += test_result["before after retrain accuracy increase"]
                 for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
-                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] += test_result[diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX]
+                    current_aggregated_row_dict[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
                 raw_results = raw_results._append(test_result, ignore_index=True)
             if drifts_count == 0:
                 continue
@@ -141,10 +140,10 @@ aggregating_total_row = {
     "average before after retrain accuracy increase": raw_results["before after retrain accuracy increase"].mean()
 }
 for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
-    aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] = raw_results[diagnosers_columns_prefix + diagnoser_name + WASTED_EFFORT_NAME_SUFFIX].mean()
-    aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] = raw_results[diagnosers_columns_prefix + diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX].mean()
-    aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] = raw_results[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_NAME_SUFFIX].mean()
-    aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] = raw_results[diagnosers_columns_prefix + diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()
+    aggregating_total_row[diagnoser_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] = raw_results[diagnoser_name + WASTED_EFFORT_NAME_SUFFIX].mean()
+    aggregating_total_row[diagnoser_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] = raw_results[diagnoser_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX].mean()
+    aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] = raw_results[diagnoser_name + FIX_ACCURACY_NAME_SUFFIX].mean()
+    aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] = raw_results[diagnoser_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()
 
 aggregated_results = aggregated_results._append(aggregating_total_row, ignore_index=True)
 
@@ -178,4 +177,4 @@ elif os.path.exists(f"{ERRORS_FILE_PATH_PREFIX}.csv"):
 
 print("All tests are done! average accuracy and the incremental:")
 for diagnoser_name in constants.DEFAULT_FIXING_DIAGNOSER:
-    print(f"{diagnoser_name}: {aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX]}%, {aggregating_total_row[diagnosers_columns_prefix + diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX]}%")
+    print(f"{diagnoser_name}: {aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX]}%, {aggregating_total_row[diagnoser_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX]}%")

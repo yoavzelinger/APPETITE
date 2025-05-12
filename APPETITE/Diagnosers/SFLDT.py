@@ -107,7 +107,9 @@ class SFLDT(ADiagnoser):
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
-                 y: Series
+                 y: Series,
+                 use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
+                 use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR
     ):
         """
         Initialize the SFLDT diagnoser.
@@ -123,6 +125,7 @@ class SFLDT(ADiagnoser):
         self.tests_count = len(X)
         self.spectra = zeros((self.components_count, self.tests_count))
         self.error_vector = zeros(self.tests_count)
+        self.use_fuzzy_participation, self.use_fuzzy_error = use_fuzzy_participation, use_fuzzy_error
         self.fill_spectra_and_error_vector(X, y)
 
     def update_fuzzy_participation(self
@@ -170,11 +173,11 @@ class SFLDT(ADiagnoser):
             for node in map(self.mapped_tree.get_node, participated_nodes):
                 self.spectra[node.spectra_index, test_index] = 1
                 if node.is_terminal():
-        if constants.USE_FUZZY_PARTICIPATION:
-            self.update_fuzzy_participation()
-        if constants.USE_FUZZY_ERROR:
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
+        if self.use_fuzzy_error:
             self.update_fuzzy_error()
+        if self.use_fuzzy_participation:
+            self.update_fuzzy_participation()
         
 
     def get_diagnoses_with_return_indices(self,

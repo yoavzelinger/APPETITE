@@ -128,15 +128,20 @@ class SFLDT(ADiagnoser):
         self.use_fuzzy_participation, self.use_fuzzy_error = use_fuzzy_participation, use_fuzzy_error
         self.fill_spectra_and_error_vector(X, y)
 
-    def update_fuzzy_participation(self
+    def update_fuzzy_participation(self,
+                                   components_depths_vector: ndarray = None,
+                                   paths_depths_vector: ndarray = None
+
     ) -> None:
-        components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
+        if components_depths_vector is None:
+            components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
+        if paths_depths_vector is None:
+            paths_depths_vector = zeros(self.tests_count)
+            for test_index in range(self.tests_count):
+                test_participation_vector = tuple(self.spectra[:, test_index])
+                test_participated_nodes = np_where(test_participation_vector)[0]
+                paths_depths_vector[test_index] = len(test_participated_nodes)
         assert components_depths_vector.all()
-        paths_depths_vector = zeros(self.tests_count)
-        for test_index in range(self.tests_count):
-            test_participation_vector = tuple(self.spectra[:, test_index])
-            test_participated_nodes = np_where(test_participation_vector)[0]
-            paths_depths_vector[test_index] = len(test_participated_nodes)
         assert paths_depths_vector.all()
         components_depths_vector = components_depths_vector[:, None]
         self.spectra = (self.spectra * components_depths_vector) / paths_depths_vector

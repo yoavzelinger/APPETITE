@@ -17,9 +17,9 @@ from .SFLDT_Features import SFLDT_Features
 
 # The diagnosers dictionary - format: {diagnoser name: (diagnoser class, (diagnoser default parameters tuple))}
 diagnosers_dict = {
-    "SFLDT": (SFLDT, (constants.SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
+    "SFLDT": (SFLDT, ()),
     "STAT": (STAT, ()),
-    "STAT_SFLDT": (STAT_SFLDT, (constants.SFLDT_DEFAULT_SIMILARITY_MEASURES, )),
+    "STAT_SFLDT": (STAT_SFLDT, ()),
     "BARINEL": (BARINEL, ()),
     "STAT_BARINEL": (STAT_BARINEL, ()),
     "BARINEL_Paths_After": (BARINEL_Paths_After, ()),

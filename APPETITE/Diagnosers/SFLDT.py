@@ -163,17 +163,17 @@ class SFLDT(ADiagnoser):
         """
         # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
         node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))
-        for sample_id in range(self.tests_count):
+        for test_index in range(self.tests_count):
             participated_nodes = node_indicator.indices[
-                node_indicator.indptr[sample_id] : node_indicator.indptr[sample_id + 1]
+                node_indicator.indptr[test_index] : node_indicator.indptr[test_index + 1]
             ]
             for node in map(self.mapped_tree.get_node, participated_nodes):
-                self.spectra[node.spectra_index, sample_id] = 1
+                self.spectra[node.spectra_index, test_index] = 1
                 if node.is_terminal():
-                    self.error_vector[sample_id] = int(node.class_name != y[sample_id])
         if constants.USE_FUZZY_PARTICIPATION:
             self.update_fuzzy_participation()
         if constants.USE_FUZZY_ERROR:
+                    self.error_vector[test_index] = int(node.class_name != y[test_index])
             self.update_fuzzy_error()
         
 

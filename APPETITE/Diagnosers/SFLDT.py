@@ -127,10 +127,16 @@ class SFLDT(ADiagnoser):
 
     def update_fuzzy_participation(self
     ) -> None:
-        assert self.components_depths_vector.all()
+        components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
+        assert components_depths_vector.all()
+        self.paths_depths_vector = zeros(self.tests_count)
+        for test_index in range(self.tests_count):
+            test_participation_vector = tuple(self.spectra[:, test_index])
+            test_participated_nodes = np_where(test_participation_vector)[0]
+            self.paths_depths_vector[test_index] = len(test_participated_nodes)
         assert self.paths_depths_vector.all()
-        self.components_depths_vector = self.components_depths_vector[:, None]
-        self.spectra = (self.spectra * self.components_depths_vector) / self.paths_depths_vector
+        components_depths_vector = components_depths_vector[:, None]
+        self.spectra = (self.spectra * components_depths_vector) / self.paths_depths_vector
         assert np_max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {np_max(self.spectra)}"
 
     def update_fuzzy_error(self
@@ -144,7 +150,6 @@ class SFLDT(ADiagnoser):
         self.error_vector = np_array([self.error_vector[test_indices].mean() for test_indices in path_tests_indices.values()])
         self.tests_count = self.error_vector.shape[0]
 
-
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
@@ -156,8 +161,6 @@ class SFLDT(ADiagnoser):
         X (DataFrame): The data.
         y (Series): The target column.
         """
-        self.components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
-        self.paths_depths_vector = zeros(self.tests_count)
         # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
         node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))
         for sample_id in range(self.tests_count):
@@ -167,10 +170,7 @@ class SFLDT(ADiagnoser):
             for node in map(self.mapped_tree.get_node, participated_nodes):
                 self.spectra[node.spectra_index, sample_id] = 1
                 if node.is_terminal():
-                    self.paths_depths_vector[sample_id] = node.depth + 1
                     self.error_vector[sample_id] = int(node.class_name != y[sample_id])
-        assert self.components_depths_vector.all()
-        assert self.paths_depths_vector.all()
         if constants.USE_FUZZY_PARTICIPATION:
             self.update_fuzzy_participation()
         if constants.USE_FUZZY_ERROR:

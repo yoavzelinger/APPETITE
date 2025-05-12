@@ -132,14 +132,14 @@ class SFLDT(ADiagnoser):
     ) -> None:
         components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
         assert components_depths_vector.all()
-        self.paths_depths_vector = zeros(self.tests_count)
+        paths_depths_vector = zeros(self.tests_count)
         for test_index in range(self.tests_count):
             test_participation_vector = tuple(self.spectra[:, test_index])
             test_participated_nodes = np_where(test_participation_vector)[0]
-            self.paths_depths_vector[test_index] = len(test_participated_nodes)
-        assert self.paths_depths_vector.all()
+            paths_depths_vector[test_index] = len(test_participated_nodes)
+        assert paths_depths_vector.all()
         components_depths_vector = components_depths_vector[:, None]
-        self.spectra = (self.spectra * components_depths_vector) / self.paths_depths_vector
+        self.spectra = (self.spectra * components_depths_vector) / paths_depths_vector
         assert np_max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {np_max(self.spectra)}"
 
     def update_fuzzy_error(self

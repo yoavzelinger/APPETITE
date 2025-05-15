@@ -161,7 +161,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 "before after retrain accuracy increase": before_after_retrained_accuracy_bump * 100
             }
             for diagnoser_name in diagnoser_names:
-                fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
+                fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser__class_name=diagnoser_name, *diagnoser_parameters)
                 fixed_mapped_tree, faulty_nodes_indices = fixer.fix_tree()
                 faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
                 detected_faulty_features = set([faulty_node.feature if (faulty_node.feature or not faulty_node.is_terminal()) else "target" for faulty_node in faulty_nodes])

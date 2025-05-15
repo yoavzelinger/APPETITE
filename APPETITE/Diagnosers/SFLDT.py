@@ -132,13 +132,12 @@ class SFLDT(ADiagnoser):
         self.fill_spectra_and_error_vector(X, y)
 
     def update_fuzzy_participation(self,
-                                   components_depths_vector: ndarray = None
+                                   components_factor: ndarray = None
     ) -> None:
-        if components_depths_vector is None:
-            components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
-        assert components_depths_vector.all(), f"Components depths vector should be non-zero but got {components_depths_vector}"
-        components_depths_vector = components_depths_vector[:, None]
-        self.spectra = (self.spectra * components_depths_vector) / self.paths_depths_vector
+        if components_factor is None:
+            components_factor = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])[:, None]
+            assert components_factor.all(), f"Components depths vector should be non-zero but got {components_factor}"
+        self.spectra = (self.spectra * components_factor) / self.paths_depths_vector
         assert np_max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {np_max(self.spectra)}"
 
     def update_fuzzy_error(self
@@ -167,13 +166,13 @@ class SFLDT(ADiagnoser):
             self.feature_to_spectra_dict[node.feature][1].append(node_spectra_index)
         self.components_count = len(self.feature_to_spectra_dict)
         features_spectra = zeros((self.components_count, self.spectra.shape[1]))
-        features_count_vector = zeros(self.components_count)
+        features_count_vector = zeros((self.components_count, self.tests_count))
         for feature_spectra_index, feature_nodes_spectra_indices in self.feature_to_spectra_dict.values():
             features_spectra[feature_spectra_index] = 1
-            features_count_vector = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
+            features_count_vector[feature_spectra_index] = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
         self.spectra = features_spectra
         if self.use_fuzzy_participation:
-            self.update_fuzzy_participation(components_depths_vector=features_count_vector)
+            self.update_fuzzy_participation(components_factor=features_count_vector)
 
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 

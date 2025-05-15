@@ -6,7 +6,7 @@ from os import listdir, path as os_path
 from copy import deepcopy as copy
 from openpyxl import load_workbook
 
-from Tester import tester_constants
+from Tester import tester_constants, load_testing_diagnosers_data
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
@@ -37,56 +37,41 @@ diagnoser_dtypes_suffixes = {
     "fix accuracy increase": "float64"
 }
 
-fuzzy_columns_dtypes = copy(columns_dtypes)
-
-aggregated_columns, fuzzy_aggregated_columns = copy(common_aggregated_columns), copy(common_aggregated_columns)
+aggregated_columns = copy(common_aggregated_columns)
 aggregating_functions_dict = {common_aggregated_column: "sum" for common_aggregated_column in common_aggregated_columns}
-fuzzy_aggregating_functions_dict = copy(aggregating_functions_dict)
-for diagnoser_name in tester_constants.constants.DEFAULT_FIXING_DIAGNOSER:
+
+diagnosers_data = load_testing_diagnosers_data()
+diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output_name"], diagnosers_data))
+
+for diagnoser_name in diagnosers_output_names:
     for diagnoser_aggregated_column_suffix in diagnoser_aggregated_columns_suffixes:
         diagnoser_aggregated_column = f"{diagnoser_name} {diagnoser_aggregated_column_suffix}"
-        fuzzy_diagnoser_aggregated_column = f"fuzzy participation {diagnoser_aggregated_column}"
         aggregated_columns.append(diagnoser_aggregated_column)
-        fuzzy_aggregated_columns.append(fuzzy_diagnoser_aggregated_column)
-        aggregating_functions_dict[diagnoser_aggregated_column], fuzzy_aggregating_functions_dict[fuzzy_diagnoser_aggregated_column] = "sum", "sum"
+        aggregating_functions_dict[diagnoser_aggregated_column] = "sum"
     for diagnoser_column_suffix, diagnoser_column_dtype in diagnoser_dtypes_suffixes.items():
         diagnoser_column = f"{diagnoser_name} {diagnoser_column_suffix}"
-        fuzzy_diagnoser_column = f"fuzzy participation {diagnoser_column}"
-        columns_dtypes[diagnoser_column], fuzzy_columns_dtypes[fuzzy_diagnoser_column] = diagnoser_column_dtype, diagnoser_column_dtype
+        columns_dtypes[diagnoser_column] = diagnoser_column_dtype
 aggregated_count_column_name = "drift description"
-aggregating_functions_dict[aggregated_count_column_name], fuzzy_aggregating_functions_dict[aggregated_count_column_name] = "count", "count"
+aggregating_functions_dict[aggregated_count_column_name] = "count"
 
 
-output_dfs = [DataFrame(columns=group_by_columns + aggregated_columns + ["count"]).set_index(group_by_columns), DataFrame(columns=group_by_columns + fuzzy_aggregated_columns + ["count"]).set_index(group_by_columns)]
+output_df = DataFrame(columns=group_by_columns + aggregated_columns + ["count"]).set_index(group_by_columns)
 
 for current_file_index, current_file_name in enumerate(listdir(tester_constants.TEMP_RESULTS_FULL_PATH), 1):
     print("Working on file", current_file_index, ":", current_file_name)
     if not current_file_name.startswith(tester_constants.RESULTS_FILE_NAME_PREFIX):
         continue
-    relevant_output_df_index, relevant_aggregating_functions_dict, relevant_columns_dtypes = 0, aggregating_functions_dict, columns_dtypes
-    if current_file_name.startswith(tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX):
-        relevant_output_df_index, relevant_aggregating_functions_dict, relevant_columns_dtypes = 1, fuzzy_aggregating_functions_dict, fuzzy_columns_dtypes
     
     with open(os_path.join(tester_constants.TEMP_RESULTS_FULL_PATH, current_file_name), "r") as current_file:
-        current_results_df = read_csv(current_file, dtype=relevant_columns_dtypes)
-        current_group_by_df = current_results_df.groupby(group_by_columns).agg(relevant_aggregating_functions_dict)
+        current_results_df = read_csv(current_file, dtype=columns_dtypes)
+        current_group_by_df = current_results_df.groupby(group_by_columns).agg(aggregating_functions_dict)
         current_group_by_df.rename(columns={aggregated_count_column_name: "count"}, inplace=True)
-        assert all(current_group_by_df.columns == output_dfs[relevant_output_df_index].columns), f"Columns mismatch in {current_file_name}"
-        assert current_group_by_df.index.names == output_dfs[relevant_output_df_index].index.names, f"Index names mismatch in {current_file_name}"
-        output_dfs[relevant_output_df_index] = output_dfs[relevant_output_df_index].add(current_group_by_df, fill_value=0)
+        assert all(current_group_by_df.columns == output_df.columns), f"Columns mismatch in {current_file_name}"
+        assert current_group_by_df.index.names == output_df.index.names, f"Index names mismatch in {current_file_name}"
+        output_df = output_df.add(current_group_by_df, fill_value=0)
 
-print("Merging regular and fuzzy results")
+output_df = output_df[["count"] + aggregated_columns]
 
-# regular adjustments
-output_dfs[0] = output_dfs[0][["count"] + aggregated_columns]
-
-# fuzzy adjustments
-output_dfs[1]["fuzzy count"] = output_dfs[1]["count"]
-output_dfs[1] = output_dfs[1][["count", "fuzzy count"] + fuzzy_aggregated_columns]
-
-output_df = output_dfs[0].combine_first(output_dfs[1])
-fuzzy_aggregated_columns = [fuzzy_aggregated_column for fuzzy_aggregated_column in fuzzy_aggregated_columns if fuzzy_aggregated_column not in aggregated_columns]
-output_df = output_df[["count"] + aggregated_columns + ["fuzzy count"] + fuzzy_aggregated_columns]
 output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
 merged_results_sheet_name = "merged_results"
 with ExcelWriter(output_full_path, mode=('a' if os_path.exists(output_full_path) else 'w'), engine="openpyxl", if_sheet_exists="replace") as excel_writer:

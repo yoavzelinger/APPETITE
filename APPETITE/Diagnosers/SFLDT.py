@@ -133,7 +133,6 @@ class SFLDT(ADiagnoser):
 
     def update_fuzzy_participation(self,
                                    components_depths_vector: ndarray = None
-
     ) -> None:
         if components_depths_vector is None:
             components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
@@ -151,6 +150,7 @@ class SFLDT(ADiagnoser):
 
         self.spectra = np_array(list(path_tests_indices.keys())).T
         self.error_vector = np_array([self.error_vector[test_indices].mean() for test_indices in path_tests_indices.values()])
+        self.paths_depths_vector = np_array([self.paths_depths_vector[test_indices].min() for test_indices in path_tests_indices.values()])
         self.tests_count = self.error_vector.shape[0]
 
     def update_feature_components(self

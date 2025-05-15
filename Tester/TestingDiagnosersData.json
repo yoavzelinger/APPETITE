@@ -1,0 +1,62 @@
+[
+    {
+        "output_name": "Regular_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_fuzzy_participation": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Error_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_fuzzy_error": true
+        }
+    },
+    {
+        "output_name": "SFLDT_Features",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Error_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_fuzzy_participation": true,
+            "use_fuzzy_error": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_SFLDT_Features",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_fuzzy_participation": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Error_SFLDT_Features",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_fuzzy_error": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Error_SFLDT_Features",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_fuzzy_participation": true,
+            "use_fuzzy_error": true,
+            "use_feature_components": true
+        }
+    }
+]

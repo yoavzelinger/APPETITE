@@ -137,7 +137,7 @@ class SFLDT(ADiagnoser):
     ) -> None:
         if components_depths_vector is None:
             components_depths_vector = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])
-        assert components_depths_vector.all()
+        assert components_depths_vector.all(), f"Components depths vector should be non-zero but got {components_depths_vector}"
         components_depths_vector = components_depths_vector[:, None]
         self.spectra = (self.spectra * components_depths_vector) / self.paths_depths_vector
         assert np_max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {np_max(self.spectra)}"
@@ -197,7 +197,7 @@ class SFLDT(ADiagnoser):
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
                     self.paths_depths_vector[test_index] = node.depth + 1
-        assert self.paths_depths_vector.all()
+        assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got {self.paths_depths_vector}"
         if self.use_fuzzy_error:
             self.update_fuzzy_error()
         if self.use_feature_components:

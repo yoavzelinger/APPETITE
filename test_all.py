@@ -28,7 +28,7 @@ parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception
 parser.add_argument("-n", "--names", type=str, nargs="+", help="Specific datasets to run, default is all", default=[])
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all", default=[])
 parser.add_argument("-a", "--after_window", type=float, nargs="+", help="After window sizes, default is all", default=tester_constants.AFTER_WINDOW_TEST_SIZES)
-parser.add_argument("-ds", "--drift_size", type=int, help=f"size of the drift, default is between {tester_constants.MIN_DRIFT_SIZE} and {tester_constants.MAX_DRIFT_SIZE}", default=-1)
+parser.add_argument("-d", "--drift_size", type=int, help=f"size of the drift, default is between {tester_constants.MIN_DRIFT_SIZE} and {tester_constants.MAX_DRIFT_SIZE}", default=-1)
 parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
 parser.add_argument("-t", "--test", type=str, help="Test dataset to run if you want to run a specific test")
 

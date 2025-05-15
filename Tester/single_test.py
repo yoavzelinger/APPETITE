@@ -160,8 +160,6 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 "before after retrain accuracy": before_after_retrained_accuracy * 100,
                 "before after retrain accuracy increase": before_after_retrained_accuracy_bump * 100
             }
-            if isinstance(diagnoser_names, str):
-                diagnoser_names = (diagnoser_names, )
             for diagnoser_name in diagnoser_names:
                 fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser_name=diagnoser_name, *diagnoser_parameters)
                 fixed_mapped_tree, faulty_nodes_indices = fixer.fix_tree()

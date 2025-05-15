@@ -1,4 +1,4 @@
-from numpy import zeros, array as np_array, max as np_max, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, where as np_where
+from numpy import zeros, array as np_array, max as np_max, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, isclose as np_isclose
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.stats import pearsonr as pearson_correlation
 from collections import defaultdict
@@ -60,7 +60,7 @@ def get_correlation(participation_vector: ndarray,
         float: The correlation similarity between the vectors.
     """
     # check if the participation vector is all 0
-    if all(participation_vector == 0):  # constant participation, cannot calculate correlation, using cosine similarity instead
+    if all(np_isclose(participation_vector, participation_vector[0])):  # constant participation, cannot calculate correlation, using cosine similarity instead
         return get_cosine_similarity(participation_vector, error_vector)
     return pearson_correlation(participation_vector, error_vector)[0]
 

@@ -39,9 +39,7 @@ print(f"Running config: {args}")
 constants.DEFAULT_FUZZY_PARTICIPATION = args.fuzzy_participation
 constants.DEFAULT_FUZZY_ERROR = args.fuzzy_error
 diagnosers_string = ""
-if constants.DEFAULT_FIXING_DIAGNOSER != args.diagnosers:
-    constants.DEFAULT_FIXING_DIAGNOSER = args.diagnosers
-    diagnosers_string = "-".join(constants.DEFAULT_FIXING_DIAGNOSER)
+constants.DEFAULT_FIXING_DIAGNOSER = args.diagnosers
 after_windows_string = ""
 if args.after_window != tester_constants.AFTER_WINDOW_TEST_SIZES:
     tester_constants.AFTER_WINDOW_TEST_SIZES = args.after_window
@@ -152,9 +150,6 @@ os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
 
 RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.RESULTS_FILE_NAME_PREFIX if not constants.DEFAULT_FUZZY_PARTICIPATION else tester_constants.RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX)
 ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.ERRORS_FILE_NAME_PREFIX if not constants.DEFAULT_FUZZY_PARTICIPATION else tester_constants.ERRORS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX)
-if diagnosers_string:
-    RESULTS_FILE_PATH_PREFIX += f"_{diagnosers_string}"
-    ERRORS_FILE_PATH_PREFIX += f"_{diagnosers_string}"
 if args.drift_size > 0:
     RESULTS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"
     ERRORS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"

@@ -4,14 +4,18 @@ import APPETITE.Constants as constants
 MINIMUM_ORIGINAL_ACCURACY = 0.75
 MINIMUM_DRIFT_ACCURACY_DROP = 0.1
 
-# Transform the diagnoser to iterable
-try:
-    iter(constants.DEFAULT_FIXING_DIAGNOSER)
-    if isinstance(constants.DEFAULT_FIXING_DIAGNOSER, str):
-        raise TypeError
-except TypeError:
-    constants.DEFAULT_FIXING_DIAGNOSER = (constants.DEFAULT_FIXING_DIAGNOSER, )
+DEFAULT_TESTING_DIAGNOSER = {
+    "output_name": "Regular_SFLDT",
+	"class_name": "SFLDT",
+	"parameters": {}
+    }
 
+if isinstance(DEFAULT_TESTING_DIAGNOSER, dict):
+    DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
+assert isinstance(DEFAULT_TESTING_DIAGNOSER, (list, tuple)) and all(isinstance(diagnoser_data, dict) for diagnoser_data in DEFAULT_TESTING_DIAGNOSER), \
+    "DEFAULT_FIXING_DIAGNOSER must be a tuple of dictionaries, each dictionary representing a diagnoser."
+
+TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME = "TestingDiagnosersData"
 
 STOP_ON_EXCEPTION = False
 
@@ -29,9 +33,6 @@ TEMP_RESULTS_DIRECTORY = "temp"
 TEMP_RESULTS_FULL_PATH = os_path.join(RESULTS_FULL_PATH, TEMP_RESULTS_DIRECTORY)
 RESULTS_FILE_NAME_PREFIX = "results"
 ERRORS_FILE_NAME_PREFIX = "errors"
-FUZZY_PARTICIPATION_PREFIX = "fuzzy_participation"
-RESULTS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX = f"{RESULTS_FILE_NAME_PREFIX}_{FUZZY_PARTICIPATION_PREFIX}"
-ERRORS_FUZZY_PARTICIPATION_FILE_NAME_PREFIX = f"{ERRORS_FILE_NAME_PREFIX}_{FUZZY_PARTICIPATION_PREFIX}"
 
 EXAMPLE_FILE_NAME = "bank"
 

@@ -14,8 +14,8 @@ class Fixer:
                  X: DataFrame,
                  y: Series,
                  diagnoser__class_name: str,
-                 *diagnoser_parameters: tuple[object],
-                 diagnoser_output_name: str = None
+                 diagnoser_parameters: dict[str, object],
+                 diagnoser_output_name: str=None
     ):
         """
         Initialize the Fixer.
@@ -25,14 +25,15 @@ class Fixer:
         X (DataFrame): The data.
         y (Series): The target column.
         diagnoser_name (str): The diagnoser name.
-        diagnoser_parameters (tuple[object]): The diagnoser parameters.
+        diagnoser_parameters ( dict[str, object]): The diagnoser parameters.
+        diagnoser_output_name (str): The diagnoser output name.
         """
         self.mapped_tree = deepcopy(mapped_tree)
         self.feature_types = mapped_tree.data_feature_types
         self.X = X
         self.y = y
         diagnoser_class = get_diagnoser(diagnoser__class_name)
-        self.diagnoser: ADiagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, *diagnoser_parameters)
+        self.diagnoser: ADiagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, **diagnoser_parameters)
         self.faulty_nodes = None    # List of sk_indices of the faulty nodes; Lazy evaluation
         self.tree_already_fixed = False
         self.diagnoser_output_name = diagnoser_output_name if diagnoser_output_name else diagnoser__class_name

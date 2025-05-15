@@ -36,10 +36,6 @@ CATEGORICAL_DRIFT_SEVERITIES = (
     0.5, 0.7, # Severity 2
     0.9 # Severity 3
 )
-
-# DEFAULT_FIXING_DIAGNOSER = ("SFLDT", "STAT_SFLDT", "SFLDT_Features")    # SFLDT Types
-DEFAULT_FIXING_DIAGNOSER = ("STAT_SFLDT", "BARINEL", "BARINEL_Paths_After", "STAT_BARINEL_Paths_After", "BARINEL_Paths_Difference", "STAT_BARINEL_Paths_Difference", "BARINEL_Features", "BARINEL_Features_Paths_After", "BARINEL_Features_Paths_Difference", "SFLDT_Features") # All relevant diagnosers
-
 BARINEL_COMPONENT_PRIOR_PROBABILITY = 1 / 1000
 
 # Choose the BARINEL ranking algorithm

@@ -111,7 +111,7 @@ def get_total_drift_types(drifted_features_types):
         return "numeric"
     return "binary"
 
-def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_size=constants.AFTER_WINDOW_SIZE, diagnoser_names=tester_constants.constants.DEFAULT_FIXING_DIAGNOSER, *diagnoser_parameters):
+def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_size=constants.AFTER_WINDOW_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
     dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
@@ -160,8 +160,9 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 "before after retrain accuracy": before_after_retrained_accuracy * 100,
                 "before after retrain accuracy increase": before_after_retrained_accuracy_bump * 100
             }
-            for diagnoser_name in diagnoser_names:
-                fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser__class_name=diagnoser_name, *diagnoser_parameters)
+            for diagnoser_data in diagnosers_data:
+                diagnoser_output_name, diagnoser_class_name, diagnoser_parameters = diagnoser_data["output_name"], diagnoser_data["class_name"], diagnoser_data["parameters"]
+                fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser__class_name=diagnoser_class_name, diagnoser_parameters=diagnoser_parameters, diagnoser_output_name=diagnoser_output_name)
                 fixed_mapped_tree, faulty_nodes_indices = fixer.fix_tree()
                 faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
                 detected_faulty_features = set([faulty_node.feature if (faulty_node.feature or not faulty_node.is_terminal()) else "target" for faulty_node in faulty_nodes])
@@ -171,19 +172,19 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 wasted_effort = get_wasted_effort(mapped_tree, fixer.diagnoses, drifted_features, tester_constants.WASTED_EFFORT_REQUIRE_FULL_FIX)
                 correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
                 current_results_dict.update({
-                    f"{diagnoser_name} faulty nodes indices": ", ".join(map(str, faulty_nodes_indices)),
-                    f"{diagnoser_name} faulty features": ", ".join(detected_faulty_features),
-                    f"{diagnoser_name} wasted effort": wasted_effort,
-                    f"{diagnoser_name} correctly_identified": correctly_identified,
-                    f"{diagnoser_name} fix accuracy": fixed_test_accuracy * 100,
-                    f"{diagnoser_name} fix accuracy increase": test_accuracy_bump * 100
+                    f"{diagnoser_output_name} faulty nodes indices": ", ".join(map(str, faulty_nodes_indices)),
+                    f"{diagnoser_output_name} faulty features": ", ".join(detected_faulty_features),
+                    f"{diagnoser_output_name} wasted effort": wasted_effort,
+                    f"{diagnoser_output_name} correctly_identified": correctly_identified,
+                    f"{diagnoser_output_name} fix accuracy": fixed_test_accuracy * 100,
+                    f"{diagnoser_output_name} fix accuracy increase": test_accuracy_bump * 100
                 })
             yield current_results_dict
         except Exception as e:
             exception_class = e.__class__.__name__
             tb = traceback.extract_tb(e.__traceback__)
             error_line, error_file = tb[-1].lineno, tb[-1].filename
-            diagnoser_info = f", diagnoser: {diagnoser_name}" if ('diagnoser_name' in locals() and diagnoser_name) else ""
+            diagnoser_info = f", diagnoser: {diagnoser_output_name} ({diagnoser_class_name})" if ('diagnoser_output_name' in locals() and diagnoser_output_name) else ""
             raise Exception(f"{exception_class} in {drift_description}, after window size: {dataset.after_window_size} ({error_file}, line {error_line}{diagnoser_info}): {e}")
         
 def get_example_mapped_tree(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
@@ -192,8 +193,8 @@ def get_example_mapped_tree(directory=tester_constants.DATASETS_FULL_PATH, file_
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
-def sanity_run(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
-    for result in run_single_test(directory, file_name):
+def sanity_run(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
+    for result in run_single_test(directory=directory, file_name=file_name, diagnosers_data=diagnosers_data):
         print(result)
         
 if __name__ == "__main__":

@@ -204,10 +204,20 @@ class SFLDT(ADiagnoser):
         elif self.use_fuzzy_participation:
             self.update_fuzzy_participation()
         
-
+    def convert_features_diagnosis_to_nodes_diagnosis(self,
+                                                      features_diagnosis: list[int]
+     ) -> list[int]:
+        nodes_diagnosis = []
+        for feature_spectra_index in features_diagnosis:
+            feature = self.spectra_index_to_features_dict[feature_spectra_index]
+            nodes_diagnosis.extend(self.feature_to_spectra_dict[feature][1])
+        return nodes_diagnosis
+    
     def convert_diagnoses_indices(self,
                                   retrieve_spectra_indices: bool = False
-    ):
+    ) -> None:
+        if self.use_feature_components:
+            self.diagnoses = [(self.convert_features_diagnosis_to_nodes_diagnosis(diagnosis), rank) for diagnosis, rank in self.diagnoses]
         if retrieve_spectra_indices:
             return
         return_indices_diagnoses = []

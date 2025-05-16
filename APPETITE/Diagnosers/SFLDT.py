@@ -101,9 +101,6 @@ def get_BCE_similarity(participation_vector: ndarray,
     return np_exp(-bce_loss)
 
 class SFLDT(ADiagnoser):
-
-    diagnoser_type = constants.SINGLE_DIAGNOSER_TYPE_NAME
-
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,

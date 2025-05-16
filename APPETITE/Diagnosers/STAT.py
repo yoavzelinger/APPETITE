@@ -3,8 +3,6 @@ from copy import deepcopy
 from .ADiagnoser import *
 
 class STAT(ADiagnoser):
-    diagnoser_type = constants.SINGLE_DIAGNOSER_TYPE_NAME
-
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
@@ -96,6 +94,6 @@ class STAT(ADiagnoser):
           where the first element is the index and the second is the violation ratio.
         """
         if self.diagnoses is None:
-            self.diagnoses = [(node_index, self.get_node_violation_difference(node_index)) for node_index in self.mapped_tree.tree_dict.keys()]
+            self.diagnoses = [([node_index], self.get_node_violation_difference(node_index)) for node_index in self.mapped_tree.tree_dict.keys()]
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks)

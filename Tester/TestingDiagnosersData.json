@@ -58,5 +58,73 @@
             "use_fuzzy_error": true,
             "use_feature_components": true
         }
+    },
+    {
+        "output_name": "STAT_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_stat": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_STAT_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_participation": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Error_STAT_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_error": true
+        }
+    },
+    {
+        "output_name": "STAT_SFLDT_Features",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_stat": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Error_STAT_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_participation": true,
+            "use_fuzzy_error": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_STAT_SFLDT_Features",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_participation": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Error_STAT_SFLDT_Features",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_error": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Error_STAT_SFLDT_Features",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_participation": true,
+            "use_fuzzy_error": true,
+            "use_feature_components": true
+        }
     }
 ]

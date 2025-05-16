@@ -320,5 +320,5 @@ class SFLDT(ADiagnoser):
             self.diagnoses = [([spectra_index], similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.components_count)]
             if self.stat:
                 self.combine_stat_diagnoses()
-            self.convert_diagnoses_indices(retrieve_spectra_indices)
+        self.convert_diagnoses_indices(retrieve_spectra_indices)
         return super().get_diagnoses(retrieve_ranks)

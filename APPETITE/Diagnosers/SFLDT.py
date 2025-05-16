@@ -7,6 +7,7 @@ from sys import float_info
 EPSILON = float_info.epsilon
 
 from .ADiagnoser import *
+from .STAT import STAT
 from APPETITE import Constants as constants
 
 def get_faith_similarity(participation_vector: ndarray,
@@ -105,6 +106,7 @@ class SFLDT(ADiagnoser):
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
+                 add_stat: bool = constants.DEFAULT_ADD_STAT,
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
                  use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR,
                  use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS
@@ -127,6 +129,7 @@ class SFLDT(ADiagnoser):
         self.use_fuzzy_participation, self.use_fuzzy_error = use_fuzzy_participation, use_fuzzy_error
         self.use_feature_components = use_feature_components
         self.fill_spectra_and_error_vector(X, y)
+        self.stat = STAT(mapped_tree, X, y) if add_stat else None
 
     def update_fuzzy_participation(self,
                                    components_factor: ndarray = None
@@ -272,6 +275,20 @@ class SFLDT(ADiagnoser):
         # both binary
         return get_faith_similarity
     
+    def combine_stat_diagnoses(self
+     ) -> None:
+        """
+        Combine stat diagnoses with the SFLDT diagnoses.
+        the combination is done by multiplying the current diagnosis rank with the average STAT rank of all the corresponding diagnosis nodes.
+        """
+        self.stat_diagnoses = self.stat.get_diagnoses(retrieve_ranks=True)
+        self.stat_diagnoses_dict = {node_index[0]: rank for node_index, rank in self.stat_diagnoses}
+        if self.diagnoses is None: # no diagnoses to combine with
+            return
+        convert_spectra_to_node_indices_function = lambda spectra_indices: map(self.mapped_tree.convert_spectra_index_to_node_index, spectra_indices)
+        get_average_stat_rank_function = lambda spectra_indices: sum(convert_spectra_to_node_indices_function(spectra_indices)) / len(spectra_indices)
+        self.diagnoses = [(diagnosis, sfldt_rank * get_average_stat_rank_function(diagnosis)) for diagnosis, sfldt_rank in self.diagnoses]
+    
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
                       retrieve_spectra_indices: bool = False
@@ -291,5 +308,7 @@ class SFLDT(ADiagnoser):
         if self.diagnoses is None:
             similarity_measure_function = self.get_relevant_similarity_function()
             self.diagnoses = [([spectra_index], similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.components_count)]
+            if self.stat:
+                self.combine_stat_diagnoses()
             self.convert_diagnoses_indices(retrieve_spectra_indices)
         return super().get_diagnoses(retrieve_ranks)

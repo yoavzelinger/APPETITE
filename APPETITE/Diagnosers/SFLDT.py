@@ -131,6 +131,10 @@ class SFLDT(ADiagnoser):
     def update_fuzzy_participation(self,
                                    components_factor: ndarray = None
     ) -> None:
+        """
+        Update the participation matrix to be fuzzy.
+        Each participation will be calculated with a component factor normalized it's classification path depth.
+        """
         if components_factor is None:
             components_factor = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])[:, None]
             assert components_factor.all(), f"Components depths vector should be non-zero but got {components_factor}"
@@ -139,6 +143,11 @@ class SFLDT(ADiagnoser):
 
     def update_fuzzy_error(self
     ) -> None:
+        """
+        Update the error vector to be fuzzy.
+        Each test will be correspond to classification path in the tree (that has any nodes passed through).
+        The error value will be the average error (the misclassification) of the classification path.
+        """
         path_tests_indices = defaultdict(list)
         for test_index in range(self.tests_count):
             test_participation_vector = tuple(self.spectra[:, test_index])
@@ -151,6 +160,11 @@ class SFLDT(ADiagnoser):
 
     def update_feature_components(self
     ) -> None:
+        """
+        Update the spectra matrix to be based on the features.
+        Each feature will be represented by a single spectra index.
+        If fuzzy participation is used, each component (feature) factor will be the amount of nodes of the corresponding feature in the relevant classification path.
+        """
         self.feature_to_spectra_dict = {}  # {feature: feature_spectra_index, [node_spectra_indices]}
         self.spectra_index_to_features_dict = {}  # {feature_spectra_index: feature}
         for node_spectra_index, node in self.mapped_tree.spectra_dict.items():
@@ -204,6 +218,14 @@ class SFLDT(ADiagnoser):
     def convert_features_diagnosis_to_nodes_diagnosis(self,
                                                       features_diagnosis: list[int]
      ) -> list[int]:
+        """
+        Convert the features diagnosis to nodes diagnosis.
+        The function will return the spectra indices of the nodes that their feature are part of the features diagnosis.
+        Parameters:
+            features_diagnosis (list[int]): The features diagnosis.
+        Returns:
+            list[int]: The diagnosis with node spectra indices.
+        """
         nodes_diagnosis = []
         for feature_spectra_index in features_diagnosis:
             feature = self.spectra_index_to_features_dict[feature_spectra_index]
@@ -213,6 +235,12 @@ class SFLDT(ADiagnoser):
     def convert_diagnoses_indices(self,
                                   retrieve_spectra_indices: bool = False
     ) -> None:
+        """
+        Convert the diagnoses indices from spectra indices to node indices.
+        If the feature components are used, the function will first convert the indices to node indices.
+        Parameters:
+            retrieve_spectra_indices (bool): Whether to return the spectra indices or the node indices.
+        """
         if self.use_feature_components:
             self.diagnoses = [(self.convert_features_diagnosis_to_nodes_diagnosis(diagnosis), rank) for diagnosis, rank in self.diagnoses]
         if retrieve_spectra_indices:

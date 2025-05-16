@@ -118,7 +118,10 @@ class SFLDT(ADiagnoser):
         mapped_tree (MappedDecisionTree): The mapped decision tree.
         X (DataFrame): The data.
         y (Series): The target column.
-        similarity_measure (str): The similarity measure to use.
+        combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
+        use_fuzzy_participation (bool): Whether to use fuzzy components participation.
+        use_fuzzy_error (bool): Whether to use fuzzy error vector.
+        use_feature_components (bool): Whether to use feature components.
         """
         super().__init__(mapped_tree, X, y)
         self.components_count = mapped_tree.node_count

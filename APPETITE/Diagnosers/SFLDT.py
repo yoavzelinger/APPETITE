@@ -292,8 +292,7 @@ class SFLDT(ADiagnoser):
         Combine stat diagnoses with the SFLDT diagnoses.
         the combination is done by multiplying the current diagnosis rank with the average STAT rank of all the corresponding diagnosis nodes.
         """
-        stat_diagnoses = self.load_stat_diagnoses()
-        stat_diagnoses_dict = {node_index[0]: rank for node_index, rank in stat_diagnoses}
+        stat_diagnoses_dict = {node_index[0]: rank for node_index, rank in self.load_stat_diagnoses()}
         convert_spectra_to_node_indices_function = lambda spectra_indices: map(self.mapped_tree.convert_spectra_index_to_node_index, spectra_indices)
         get_nodes_stat_ranks_function = lambda spectra_indices: map(stat_diagnoses_dict.get, convert_spectra_to_node_indices_function(spectra_indices))
         get_average_stat_rank_function = lambda spectra_indices: sum(get_nodes_stat_ranks_function(spectra_indices)) / len(spectra_indices)

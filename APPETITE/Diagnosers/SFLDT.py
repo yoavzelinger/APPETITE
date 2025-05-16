@@ -106,7 +106,7 @@ class SFLDT(ADiagnoser):
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 add_stat: bool = constants.DEFAULT_ADD_STAT,
+                 combine_stat: bool = constants.DEFAULT_ADD_STAT,
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
                  use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR,
                  use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS
@@ -129,7 +129,7 @@ class SFLDT(ADiagnoser):
         self.use_fuzzy_participation, self.use_fuzzy_error = use_fuzzy_participation, use_fuzzy_error
         self.use_feature_components = use_feature_components
         self.fill_spectra_and_error_vector(X, y)
-        self.stat = STAT(mapped_tree, X, y) if add_stat else None
+        self.stat = STAT(mapped_tree, X, y) if combine_stat else None
 
     def update_fuzzy_participation(self,
                                    components_factor: ndarray = None

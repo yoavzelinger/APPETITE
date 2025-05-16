@@ -209,7 +209,7 @@ class SFLDT(ADiagnoser):
                                   retrieve_spectra_indices: bool = False
     ):
         if retrieve_spectra_indices:
-            return self.diagnoses
+            return
         return_indices_diagnoses = []
         for diagnosis, rank in self.diagnoses:
             diagnosis = [self.mapped_tree.convert_spectra_index_to_node_index(spectra_index) for spectra_index in diagnosis]

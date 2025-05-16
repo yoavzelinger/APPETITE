@@ -255,7 +255,6 @@ class SFLDT(ADiagnoser):
         """
         if self.diagnoses is None:
             similarity_measure_function = self.get_relevant_similarity_function()
-            self.sort_diagnoses()
             self.diagnoses = [([spectra_index], similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.components_count)]
         self.convert_diagnoses_indices(retrieve_spectra_indices)
         return super().get_diagnoses(retrieve_ranks)

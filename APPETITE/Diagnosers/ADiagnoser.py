@@ -58,4 +58,5 @@ class ADiagnoser(ABC):
         list[int] | list[tuple[int, float]] | list[list[int]] | list[tuple[list[int], float]]: The diagnosis (can be single or multiple). If retrieve_ranks is True, the diagnosis will be a list of tuples,
           where the first element is the diagnosis and the second is the rank.
         """
+        self.sort_diagnoses()
         return self.diagnoses if retrieve_ranks else self.get_diagnoses_without_ranks(self.diagnoses)

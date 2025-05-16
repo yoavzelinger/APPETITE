@@ -278,18 +278,25 @@ class SFLDT(ADiagnoser):
         # both binary
         return get_faith_similarity
     
+    def load_stat_diagnoses(self) -> None:
+        """
+        Load the diagnoses from the STAT diagnoser.
+        The diagnoses will be used to combine with the SFLDT diagnoses.
+        """
+        assert self.stat, "STAT diagnoser is not initialized"
+        return self.stat.get_diagnoses(retrieve_ranks=True)
+    
     def combine_stat_diagnoses(self
      ) -> None:
         """
         Combine stat diagnoses with the SFLDT diagnoses.
         the combination is done by multiplying the current diagnosis rank with the average STAT rank of all the corresponding diagnosis nodes.
         """
-        self.stat_diagnoses = self.stat.get_diagnoses(retrieve_ranks=True)
-        self.stat_diagnoses_dict = {node_index[0]: rank for node_index, rank in self.stat_diagnoses}
-        if self.diagnoses is None: # no diagnoses to combine with
-            return
+        stat_diagnoses = self.load_stat_diagnoses()
+        stat_diagnoses_dict = {node_index[0]: rank for node_index, rank in stat_diagnoses}
         convert_spectra_to_node_indices_function = lambda spectra_indices: map(self.mapped_tree.convert_spectra_index_to_node_index, spectra_indices)
-        get_average_stat_rank_function = lambda spectra_indices: sum(convert_spectra_to_node_indices_function(spectra_indices)) / len(spectra_indices)
+        get_nodes_stat_ranks_function = lambda spectra_indices: map(stat_diagnoses_dict.get, convert_spectra_to_node_indices_function(spectra_indices))
+        get_average_stat_rank_function = lambda spectra_indices: sum(get_nodes_stat_ranks_function(spectra_indices)) / len(spectra_indices)
         self.diagnoses = [(diagnosis, sfldt_rank * get_average_stat_rank_function(diagnosis)) for diagnosis, sfldt_rank in self.diagnoses]
     
     def get_diagnoses(self,

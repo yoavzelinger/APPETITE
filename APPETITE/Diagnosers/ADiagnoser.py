@@ -45,7 +45,6 @@ class ADiagnoser(ABC):
     @abstractmethod
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
-                      diagnoses: list[int] | list[tuple[int, float]] | list[list[int]] | list[tuple[list[int], float]] = None
      ) -> list[int] | list[tuple[int, float]] | list[list[int]] | list[tuple[list[int], float]]:
         """
         Get the diagnosis of the nodes.
@@ -54,12 +53,9 @@ class ADiagnoser(ABC):
 
         Parameters:
         retrieve_ranks (bool): Whether to return the diagnosis ranks.
-        diagnoses (list[int] | list[tuple[int, float]] | list[list[int]] | list[tuple[list[int], float]]): Optional - Given diagnoses
 
         Returns:
         list[int] | list[tuple[int, float]] | list[list[int]] | list[tuple[list[int], float]]: The diagnosis (can be single or multiple). If retrieve_ranks is True, the diagnosis will be a list of tuples,
           where the first element is the diagnosis and the second is the rank.
         """
-        if diagnoses is None:
-            diagnoses = self.diagnoses
-        return diagnoses if retrieve_ranks else self.get_diagnoses_without_ranks(diagnoses)
+        return self.diagnoses if retrieve_ranks else self.get_diagnoses_without_ranks(self.diagnoses)

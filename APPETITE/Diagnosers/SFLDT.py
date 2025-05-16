@@ -211,14 +211,14 @@ class SFLDT(ADiagnoser):
         if retrieve_spectra_indices:
             return self.diagnoses
         convert_func = self.mapped_tree.convert_spectra_index_to_node_index
-        returned_diagnoses = []
+        return_indices_diagnoses = []
         for diagnosis, rank in self.diagnoses:
             if isinstance(diagnosis, int):
                 diagnosis = convert_func(diagnosis)
             else:
                 diagnosis = [convert_func(spectra_index) for spectra_index in diagnosis]
-            returned_diagnoses.append((diagnosis, rank))
-        return returned_diagnoses
+            return_indices_diagnoses.append((diagnosis, rank))
+        self.diagnoses = return_indices_diagnoses
     
     def get_relevant_similarity_function(self):
         """
@@ -262,4 +262,4 @@ class SFLDT(ADiagnoser):
             self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.components_count)]
             self.sort_diagnoses()
         diagnoses = self.get_diagnoses_with_return_indices(retrieve_spectra_indices)
-        return super().get_diagnoses(retrieve_ranks, diagnoses)
+        return super().get_diagnoses(retrieve_ranks)

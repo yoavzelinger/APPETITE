@@ -205,8 +205,8 @@ class SFLDT(ADiagnoser):
             self.update_fuzzy_participation()
         
 
-    def get_diagnoses_with_return_indices(self,
-                                          retrieve_spectra_indices: bool = False
+    def convert_diagnoses_indices(self,
+                                  retrieve_spectra_indices: bool = False
     ):
         if retrieve_spectra_indices:
             return self.diagnoses
@@ -261,5 +261,5 @@ class SFLDT(ADiagnoser):
             similarity_measure_function = self.get_relevant_similarity_function()
             self.diagnoses = [(spectra_index, similarity_measure_function(self.spectra[spectra_index], self.error_vector)) for spectra_index in range(self.components_count)]
             self.sort_diagnoses()
-        diagnoses = self.get_diagnoses_with_return_indices(retrieve_spectra_indices)
+        self.convert_diagnoses_indices(retrieve_spectra_indices)
         return super().get_diagnoses(retrieve_ranks)

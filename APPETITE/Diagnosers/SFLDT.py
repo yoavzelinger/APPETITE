@@ -171,22 +171,20 @@ class SFLDT(ADiagnoser):
         Each feature will be represented by a single spectra index.
         If fuzzy participation is used, each component (feature) factor will be the amount of nodes of the corresponding feature in the relevant classification path.
         """
-        self.feature_to_spectra_dict = {}  # {feature: feature_spectra_index, [node_spectra_indices]}
-        self.spectra_index_to_features_dict = {}  # {feature_spectra_index: feature}
+        self.feature_index_to_node_indices_dict = defaultdict(list)  # {feature_index: [node_spectra_indices]}
+        self.feature_indices_dict = {}  # {feature: feature_index}
         for node_spectra_index, node in self.mapped_tree.spectra_dict.items():
             if node.is_terminal():
                 continue
-            if node.feature not in self.feature_to_spectra_dict:
-                feature_spectra_index = len(self.feature_to_spectra_dict)
-                self.feature_to_spectra_dict[node.feature] = feature_spectra_index, []
-                self.spectra_index_to_features_dict[feature_spectra_index] = node.feature
-            self.feature_to_spectra_dict[node.feature][1].append(node_spectra_index)
-        self.components_count = len(self.feature_to_spectra_dict)
+            if node.feature not in self.feature_indices_dict:
+                self.feature_indices_dict[node.feature] = len(self.feature_indices_dict)
+            self.feature_index_to_node_indices_dict[self.feature_indices_dict[node.feature]].append(node_spectra_index)
+        self.components_count = len(self.feature_indices_dict)
         features_spectra = zeros((self.components_count, self.spectra.shape[1]))
         features_count_vector = zeros((self.components_count, self.tests_count))
-        for feature_spectra_index, feature_nodes_spectra_indices in self.feature_to_spectra_dict.values():
-            features_spectra[feature_spectra_index] = 1
-            features_count_vector[feature_spectra_index] = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
+        for feature_index, feature_nodes_spectra_indices in self.feature_index_to_node_indices_dict.items():
+            features_spectra[feature_index] = 1
+            features_count_vector[feature_index] = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
         self.spectra = features_spectra
         if self.use_fuzzy_participation:
             self.update_fuzzy_participation(components_factor=features_count_vector)
@@ -233,9 +231,8 @@ class SFLDT(ADiagnoser):
             list[int]: The diagnosis with node spectra indices.
         """
         nodes_diagnosis = []
-        for feature_spectra_index in features_diagnosis:
-            feature = self.spectra_index_to_features_dict[feature_spectra_index]
-            nodes_diagnosis.extend(self.feature_to_spectra_dict[feature][1])
+        for feature_index in features_diagnosis:
+            nodes_diagnosis.extend(self.feature_index_to_node_indices_dict[feature_index])
         return nodes_diagnosis
     
     def convert_diagnoses_indices(self,

@@ -275,7 +275,8 @@ class SFLDT(ADiagnoser):
         # both binary
         return get_faith_similarity
     
-    def load_stat_diagnoses(self) -> None:
+    def load_stat_diagnoses(self
+     ) -> list[tuple[int, float]]:
         """
         Load the diagnoses from the STAT diagnoser.
         The diagnoses will be used to combine with the SFLDT diagnoses.

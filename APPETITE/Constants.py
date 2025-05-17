@@ -53,7 +53,7 @@ DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
 DEFAULT_FUZZY_ERROR = False # Use fuzzy error vector
 DEFAULT_FEATURE_COMPONENTS = False # Use features components
 
-BARINEL_STD_THRESHOLD = 0.5
+BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5
 
 SINGLE_DIAGNOSER_TYPE_NAME = "single_diagnoser"
 MULTIPLE_DIAGNOSER_TYPE_NAME = "multiple_diagnoser"

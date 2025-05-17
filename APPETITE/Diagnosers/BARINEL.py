@@ -86,7 +86,7 @@ class BARINEL(SFLDT):
         the combination is done by using the stat ranks of the components as the prior probabilities of the components.
         """
         stat_diagnoses = self.load_stat_diagnoses()
-        stat_diagnoses.sort(key=lambda diagnosis: self.mapped_tree.convert_node_index_to_spectra_index(diagnosis[0])) # sort by the components order
+        stat_diagnoses.sort(key=lambda diagnosis: self.mapped_tree.convert_node_index_to_spectra_index(diagnosis[0])) # sort by the components order (to match the spectra indices)
         nodes_stat_rank_vector = np_array([diagnosis[1] for diagnosis in stat_diagnoses])
         if not self.use_feature_components:
             self.components_prior_probabilities = nodes_stat_rank_vector

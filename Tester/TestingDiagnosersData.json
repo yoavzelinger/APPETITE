@@ -126,5 +126,133 @@
             "use_fuzzy_error": true,
             "use_feature_components": true
         }
+    },
+    {
+        "output_name": "Regular_BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_fuzzy_participation": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Error_BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_fuzzy_error": true
+        }
+    },
+    {
+        "output_name": "BARINEL_Features",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Error_BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_fuzzy_participation": true,
+            "use_fuzzy_error": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_BARINEL_Features",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_fuzzy_participation": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Error_BARINEL_Features",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_fuzzy_error": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Error_BARINEL_Features",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_fuzzy_participation": true,
+            "use_fuzzy_error": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "STAT_BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_STAT_BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_participation": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Error_STAT_BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_error": true
+        }
+    },
+    {
+        "output_name": "STAT_BARINEL_Features",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Error_STAT_BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_participation": true,
+            "use_fuzzy_error": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_STAT_BARINEL_Features",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_participation": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Error_STAT_BARINEL_Features",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_error": true,
+            "use_feature_components": true
+        }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Error_STAT_BARINEL_Features",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": true,
+            "use_fuzzy_participation": true,
+            "use_fuzzy_error": true,
+            "use_feature_components": true
+        }
     }
 ]

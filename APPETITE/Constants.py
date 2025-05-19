@@ -23,21 +23,19 @@ PARAM_GRID = {
 }
 
 # Drift severity levels
-NUMERIC_DRIFT_SEVERITIES = (
-    -2, # Severity 3
-    -1, # Severity 2
-    -0.5, # Severity 1
-    0.5, # Severity 1
-    1, # Severity 2
-    2 # Severity 3
-)
-CATEGORICAL_DRIFT_SEVERITIES = (
-    0.3, # Severity 1
-    0.5, 0.7, # Severity 2
-    0.9 # Severity 3
-)
-BARINEL_COMPONENT_PRIOR_PROBABILITY = 1 / 1000
+NUMERIC_DRIFT_SEVERITIES = {
+    1: (-0.5, 0.5),
+    2: (-1, 1),
+    3: (-2, 2)
+}
+CATEGORICAL_DRIFT_SEVERITIES = {
+    1: (0.3, ),
+    2: (0.5, 0.7),
+    3: (0.9, )
+}
+DEFAULT_GENERATED_SEVERITY_LEVELS = (2, )
 
+BARINEL_COMPONENT_PRIOR_PROBABILITY = 1 / 1000
 # Choose the BARINEL ranking algorithm
 # V1: discrete error ranking algorithm taken from DDIFMAS
 # V2: new ranking algorithm, supporting fuzzy error and participation matrix

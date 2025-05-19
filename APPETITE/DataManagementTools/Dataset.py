@@ -126,7 +126,8 @@ class Dataset:
 
     def _drift_data_generator(self,
                    data: DataFrame,
-                   drift_features: str | list[str]
+                   drift_features: str | list[str],
+                   severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
      ) -> Generator[DataFrame, None, None]:
         """
         Create a drift in the data
@@ -134,6 +135,7 @@ class Dataset:
         Parameters:
             data (DataFrame): The data to drift
             drift_features (str or list): single feature or list of features to drift
+            severity_levels (tuple[int]): The severity levels the column should be drifted to. Default is all.
                 
         Returns:
             DataFrame: The drifted data
@@ -141,22 +143,24 @@ class Dataset:
         if type(drift_features) == str:
             assert drift_features in data.columns, f"Feature {drift_features} not in the dataset"
             feature_type = self.feature_types[drift_features]
-            return single_feature_concept_drift_generator(data, drift_features, feature_type)
+            return single_feature_concept_drift_generator(data, drift_features, feature_type, severity_levels)
         assert all([feature in data for feature in drift_features]), "Not all features in the dataset"
         # Get subset of the dictionary
         drift_features_dict = {feature: self.feature_types[feature] for feature in drift_features}
-        return multiple_features_concept_drift_generator(data, drift_features_dict)
+        return multiple_features_concept_drift_generator(data, drift_features_dict, severity_levels)
 
     def drift_generator(self,
-                                  drift_features: str | set[str],
-                                  partition: str = "after"
+                        drift_features: str | set[str],
+                        partition: str = "after",
+                        severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
      ) -> Generator[tuple[tuple[DataFrame, Series], str, list[str]], None, None]:
         """
         Drift generator for a specific partition
         
         Parameters:
             drift_features (str or list): single feature or set of features to drift
-            partition (str): The partition to drift
+            partition (str): The partition to drift.
+            severity_levels (tuple[int]): The severity levels the column should be drifted to. Default is all.
 
         Returns:
             Generator[tuple[tuple[DataFrame, Series], str], None, None]: 
@@ -170,7 +174,7 @@ class Dataset:
             "test": self.get_test_concept
         }
         original_X, y = get_portion_dict[partition]()
-        for drifted_X, description in self._drift_data_generator(original_X, drift_features):
+        for drifted_X, drift_severity_level, description in self._drift_data_generator(original_X, drift_features, severity_levels):
             if isinstance(drift_features, str):
                 drift_features = [drift_features]
-            yield (drifted_X, y), f"{partition.upper()}_{description}", drift_features
+            yield (drifted_X, y), (drift_severity_level, f"{partition.upper()}_{description}"), drift_features

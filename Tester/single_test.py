@@ -40,9 +40,14 @@ def drift_tree(mapped_tree: MappedDecisionTree,
                 print(f"\t\t\tDrifting {', '.join(drifting_features)}")
                 drifted_features_types = sorted([dataset.feature_types[drifting_feature] for drifting_feature in drifting_features])
                 after_drift_generator = dataset.drift_generator(drifting_features, partition="after")
+                after_prefix_length, test_prefix_length = len("after") + 1, len("test") + 1
                 test_drift_generator = dataset.drift_generator(drifting_features, partition="test")
-                for ((X_after_drifted, y_after), after_drift_description, drifted_features), ((X_test_drifted, y_test), _, _) in zip(after_drift_generator, test_drift_generator):
-                    yield (X_after_drifted, y_after,), (X_test_drifted, y_test), after_drift_description[len("after") + 1: ], set(drifted_features), drifted_features_types, drift_size
+                for ((X_after_drifted, y_after), (after_drift_severity_level, after_drift_description), drifted_features), ((X_test_drifted, y_test), (test_drift_severity_level, test_drift_description), _) in zip(after_drift_generator, test_drift_generator):
+                    drift_description, drift_severity_level = after_drift_description[after_prefix_length: ], after_drift_severity_level
+                    assert drift_description == test_drift_description[test_prefix_length: ], f"after and test description do not match: {drift_description} != {test_drift_description[test_prefix_length: ]}"
+                    assert drift_severity_level == test_drift_severity_level
+                    print(f"\t\t\t\tSeverity level: {drift_severity_level}")
+                    yield (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), set(drifted_features), drifted_features_types, drift_size
 
 
 def get_wasted_effort(mapped_tree: MappedDecisionTree,
@@ -127,7 +132,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
     original_after_accuracy, original_test_accuracy = get_accuracy(sklearn_tree_model, X_after, y_after), get_accuracy(sklearn_tree_model, X_test, y_test)
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
-    for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_description, drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset):
+    for (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset):
         try:
             drifted_after_accuracy, drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after), get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
             drifted_after_accuracy_drop, drifted_test_accuracy_drop = original_after_accuracy - drifted_after_accuracy, original_test_accuracy - drifted_test_accuracy
@@ -150,6 +155,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
             current_results_dict = {
                 "after size": dataset.after_proportion * dataset.after_window_size * 100,
                 "drift size": drift_size,
+                "drift severity level": drift_severity_level,
                 "drift description": drift_description,
                 "drifted features types": ", ".join(drifted_features_types),
                 "total drift type": get_total_drift_types(drifted_features_types),

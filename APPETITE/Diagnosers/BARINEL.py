@@ -59,6 +59,17 @@ class BARINEL(SFLDT):
         self.components_prior_probabilities = None
         self.threshold = 1
         super().__init__(mapped_tree, X, y, **kwargs)
+        if self.use_confidence:
+            self.update_threshold()
+
+    def update_threshold(self
+    ) -> None:
+        """
+        Update the error threshold that determine which test is considered fail in the candidation process.
+        """
+        error_average, error_std = self.error_vector.mean(), self.error_vector.std()
+        self.threshold = error_average + constants.BARINEL_THRESHOLD_ABOVE_STD_RATE * error_std
+        self.threshold = min(self.threshold, max(self.error_vector)) # decrease to catch at least one error
 
     def update_fuzzy_error(self
     ) -> None:
@@ -66,9 +77,7 @@ class BARINEL(SFLDT):
         After using the parent class (SFLDT)'s update_fuzzy_error method, update the threshold accordingly.
         """
         super().update_fuzzy_error()
-        error_average, error_std = self.error_vector.mean(), self.error_vector.std()
-        self.threshold = error_average + constants.BARINEL_THRESHOLD_ABOVE_STD_RATE * error_std
-        self.threshold = min(self.threshold, max(self.error_vector)) # decrease to catch at least one error
+        self.update_threshold()
 
     def combine_stat_diagnoses(self
      ) -> None:

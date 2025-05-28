@@ -42,7 +42,7 @@ if args.after_window != tester_constants.AFTER_WINDOW_TEST_SIZES:
     after_windows_string = "-".join(map(str, tester_constants.AFTER_WINDOW_TEST_SIZES))
 if args.drift_size > 0:
     tester_constants.MIN_DRIFT_SIZE, tester_constants.MAX_DRIFT_SIZE = args.drift_size, args.drift_size
-print(f"Running tests with diagnosers: {diagnosers_output_names}")
+print(f"Running tests with {len(diagnosers_output_names)} diagnosers: {diagnosers_output_names}")
 STOP_ON_EXCEPTION = args.stop
 datasets_count = args.count
 if args.test:

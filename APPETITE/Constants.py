@@ -50,5 +50,6 @@ DEFAULT_ADD_STAT = False # Combine STAT Diagnoses
 DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
 DEFAULT_FUZZY_ERROR = False # Use fuzzy error vector
 DEFAULT_FEATURE_COMPONENTS = False # Use features components
+DEFAULT_USE_CONFIDENCE = False # Use confidence in Error vector calculation
 
 BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5

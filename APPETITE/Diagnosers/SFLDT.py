@@ -109,7 +109,8 @@ class SFLDT(ADiagnoser):
                  combine_stat: bool = constants.DEFAULT_ADD_STAT,
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
                  use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR,
-                 use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS
+                 use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS,
+                 use_confidence: bool = constants.DEFAULT_USE_CONFIDENCE
     ):
         """
         Initialize the SFLDT diagnoser.
@@ -131,6 +132,7 @@ class SFLDT(ADiagnoser):
         self.paths_depths_vector = zeros(self.tests_count)
         self.use_fuzzy_participation, self.use_fuzzy_error = use_fuzzy_participation, use_fuzzy_error
         self.use_feature_components = use_feature_components
+        self.use_confidence = use_confidence
         self.fill_spectra_and_error_vector(X, y)
         self.stat = STAT(mapped_tree, X, y) if combine_stat else None
 
@@ -210,6 +212,8 @@ class SFLDT(ADiagnoser):
                 self.spectra[node.spectra_index, test_index] = 1
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
+                    if self.use_confidence:
+                        self.error_vector[test_index] *= node.confidence
                     self.paths_depths_vector[test_index] = node.depth + 1
         assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got {self.paths_depths_vector}"
         if self.use_fuzzy_error:
@@ -265,7 +269,7 @@ class SFLDT(ADiagnoser):
         Returns:
             The relevant similarity function
         """
-        are_continuous = self.use_fuzzy_participation, self.use_fuzzy_error
+        are_continuous = self.use_fuzzy_participation, (self.use_fuzzy_error or self.use_confidence)
         if all(are_continuous): # both continuous
             if self.tests_count < 2:    # not enough samples for correlation measure
                 return get_cosine_similarity

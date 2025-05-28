@@ -187,8 +187,8 @@ class MappedDecisionTree:
                 else:
                     self.correct_classifications_count = self.left_child.correct_classifications_count + self.right_child.correct_classifications_count
                     self.misclassifications_count = self.left_child.misclassifications_count + self.right_child.misclassifications_count
-                if self.reached_samples_count > 0:
-                    self.confidence = self.correct_classifications_count / self.reached_samples_count
+                self.confidence = self.correct_classifications_count / self.reached_samples_count if self.reached_samples_count > 0 else 0
+
 
         def __eq__(self, other):
             if isinstance(other, MappedDecisionTree.DecisionTreeNode):

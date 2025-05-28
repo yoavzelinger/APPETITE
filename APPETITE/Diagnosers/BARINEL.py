@@ -48,26 +48,24 @@ class BARINEL(SFLDT):
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 combine_stat: bool = constants.DEFAULT_ADD_STAT,
-                 use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
-                 use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR,
-                 use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS
+                 **kwargs: object
     ):
         """
         Initialize the BARINEL diagnoser.
         
         Parameters:
-        mapped_tree (MappedDecisionTree): The mapped decision tree.
-        X (DataFrame): The data.
-        y (Series): The target column.
-        combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
-        use_fuzzy_participation (bool): Whether to use fuzzy components participation.
-        use_fuzzy_error (bool): Whether to use fuzzy error vector.
-        use_feature_components (bool): Whether to use feature components.
+        kwargs (object): All the SFLDT parameters:
+            mapped_tree (MappedDecisionTree): The mapped decision tree.
+            X (DataFrame): The data.
+            y (Series): The target column.
+            combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
+            use_fuzzy_participation (bool): Whether to use fuzzy components participation.
+            use_fuzzy_error (bool): Whether to use fuzzy error vector.
+            use_feature_components (bool): Whether to use feature components.
         """
         self.components_prior_probabilities = None
         self.threshold = 1
-        super().__init__(mapped_tree, X, y, combine_stat, use_fuzzy_participation, use_fuzzy_error, use_feature_components)
+        super().__init__(mapped_tree, X, y, **kwargs)
 
     def update_fuzzy_error(self
     ) -> None:

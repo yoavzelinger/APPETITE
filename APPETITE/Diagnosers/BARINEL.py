@@ -54,14 +54,7 @@ class BARINEL(SFLDT):
         Initialize the BARINEL diagnoser.
         
         Parameters:
-        kwargs (object): All the SFLDT parameters:
-            mapped_tree (MappedDecisionTree): The mapped decision tree.
-            X (DataFrame): The data.
-            y (Series): The target column.
-            combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
-            use_fuzzy_participation (bool): Whether to use fuzzy components participation.
-            use_fuzzy_error (bool): Whether to use fuzzy error vector.
-            use_feature_components (bool): Whether to use feature components.
+        kwargs (object): All the SFLDT parameters
         """
         self.components_prior_probabilities = None
         self.threshold = 1

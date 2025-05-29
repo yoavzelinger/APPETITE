@@ -46,7 +46,6 @@ def drift_tree(mapped_tree: MappedDecisionTree,
                     drift_description, drift_severity_level = after_drift_description[after_prefix_length: ], after_drift_severity_level
                     assert drift_description == test_drift_description[test_prefix_length: ], f"after and test description do not match: {drift_description} != {test_drift_description[test_prefix_length: ]}"
                     assert drift_severity_level == test_drift_severity_level
-                    print(f"\t\t\t\tSeverity level: {drift_severity_level}")
                     yield (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), set(drifted_features), drifted_features_types, drift_size
 
 

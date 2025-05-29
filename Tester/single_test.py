@@ -39,14 +39,8 @@ def drift_tree(mapped_tree: MappedDecisionTree,
             for drifting_features in combinations(mapped_tree.tree_features_set, drift_size):
                 print(f"\t\t\tDrifting {', '.join(drifting_features)}")
                 drifted_features_types = sorted([dataset.feature_types[drifting_feature] for drifting_feature in drifting_features])
-                after_drift_generator = dataset.drift_generator(drifting_features, partition="after")
-                after_prefix_length, test_prefix_length = len("after") + 1, len("test") + 1
-                test_drift_generator = dataset.drift_generator(drifting_features, partition="test")
-                for ((X_after_drifted, y_after), (after_drift_severity_level, after_drift_description), drifted_features), ((X_test_drifted, y_test), (test_drift_severity_level, test_drift_description), _) in zip(after_drift_generator, test_drift_generator):
-                    drift_description, drift_severity_level = after_drift_description[after_prefix_length: ], after_drift_severity_level
-                    assert drift_description == test_drift_description[test_prefix_length: ], f"after and test description do not match: {drift_description} != {test_drift_description[test_prefix_length: ]}"
-                    assert drift_severity_level == test_drift_severity_level
-                    yield (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), set(drifted_features), drifted_features_types, drift_size
+                for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_severity_level, drift_description in dataset.drift_generator(drifting_features, partition="after"):
+                    yield (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), set(drifting_features), drifted_features_types, drift_size
 
 
 def get_wasted_effort(mapped_tree: MappedDecisionTree,

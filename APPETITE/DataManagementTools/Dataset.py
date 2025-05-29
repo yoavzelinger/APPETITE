@@ -94,6 +94,22 @@ class Dataset:
 
         assert 0 < after_window_size and after_window_size <= 1
         self.after_window_size = after_window_size
+        self.update_total_after_size()
+
+    def update_after_size(self, 
+                          new_after_size: int | float
+     ) -> None:
+        self.after_size = new_after_size
+        self.update_total_after_size()
+
+    def update_after_window_size(self, 
+                          new_after_window_size: int | float
+     ) -> None:
+        self.after_window_size = new_after_window_size
+        self.update_total_after_size()
+
+    def update_total_after_size(self) -> None:
+        self.total_after_size = ceil(max(self.after_size * self.after_window_size, 1 / constants.VALIDATION_SIZE))
 
     def split_features_targets(self, 
                                data: DataFrame
@@ -116,13 +132,22 @@ class Dataset:
         return self.split_features_targets(before_concept_data)
     
     def get_after_concept(self) -> tuple[DataFrame, Series]:
-        after_concept_data = self.data.iloc[self.before_size: self.before_size + 
-                                            ceil(max(self.after_size * self.after_window_size, 1 / constants.VALIDATION_SIZE))]
+        after_concept_data = self.data.iloc[self.before_size: self.before_size + self.total_after_size]
         return self.split_features_targets(after_concept_data)
     
     def get_test_concept(self) -> tuple[DataFrame, Series]:
         test_concept_data = self.data.iloc[-self.test_size:]
         return self.split_features_targets(test_concept_data)
+    
+    def get_total_after_concept(self) -> tuple[DataFrame, Series]:
+        """
+        Get the total after concept data, including the after and test concepts
+        
+        Returns:
+            tuple[DataFrame, Series]: The total after concept data
+        """
+        after_concept_data = self.data.iloc[self.before_size:]
+        return self.split_features_targets(after_concept_data)
 
     def _drift_data_generator(self,
                    data: DataFrame,
@@ -170,11 +195,14 @@ class Dataset:
         assert partition in Dataset.partitions, "Invalid partition name"
         get_portion_dict = {
             "before": self.get_before_concept,
-            "after": self.get_after_concept,
-            "test": self.get_test_concept
+            "after": self.get_total_after_concept
         }
         original_X, y = get_portion_dict[partition]()
-        for drifted_X, drift_severity_level, description in self._drift_data_generator(original_X, drift_features, severity_levels):
-            if isinstance(drift_features, str):
-                drift_features = [drift_features]
-            yield (drifted_X, y), (drift_severity_level, f"{partition.upper()}_{description}"), drift_features
+        for drifted_X, drift_severity_level, drift_description in self._drift_data_generator(original_X, drift_features, severity_levels):
+            if partition == "before":
+                yield (drifted_X, y), (drift_severity_level, f"BEFORE_{drift_description}")
+                continue
+            # split to after and test
+            X_after_drifted, y_after_drifted = drifted_X.iloc[:self.total_after_size], y.iloc[:self.total_after_size]
+            X_test_drifted, y_test_drifted = drifted_X.iloc[self.total_after_size:], y.iloc[self.total_after_size:]
+            yield (X_after_drifted, y_after_drifted), (X_test_drifted, y_test_drifted), drift_severity_level, drift_description

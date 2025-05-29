@@ -91,6 +91,7 @@ def _categorical_drift_generator(
     """
     assert severity_level in constants.CATEGORICAL_DRIFT_SEVERITIES, f"Severity level {severity_level} is not available. Please use one of {constants.CATEGORICAL_DRIFT_SEVERITIES.keys()}"
     unique_values = column.unique()
+    unique_values.sort()
     
     # Nested function
     def categorical_drift_in_value_generator(

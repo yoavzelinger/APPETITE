@@ -33,7 +33,7 @@ def drift_tree(mapped_tree: MappedDecisionTree,
     max_drift_size = min(len(mapped_tree.tree_features_set), tester_constants.MAX_DRIFT_SIZE) if tester_constants.MAX_DRIFT_SIZE > 0 else len(mapped_tree.tree_features_set)
     for after_window_test_size in tester_constants.AFTER_WINDOW_TEST_SIZES:
         print(f"\tAfter size: {after_window_test_size}%")
-        dataset.after_window_size = after_window_test_size
+        dataset.update_after_window_size(after_window_test_size)
         for drift_size in range(tester_constants.MIN_DRIFT_SIZE, max_drift_size + 1):
             print(f"\t\tDrift size: {drift_size} / {max_drift_size} features")
             for drifting_features in combinations(mapped_tree.tree_features_set, drift_size):

@@ -96,32 +96,31 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         }
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
         print(f"Running tests for {dataset_name}")
-        try:
-            for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name + ".csv", diagnosers_data=diagnosers_data):
-                drifts_count += 1
-                current_aggregated_row_dict["tree size"] = test_result["tree size"]
-                current_aggregated_row_dict["average after accuracy decrease"] += test_result["after accuracy decrease"]
-                current_aggregated_row_dict["average after retrain accuracy"] += test_result["after retrain accuracy"]
-                current_aggregated_row_dict["average after retrain accuracy increase"] += test_result["after retrain accuracy increase"]
-                current_aggregated_row_dict["average before after retrain accuracy"] += test_result["before after retrain accuracy"]
-                current_aggregated_row_dict["average before after retrain accuracy increase"] += test_result["before after retrain accuracy increase"]
-                for diagnoser_output_name in diagnosers_output_names:
-                    current_aggregated_row_dict[diagnoser_output_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnoser_output_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] += test_result[diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnoser_output_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_output_name + FIX_ACCURACY_NAME_SUFFIX]
-                    current_aggregated_row_dict[diagnoser_output_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
-                raw_results = raw_results._append(test_result, ignore_index=True)
-            if drifts_count == 0:
+        for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name + ".csv", diagnosers_data=diagnosers_data):
+            if isinstance(test_result, Exception):
+                if STOP_ON_EXCEPTION:
+                    raise test_result
+                errors = errors._append({"name": dataset_name, "error": test_result}, ignore_index=True)
                 continue
-            current_aggregated_row_dict["drifts count"] = drifts_count
-            for summarize_column_name in aggregated_summarizes_columns:
-                current_aggregated_row_dict[summarize_column_name] /= drifts_count
-            aggregated_results = aggregated_results._append(current_aggregated_row_dict, ignore_index=True)
-        except Exception as e:
-            if STOP_ON_EXCEPTION:
-                raise e
-            errors = errors._append({"name": dataset_name, "error": e}, ignore_index=True)
+            drifts_count += 1
+            current_aggregated_row_dict["tree size"] = test_result["tree size"]
+            current_aggregated_row_dict["average after accuracy decrease"] += test_result["after accuracy decrease"]
+            current_aggregated_row_dict["average after retrain accuracy"] += test_result["after retrain accuracy"]
+            current_aggregated_row_dict["average after retrain accuracy increase"] += test_result["after retrain accuracy increase"]
+            current_aggregated_row_dict["average before after retrain accuracy"] += test_result["before after retrain accuracy"]
+            current_aggregated_row_dict["average before after retrain accuracy increase"] += test_result["before after retrain accuracy increase"]
+            for diagnoser_output_name in diagnosers_output_names:
+                current_aggregated_row_dict[diagnoser_output_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX]
+                current_aggregated_row_dict[diagnoser_output_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] += test_result[diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX]
+                current_aggregated_row_dict[diagnoser_output_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_output_name + FIX_ACCURACY_NAME_SUFFIX]
+                current_aggregated_row_dict[diagnoser_output_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
+            raw_results = raw_results._append(test_result, ignore_index=True)
+        if drifts_count == 0:
             continue
+        current_aggregated_row_dict["drifts count"] = drifts_count
+        for summarize_column_name in aggregated_summarizes_columns:
+            current_aggregated_row_dict[summarize_column_name] /= drifts_count
+        aggregated_results = aggregated_results._append(current_aggregated_row_dict, ignore_index=True)
 
 aggregating_total_row = {
     "name": "TOTAL",

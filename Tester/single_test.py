@@ -60,12 +60,9 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
     Returns:
     int: The wasted effort.
     """
-    # Get node's feature or it's parent's feature if it's None
-    get_node_feature_func = lambda node: node.feature if node.feature is not None else node.parent.feature
-    # If not require_full_fix, then the faulty feature will be counted only as one
     faulty_features_nodes = {true_faulty_feature : [] for true_faulty_feature in true_faulty_features}
     for node_index, tree_node in mapped_tree.tree_dict.items():
-        tree_node_feature = get_node_feature_func(tree_node)
+        tree_node_feature = tree_node.feature
         if tree_node_feature in true_faulty_features:
             faulty_features_nodes[tree_node_feature].append(node_index)
 
@@ -73,7 +70,7 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
     all_faults_detected = lambda: not any(faulty_features_nodes.values())
     for diagnosis in diagnoses:
         for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosis):
-            diagnosed_faulty_feature = get_node_feature_func(diagnosed_faulty_node)
+            diagnosed_faulty_feature = diagnosed_faulty_node.feature
             if diagnosed_faulty_feature not in true_faulty_features: # a wasted effort
                 wasted_effort += 1
             else:   # relevant fix

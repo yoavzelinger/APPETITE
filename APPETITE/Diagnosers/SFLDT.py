@@ -123,6 +123,7 @@ class SFLDT(ADiagnoser):
         use_fuzzy_participation (bool): Whether to use fuzzy components participation.
         use_fuzzy_error (bool): Whether to use fuzzy error vector.
         use_feature_components (bool): Whether to use feature components.
+        use_confidence (bool): Whether to use confidence in the error vector calculation.
         """
         super().__init__(mapped_tree, X, y)
         self.components_count = mapped_tree.node_count

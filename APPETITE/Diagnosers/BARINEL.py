@@ -54,6 +54,9 @@ class BARINEL(SFLDT):
         Initialize the BARINEL diagnoser.
         
         Parameters:
+        mapped_tree (MappedDecisionTree): The mapped decision tree.
+        X (DataFrame): The data.
+        y (Series): The target column.
         kwargs (object): All the SFLDT parameters
         """
         self.components_prior_probabilities = None

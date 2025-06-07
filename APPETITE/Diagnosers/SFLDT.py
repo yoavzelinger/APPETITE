@@ -313,7 +313,6 @@ class SFLDT(ADiagnoser):
         """
         merged_diagnoses = {}
         for diagnosis, rank in self.diagnoses:
-            assert len(diagnosis) == 1, "Cannot merge diagnoses with multiple nodes"
             spectra_index = diagnosis[0]
             faulty_feature = self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).feature
             if faulty_feature is None:

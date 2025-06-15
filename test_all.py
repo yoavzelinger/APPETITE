@@ -53,8 +53,8 @@ if SPECIFIC_DATASETS:
     print(f"Running tests with prefixes: {SPECIFIC_DATASETS}")
     SPECIFIC_DATASETS = list(map(lambda prefix: prefix.lower(), SPECIFIC_DATASETS))
 
-raw_results_columns = ["after size", "drift size", "drift description", "drifted features types", "total drift type", "drift severity level", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
-aggregated_groupby_columns = ["name", "tree size", "drifts count"]
+raw_results_columns = ["dataset name","after size", "drift size", "drift description", "drifted features types", "total drift type", "drift severity level", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
+aggregated_groupby_columns = ["dataset name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
 for diagnoser_output_name in diagnosers_output_names:
@@ -86,7 +86,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         drifts_count = 0
 
         current_aggregated_row_dict = {
-            "name": dataset_name,
+            "dataset name": dataset_name,
             "tree size": -1,
             "average after accuracy decrease": 0,
             "average after retrain accuracy": 0,

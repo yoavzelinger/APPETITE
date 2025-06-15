@@ -12,11 +12,12 @@ parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 args = parser.parse_args()
 
-group_by_columns = ["after size", "drift size", "drifted features types", "total drift type", "drift severity level"]
+group_by_columns = ["dataset name", "after size", "drift size", "drifted features types", "total drift type", "drift severity level"]
 common_aggregated_columns = ["after accuracy decrease", "after retrain accuracy increase", "before after retrain accuracy increase"]
 diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort", "correctly_identified"]
 
 columns_dtypes = {
+    "dataset name": "string",
     "after size": "float64",
     "drift size": "int64",
     "drift severity level": "int64",

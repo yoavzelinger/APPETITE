@@ -1,14 +1,14 @@
-/__pycache__
-APPETITE/__pycache__
-APPETITE/DataManagementTools/__pycache__
-APPETITE/DecisionTreeTools/__pycache__
-APPETITE/Diagnosers/__pycache__
-APPETITE/Fixers/__pycache__
-/Tester/__pycache__
-/.vscode
-/APPETITE/Diagnosers/barinel_utils/__pycache__
-/APPETITE/Diagnosers/barinel_utils/DDIFMAS/__pycache__
-/data/results/*temp*
-/*.sh
+# IDE-related folders
+**/__pycache__/
+**/.vscode/
+
+# system files
+*.nfs*
+
+# cluster files
+*.sh
 *.out
-.nfs*
+
+# temporary files
+/data/results/*temp*
+/data/results/*old*

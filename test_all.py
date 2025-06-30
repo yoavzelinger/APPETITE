@@ -11,6 +11,7 @@ from Tester import *
 from warnings import simplefilter as warnings_simplefilter
 warnings_simplefilter(action='ignore', category=FutureWarning)
 
+DIAGNOSES_NAME_SUFFIX = " diagnoses"
 FAULTY_NODES_NAME_SUFFIX = " faulty nodes indices"
 FAULTY_FEATURES_NAME_SUFFIX = " faulty features"
 WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
@@ -53,11 +54,12 @@ if SPECIFIC_DATASETS:
     print(f"Running tests with prefixes: {SPECIFIC_DATASETS}")
     SPECIFIC_DATASETS = list(map(lambda prefix: prefix.lower(), SPECIFIC_DATASETS))
 
-raw_results_columns = ["dataset name","after size", "drift size", "drift description", "drifted features types", "total drift type", "drift severity level", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
+raw_results_columns = ["dataset name","after size", "drift size", "drift description", "drifted features", "drifted features types", "total drift type", "drift severity level", "tree size", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 aggregated_groupby_columns = ["dataset name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
 for diagnoser_output_name in diagnosers_output_names:
+    raw_results_columns.append(diagnoser_output_name + DIAGNOSES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX)

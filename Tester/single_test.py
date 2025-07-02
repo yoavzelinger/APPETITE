@@ -87,7 +87,7 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
         if are_all_faults_detected():
             return len(wasted_effort_nodes)
     # Didn't detect all the faulty features, so we count all the "healthy" nodes as wasted effort
-    faulty_nodes_count = sum(map(len, undetected_faulty_features_nodes.values()))
+    faulty_nodes_count = sum(map(len, faulty_features_nodes.values()))
     healthy_nodes_count = len(mapped_tree) - faulty_nodes_count
     assert healthy_nodes_count >= len(wasted_effort_nodes), "Wasted effort nodes count is greater than the healthy nodes count (suppose to be subset of)"
     return healthy_nodes_count

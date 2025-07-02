@@ -196,6 +196,9 @@ class MappedDecisionTree:
             if isinstance(other, int):
                 return self.sk_index == other
             return False
+        
+        def __hash__(self):
+            return hash(self.sk_index)
 
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,

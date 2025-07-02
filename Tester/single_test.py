@@ -208,7 +208,7 @@ def get_example_mapped_tree(directory=tester_constants.DATASETS_FULL_PATH, file_
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
 def sanity_run(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
-    for result in run_single_test(directory=directory, file_name=file_name, diagnosers_data=diagnosers_data):
+    for result in run_single_test(directory=directory, file_name=file_name + ".csv", diagnosers_data=diagnosers_data):
         print(result)
         
 if __name__ == "__main__":

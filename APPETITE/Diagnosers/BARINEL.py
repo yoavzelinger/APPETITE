@@ -32,7 +32,7 @@ def get_barinel_diagnoses(spectra: ndarray,
     assert len(diagnoses) > 0, "No candidate diagnoses found"
     spectrum = np_concatenate((np_array(spectrum)[:, :-1], np_array([error_vector]).T), axis=1)
     diagnoses = rank_diagnoses(spectrum, diagnoses, components_prior_probabilities)
-    diagnoses = [(diagnosis[0], diagnosis[1]) for diagnosis in diagnoses]
+    diagnoses = [(diagnosis[0].tolist(), diagnosis[1]) for diagnosis in diagnoses]
     return diagnoses
 
 class BARINEL(SFLDT):

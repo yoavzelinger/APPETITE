@@ -392,3 +392,6 @@ class MappedDecisionTree:
 
     def __repr__(self) -> str:
         return export_text(self.sklearn_tree_model, feature_names=list(self.data_feature_types.keys()))
+    
+    def __len__(self) -> int:
+        return len(self.tree_dict)

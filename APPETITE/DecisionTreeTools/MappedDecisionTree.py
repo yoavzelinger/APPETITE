@@ -29,7 +29,7 @@ class MappedDecisionTree:
                 class_name (str): The class name.
                 spectra_index (int): The index of the node (in the spectra matrix).
             """
-            self.sk_index, self.spectra_index = sk_index, spectra_index
+            self.sk_index, self.spectra_index = int(sk_index), spectra_index
             self.parent: 'MappedDecisionTree.DecisionTreeNode' = parent
             self.update_children(left_child, right_child)
             self.feature = feature

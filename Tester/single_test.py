@@ -71,22 +71,26 @@ def get_wasted_effort(mapped_tree: MappedDecisionTree,
     Returns:
     int: The wasted effort.
     """
-    faulty_features_nodes = deepcopy(faulty_features_nodes)
-    wasted_effort = 0
-    all_faults_detected = lambda: not any(faulty_features_nodes.values())
+    undetected_faulty_features_nodes = deepcopy(faulty_features_nodes)
+    wasted_effort_nodes = set()
+    are_all_faults_detected = lambda: not any(undetected_faulty_features_nodes.values())
     for diagnosis in diagnoses:
         for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosis):
             diagnosed_faulty_feature = diagnosed_faulty_node.feature
-            if diagnosed_faulty_feature not in faulty_features_nodes: # a wasted effort
-                wasted_effort += 1
+            if diagnosed_faulty_feature not in undetected_faulty_features_nodes: # a wasted effort
+                wasted_effort_nodes.add(diagnosed_faulty_node)
             else:   # relevant fix
-                if require_full_fix and diagnosed_faulty_node.sk_index in faulty_features_nodes[diagnosed_faulty_feature]:
-                    faulty_features_nodes[diagnosed_faulty_feature].remove(diagnosed_faulty_node.sk_index)
+                if require_full_fix and diagnosed_faulty_node.sk_index in undetected_faulty_features_nodes[diagnosed_faulty_feature]:
+                    undetected_faulty_features_nodes[diagnosed_faulty_feature].remove(diagnosed_faulty_node.sk_index)
                 else:
-                    faulty_features_nodes[diagnosed_faulty_feature] = []
-        if all_faults_detected():
-            break
-    return wasted_effort
+                    undetected_faulty_features_nodes[diagnosed_faulty_feature] = []
+        if are_all_faults_detected():
+            return len(wasted_effort_nodes)
+    # Didn't detect all the faulty features, so we count all the "healthy" nodes as wasted effort
+    faulty_nodes_count = sum(map(len, undetected_faulty_features_nodes.values()))
+    healthy_nodes_count = len(mapped_tree) - faulty_nodes_count
+    assert healthy_nodes_count >= len(wasted_effort_nodes), "Wasted effort nodes count is greater than the healthy nodes count (suppose to be subset of)"
+    return healthy_nodes_count
 
 def get_correctly_identified_ratio(detected_faulty_features: set[str],
                                     true_faulty_features: set[str]

@@ -55,7 +55,7 @@ def build_tree(
                                                       random_state=constants.RANDOM_STATE
                                                       )
     pruning_path = decision_tree_classifier.cost_complexity_pruning_path(X_train, y_train)
-    ccp_alphas = set(pruning_path.ccp_alphas) # TODO - Understand what is it
+    ccp_alphas = set(pruning_path.ccp_alphas)
     best_decision_tree, best_accuracy = None, -1
     for ccp_alpha in ccp_alphas:
         if ccp_alpha < 0:

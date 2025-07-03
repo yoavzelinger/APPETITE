@@ -97,13 +97,13 @@ class SFLDT(ADiagnoser):
             self.feature_index_to_node_indices_dict[self.feature_indices_dict[node.feature]].append(node_spectra_index)
         self.components_count = len(self.feature_indices_dict)
         features_spectra = zeros((self.components_count, self.tests_count))
-        features_count_vector = zeros((self.components_count, self.tests_count))
+        features_count_vectors = zeros((self.components_count, self.tests_count))
         for feature_index, feature_nodes_spectra_indices in self.feature_index_to_node_indices_dict.items():
             features_spectra[feature_index] = 1
-            features_count_vector[feature_index] = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
+            features_count_vectors[feature_index] = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
         self.spectra = features_spectra
         if self.use_fuzzy_participation:
-            self.update_fuzzy_participation(components_factor=features_count_vector)
+            self.update_fuzzy_participation(components_factor=features_count_vectors)
 
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 

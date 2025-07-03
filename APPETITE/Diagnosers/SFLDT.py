@@ -59,7 +59,7 @@ class SFLDT(ADiagnoser):
         """
         if components_factor is None:
             components_factor = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])[:, None]
-            assert components_factor.all(), f"Components depths vector should be non-zero but got {components_factor}"
+        assert components_factor.all(), f"Components depths vector should be non-zero but got {components_factor}"
         self.spectra = (self.spectra * components_factor) / self.paths_depths_vector
         assert np_max(self.spectra) <= 1.0, f"Participation should be in [0, 1] but got {np_max(self.spectra)}"
 

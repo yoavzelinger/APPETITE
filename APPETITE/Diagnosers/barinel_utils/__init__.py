@@ -15,7 +15,7 @@ def get_candidates(spectrum, error_threshold=1):
     Returns:
         list: The candidates.
     """
-    diagnoses, _ = _barinel_diagnosis(spectrum, [], error_threshold=1)
+    diagnoses, _ = _barinel_diagnosis(spectrum, [], error_threshold=error_threshold)
     return diagnoses
 
 

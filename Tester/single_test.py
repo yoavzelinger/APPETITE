@@ -1,13 +1,12 @@
 from os import path as os_path
 from sys import argv as sys_argv
 from pandas import concat as pd_concat
-from sklearn.metrics import accuracy_score
 from itertools import combinations
-from copy import deepcopy
 
 from APPETITE import *
 
 import Tester.TesterConstants as tester_constants
+from Tester.metrics import get_accuracy, get_wasted_effort, get_correctly_identified_ratio
 import traceback
 
 def get_dataset(directory: str,
@@ -53,55 +52,6 @@ def get_drifted_nodes(mapped_tree: MappedDecisionTree,
         if tree_node_feature in drifted_features:
             faulty_features_nodes[tree_node_feature].append(node_index)
     return faulty_features_nodes
-
-def get_wasted_effort(mapped_tree: MappedDecisionTree,
-                      diagnoses: list[list[int]],
-                      faulty_features_nodes: dict[str, list[int]],
-                      require_full_fix = True
- ) -> int:
-    """
-    Calculate the wasted effort of the diagnoser.
-    In here the wasted effort is calculated for fixes of all the nodes that include a faulty feature.
-
-    Parameters:
-    mapped_tree (MappedDecisionTree): The mapped decision tree.
-    diagnoses (list[list[int]]): The diagnoses of the nodes.
-    faulty_features_nodes (dict[str, list[int]]): Dict of the drifted features and their corresponding faulty nodes indices.
-    require_full_fix (bool): If True, the diagnoser is required to fix all faulty nodes of a feature
-
-    Returns:
-    int: The wasted effort.
-    """
-    undetected_faulty_features_nodes = deepcopy(faulty_features_nodes)
-    wasted_effort_nodes = set()
-    are_all_faults_detected = lambda: not any(undetected_faulty_features_nodes.values())
-    for diagnosis in diagnoses:
-        for diagnosed_faulty_node in map(mapped_tree.get_node, diagnosis):
-            diagnosed_faulty_feature = diagnosed_faulty_node.feature
-            if diagnosed_faulty_feature not in undetected_faulty_features_nodes: # a wasted effort
-                wasted_effort_nodes.add(diagnosed_faulty_node)
-            else:   # relevant fix
-                if require_full_fix and diagnosed_faulty_node.sk_index in undetected_faulty_features_nodes[diagnosed_faulty_feature]:
-                    undetected_faulty_features_nodes[diagnosed_faulty_feature].remove(diagnosed_faulty_node.sk_index)
-                else:
-                    undetected_faulty_features_nodes[diagnosed_faulty_feature] = []
-        if are_all_faults_detected():
-            return len(wasted_effort_nodes)
-    # Didn't detect all the faulty features, so we count all the "healthy" nodes as wasted effort
-    faulty_nodes_count = sum(map(len, faulty_features_nodes.values()))
-    healthy_nodes_count = len(mapped_tree) - faulty_nodes_count
-    assert healthy_nodes_count >= len(wasted_effort_nodes), "Wasted effort nodes count is greater than the healthy nodes count (suppose to be subset of)"
-    return healthy_nodes_count
-
-def get_correctly_identified_ratio(detected_faulty_features: set[str],
-                                    true_faulty_features: set[str]
-                                    ) -> float:
-    identified_features = map(lambda feature: feature in detected_faulty_features, true_faulty_features)
-    return sum(identified_features) / len(true_faulty_features)
-
-def get_accuracy(model, X, y):
-    y_predicted = model.predict(X)
-    return accuracy_score(y, y_predicted)
 
 def is_drift_contains_numeric_features(drifted_features_types):
     return any(map(lambda feature_type: feature_type == "numeric", drifted_features_types))
@@ -183,7 +133,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
                 diagnoses = fixer.diagnoses
-                wasted_effort = get_wasted_effort(mapped_tree, diagnoses, faulty_features_nodes, tester_constants.WASTED_EFFORT_REQUIRE_FULL_FIX)
+                wasted_effort = get_wasted_effort(mapped_tree, diagnoses, faulty_features_nodes)
                 correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
                 current_results_dict.update({
                     f"{diagnoser_output_name} diagnoses": ", ".join(map(str, diagnoses)),

@@ -21,6 +21,20 @@ SKIP_EXCEPTIONS = False
 
 WASTED_EFFORT_REQUIRE_FULL_FIX = True # Fix all faulty features
 
+# How to handle "healthy" components did not appear in any diagnoses.
+WASTED_EFFORT_MISSING_ACTIONS = [
+    "all", # Add all as wasted effort
+    "none", # Do not add any as wasted effort
+    "random", # Randomly choose components until all faults were fixed.
+              # Since Since we already fixed current_wasted_effort components and there are undetected_faults_count left to fix, 
+              # we can calculate the wasted effort as:
+              #                             undetected_faults_count * (healthy_nodes_counts - current_wasted_effort)
+              #                         --------------------------------------------------------------------------------
+              #                                                     undetected_faults_count + 1
+]
+WASTED_EFFORT_MISSING_ACTION = "random"
+assert WASTED_EFFORT_MISSING_ACTION in WASTED_EFFORT_MISSING_ACTIONS, f"WASTED_EFFORT_MISSING_ACTION must be one of {WASTED_EFFORT_MISSING_ACTIONS}, got {WASTED_EFFORT_MISSING_ACTION}."
+
 DATA_DIRECTORY = "data"
 DATASET_DESCRIPTION_FILE_NAME = "all_datasets"
 DATASET_DESCRIPTION_FILE_PATH = os_path.join(DATA_DIRECTORY, f"{DATASET_DESCRIPTION_FILE_NAME}.csv")

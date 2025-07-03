@@ -140,7 +140,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 # print(f"Drift is insignificant, accuracy drop: after: {drifted_after_accuracy_drop}, test: {drifted_test_accuracy_drop}")
                 continue
 
-            print(f"\t\t\t\tDiagnosing significant drift")
+            print(f"\t\t\t\tDiagnosing")
 
             drifted_features_types = [drifted_features_types] if isinstance(drifted_features_types, str) else drifted_features_types
 

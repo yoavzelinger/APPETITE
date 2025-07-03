@@ -12,7 +12,6 @@ from warnings import simplefilter as warnings_simplefilter
 warnings_simplefilter(action='ignore', category=FutureWarning)
 
 DIAGNOSES_NAME_SUFFIX = " diagnoses"
-FAULTY_NODES_NAME_SUFFIX = " faulty nodes indices"
 FAULTY_FEATURES_NAME_SUFFIX = " faulty features"
 WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
 CORRECTLY_IDENTIFIED_NAME_SUFFIX = " correctly_identified"
@@ -63,7 +62,6 @@ for diagnoser_output_name in diagnosers_output_names:
     raw_results_columns.append(diagnoser_output_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_output_name + FAULTY_NODES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + FIX_ACCURACY_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
     aggregated_summarizes_columns.append(diagnoser_output_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX)

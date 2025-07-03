@@ -30,6 +30,7 @@ def get_barinel_diagnoses(spectra: ndarray,
     diagnoses = get_candidates(spectra.tolist(), error_threshold=error_threshold)
     assert len(diagnoses), "No candidate diagnoses found"
     
+    diagnoses = list(map(np_array, diagnoses))
     diagnoses = rank_diagnoses(spectra, diagnoses, components_prior_probabilities)
     diagnoses = [(diagnosis[0].tolist(), diagnosis[1]) for diagnosis in diagnoses]
 

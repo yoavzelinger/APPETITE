@@ -178,7 +178,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser__class_name=diagnoser_class_name, diagnoser_parameters=diagnoser_parameters, diagnoser_output_name=diagnoser_output_name)
                 fixed_mapped_tree, faulty_nodes_indices = fixer.fix_tree()
                 faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
-                detected_faulty_features = set([faulty_node.feature if (faulty_node.feature or not faulty_node.is_terminal()) else "target" for faulty_node in faulty_nodes])
+                detected_faulty_features = set([faulty_node.feature if not faulty_node.is_terminal() else "target" for faulty_node in faulty_nodes])
                 fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
                 test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
                 diagnoses = fixer.diagnoses

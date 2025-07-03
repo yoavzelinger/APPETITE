@@ -96,7 +96,7 @@ class SFLDT(ADiagnoser):
                 self.feature_indices_dict[node.feature] = len(self.feature_indices_dict)
             self.feature_index_to_node_indices_dict[self.feature_indices_dict[node.feature]].append(node_spectra_index)
         self.components_count = len(self.feature_indices_dict)
-        features_spectra = zeros((self.components_count, self.spectra.shape[1]))
+        features_spectra = zeros((self.components_count, self.tests_count))
         features_count_vector = zeros((self.components_count, self.tests_count))
         for feature_index, feature_nodes_spectra_indices in self.feature_index_to_node_indices_dict.items():
             features_spectra[feature_index] = 1

@@ -10,7 +10,8 @@ def build_tree(
         X_train: DataFrame,
         y_train: Series,
         X_validation: DataFrame = None,
-        y_validation: Series = None
+        y_validation: Series = None,
+        is_retraining_model: bool = False
         ) -> DecisionTreeClassifier:
     """
     Build a decision tree classifier based on the given data and features.
@@ -43,7 +44,10 @@ def build_tree(
             modified_y_train = concat([modified_y_train, Series([class_name])], ignore_index=True)
     cross_validation_split_count = min(constants.CROSS_VALIDATION_SPLIT_COUNT , modified_y_train.value_counts().min())
 
-    decision_tree_classifier = DecisionTreeClassifier()
+    decision_tree_classifier = DecisionTreeClassifier(random_state=constants.RANDOM_STATE)
+    if is_retraining_model:
+        decision_tree_classifier.fit(X_train, y_train)
+        return decision_tree_classifier
     # Find best parameters using grid search cross validation (on training data)
     grid_search_classifier = GridSearchCV(estimator=decision_tree_classifier, 
                                      param_grid=constants.PARAM_GRID, 

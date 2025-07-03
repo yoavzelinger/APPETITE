@@ -19,8 +19,9 @@ def get_dataset(directory: str,
     return Dataset(source, proportions_tuple, after_window_size)
 
 def get_sklearn_tree(X_train,
-                     y_train):
-    return build_tree(X_train, y_train)
+                     y_train,
+                     is_retraining_model: bool = False):
+    return build_tree(X_train, y_train, is_retraining_model=is_retraining_model)
 
 def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
     return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types, X=X_train, y=y_train)
@@ -145,14 +146,14 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
             drifted_features_types = [drifted_features_types] if isinstance(drifted_features_types, str) else drifted_features_types
 
 
-            after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after)
-            after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
-            after_retrained_accuracy_bump = after_retrained_accuracy - drifted_test_accuracy
-
             X_before_after_concat, y_before_after_concat = pd_concat([X_train, X_after_drifted]), pd_concat([y_train, y_after])
-            before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat)
+            before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat, is_retraining_model=True)
             before_after_retrained_accuracy = get_accuracy(before_after_retrained_tree, X_test_drifted, y_test)
             before_after_retrained_accuracy_bump = before_after_retrained_accuracy - drifted_test_accuracy
+
+            after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after, is_retraining_model=True)
+            after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
+            after_retrained_accuracy_bump = after_retrained_accuracy - drifted_test_accuracy
 
             drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
             faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)

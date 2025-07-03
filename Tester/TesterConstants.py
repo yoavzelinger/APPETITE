@@ -17,7 +17,7 @@ assert isinstance(DEFAULT_TESTING_DIAGNOSER, (list, tuple)) and all(isinstance(d
 
 TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME = "TestingDiagnosersData"
 
-STOP_ON_EXCEPTION = False
+SKIP_EXCEPTIONS = False
 
 WASTED_EFFORT_REQUIRE_FULL_FIX = True # Fix all faulty features
 

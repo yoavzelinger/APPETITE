@@ -25,7 +25,7 @@ AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_N
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m_%H-%M-%S')}")
-parser.add_argument("-s", "--stop", action="store_true", help="Stop on exception, default is false and writing the errors to errors file", default=tester_constants.STOP_ON_EXCEPTION)
+parser.add_argument("-s", "--skip", action="store_true", help=f"skip exceptions, default is {tester_constants.SKIP_EXCEPTIONS}. If true will write the errors to errors file", default=tester_constants.SKIP_EXCEPTIONS)
 parser.add_argument("-n", "--names", type=str, nargs="+", help="Specific datasets to run, default is all", default=[])
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all", default=[])
 parser.add_argument("-a", "--after_window", type=float, nargs="+", help="After window sizes, default is all", default=tester_constants.AFTER_WINDOW_TEST_SIZES)
@@ -44,7 +44,7 @@ if args.after_window != tester_constants.AFTER_WINDOW_TEST_SIZES:
 if args.drift_size > 0:
     tester_constants.MIN_DRIFT_SIZE, tester_constants.MAX_DRIFT_SIZE = args.drift_size, args.drift_size
 print(f"Running tests with {len(diagnosers_output_names)} diagnosers: {diagnosers_output_names}")
-STOP_ON_EXCEPTION = args.stop
+skip_exceptions = args.skip
 datasets_count = args.count
 if args.test:
     single_test.sanity_run(file_name=args.test + ".csv", diagnosers_data=diagnosers_data)
@@ -100,7 +100,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         print(f"Running tests for {dataset_name}")
         for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name + ".csv", diagnosers_data=diagnosers_data):
             if isinstance(test_result, Exception):
-                if STOP_ON_EXCEPTION:
+                if not skip_exceptions:
                     raise test_result
                 errors = errors._append({"name": dataset_name, "error": test_result}, ignore_index=True)
                 continue

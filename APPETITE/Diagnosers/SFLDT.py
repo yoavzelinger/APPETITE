@@ -129,7 +129,7 @@ class SFLDT(ADiagnoser):
                     if self.use_confidence:
                         self.error_vector[test_index] *= node.confidence
                     self.paths_depths_vector[test_index] = node.depth + 1
-        assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got {self.paths_depths_vector}"
+        assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got: \n{self.paths_depths_vector}"
         if self.use_fuzzy_error:
             self.update_fuzzy_error()
         if self.use_feature_components:

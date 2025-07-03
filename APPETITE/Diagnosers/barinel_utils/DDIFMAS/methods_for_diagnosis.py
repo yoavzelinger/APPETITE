@@ -4,11 +4,12 @@ import random
 from . import functions
 
 
-def diagnosis_0(spectrum, local_spectra):
+def diagnosis_0(spectrum, local_spectra, error_threshold=1):
     """
     the traditional hitting set algorithm
     :param local_spectra: for calculating information sent
     :param spectrum: the local spectra of the agents
+    :param error_threshold: the threshold for fault. default is 1 (binary faults).
     :return: a set of diagnoses
     """
     info_sent_diagnosis = 0
@@ -21,7 +22,7 @@ def diagnosis_0(spectrum, local_spectra):
     # calculate conflicts
     conflicts = []
     for i, row in enumerate(spectrum):
-        if row[-1] == 1:
+        if row[-1] >= error_threshold:
             conf = [j for j, a in enumerate(row[:-1]) if a != 0]
             conflicts.append(conf)
 

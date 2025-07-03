@@ -8,8 +8,8 @@ from .SFLDT import SFLDT
 
 def get_barinel_diagnoses(spectra: ndarray,
                           error_vector: ndarray,
-                          components_prior_probabilities: ndarray = None,
-                          error_threshold: float = 1
+                          components_prior_probabilities: ndarray=None,
+                          error_threshold: float=1
  ) -> list[tuple[list[int], float]]:
     """
     Perform the Barinel diagnosis algorithm on the given spectrum.
@@ -23,16 +23,16 @@ def get_barinel_diagnoses(spectra: ndarray,
     Returns:
     list[tuple[list[int], float]]: The diagnoses with their corresponding ranks.
     """
-    discrete_error_vector = (error_vector >= error_threshold).astype(int)
-    assert all([error in [0, 1] for error in discrete_error_vector]), f"The error vector must be binary (for candidation). Provided threshold: {error_threshold}"
-    assert sum(discrete_error_vector) > 0, f"No path with error above the threshold {error_threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
-    spectrum = list(map(lambda spectra_vector_pair: spectra_vector_pair[0] + [spectra_vector_pair[1]], zip(spectra.T.tolist(), discrete_error_vector.tolist())))
-    diagnoses, _ = get_candidates(spectrum)
-    diagnoses = list(map(np_array, diagnoses))
-    assert len(diagnoses) > 0, "No candidate diagnoses found"
-    spectrum = np_concatenate((np_array(spectrum)[:, :-1], np_array([error_vector]).T), axis=1)
-    diagnoses = rank_diagnoses(spectrum, diagnoses, components_prior_probabilities)
+    assert (error_vector >= error_threshold).sum() > 0, f"No path with error above the threshold {error_threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
+    
+    spectra = np_concatenate((spectra.T, error_vector[:, None]), axis=1)
+    
+    diagnoses = get_candidates(spectra.tolist(), error_threshold=error_threshold)
+    assert len(diagnoses), "No candidate diagnoses found"
+    
+    diagnoses = rank_diagnoses(spectra, diagnoses, components_prior_probabilities)
     diagnoses = [(diagnosis[0].tolist(), diagnosis[1]) for diagnosis in diagnoses]
+
     return diagnoses
 
 class BARINEL(SFLDT):

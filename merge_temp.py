@@ -33,7 +33,7 @@ columns_dtypes = {
 diagnoser_dtypes_suffixes = {
     "diagnoses": "string",
     "faulty features": "string",
-    "wasted effort": "int64",
+    "wasted effort": "float64",
     "correctly_identified": "float64",
     "fix accuracy": "float64",
     "fix accuracy increase": "float64"

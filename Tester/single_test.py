@@ -26,8 +26,8 @@ def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
     return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types, X=X_train, y=y_train)
 
 def drift_tree(mapped_tree: MappedDecisionTree,
-                        dataset: Dataset,
-                        ):
+               dataset: Dataset,
+               ):
     """
     Generate a drifted in a multiple features
     """
@@ -117,6 +117,7 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 "drifted features types": ", ".join(drifted_features_types),
                 "total drift type": get_total_drift_types(drifted_features_types),
                 "tree size": mapped_tree.node_count,
+                "tree features count": len(mapped_tree.tree_features_set),
                 "after accuracy decrease": drifted_test_accuracy * 100,
                 "after retrain accuracy": after_retrained_accuracy * 100,
                 "after retrain accuracy increase": after_retrained_accuracy_bump * 100,

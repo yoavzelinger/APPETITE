@@ -58,9 +58,9 @@ aggregated_groupby_columns = ["dataset name", "tree size", "drifts count"]
 
 aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
 for diagnoser_output_name in diagnosers_output_names:
+    raw_results_columns.append(diagnoser_output_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + DIAGNOSES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_output_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + FIX_ACCURACY_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)

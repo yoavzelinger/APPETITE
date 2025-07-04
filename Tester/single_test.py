@@ -136,9 +136,9 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
                 wasted_effort = get_wasted_effort(mapped_tree, diagnoses, faulty_features_nodes)
                 correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
                 current_results_dict.update({
+                    f"{diagnoser_output_name} faulty features": ", ".join(detected_faulty_features),
                     f"{diagnoser_output_name} diagnoses": ", ".join(map(str, diagnoses)),
                     f"{diagnoser_output_name} wasted effort": wasted_effort,
-                    f"{diagnoser_output_name} faulty features": ", ".join(detected_faulty_features),
                     f"{diagnoser_output_name} correctly_identified": correctly_identified,
                     f"{diagnoser_output_name} fix accuracy": fixed_test_accuracy * 100,
                     f"{diagnoser_output_name} fix accuracy increase": test_accuracy_bump * 100

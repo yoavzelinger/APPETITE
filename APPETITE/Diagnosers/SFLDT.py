@@ -86,7 +86,7 @@ class SFLDT(ADiagnoser):
         target_feature_index = len(self.feature_indices_dict)
         self.feature_indices_dict[target_name] = target_feature_index
         target_nodes = [node_spectra_index for node_spectra_index, node in self.mapped_tree.spectra_dict.items() if node.is_terminal()]
-        self.feature_index_to_node_indices_dict[target_feature_index].append(target_nodes)
+        self.feature_index_to_node_indices_dict[target_feature_index] = target_nodes
 
     def update_feature_components(self
     ) -> None:

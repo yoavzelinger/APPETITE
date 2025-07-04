@@ -80,6 +80,14 @@ class SFLDT(ADiagnoser):
         self.paths_depths_vector = np_array([self.paths_depths_vector[test_indices].min() for test_indices in path_tests_indices.values()])
         self.tests_count = self.error_vector.shape[0]
 
+    def add_target_to_feature_components(self,
+                                         target_name: str = "target"
+    ) -> None:
+        target_feature_index = len(self.feature_indices_dict)
+        self.feature_indices_dict[target_name] = target_feature_index
+        target_nodes = [node_spectra_index for node_spectra_index, node in self.mapped_tree.spectra_dict.items() if node.is_terminal()]
+        self.feature_index_to_node_indices_dict[target_feature_index].append(target_nodes)
+
     def update_feature_components(self
     ) -> None:
         """
@@ -95,6 +103,8 @@ class SFLDT(ADiagnoser):
             if node.feature not in self.feature_indices_dict:
                 self.feature_indices_dict[node.feature] = len(self.feature_indices_dict)
             self.feature_index_to_node_indices_dict[self.feature_indices_dict[node.feature]].append(node_spectra_index)
+        # add target
+        self.add_target_to_feature_components()
         self.components_count = len(self.feature_indices_dict)
         features_spectra = zeros((self.components_count, self.tests_count))
         features_count_vectors = zeros((self.components_count, self.tests_count))

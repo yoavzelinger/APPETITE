@@ -83,6 +83,11 @@ class BARINEL(SFLDT):
         super().update_fuzzy_error()
         self.update_threshold()
 
+    def add_target_to_feature_components(self,
+                                         target_name: str = "target"
+    ) -> None:
+        pass
+
     def combine_stat_diagnoses(self
      ) -> None:
         """

@@ -36,10 +36,10 @@ args = parser.parse_args()
 # print(f"Running config: {args}")
 diagnosers_data = load_testing_diagnosers_data()
 diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output_name"], diagnosers_data))
-after_windows_string = ""
+after_window_test_sizes, after_windows_string = tester_constants.AFTER_WINDOW_TEST_SIZES, ""
 if args.after_window != tester_constants.AFTER_WINDOW_TEST_SIZES:
-    tester_constants.AFTER_WINDOW_TEST_SIZES = args.after_window
-    after_windows_string = "-".join(map(str, tester_constants.AFTER_WINDOW_TEST_SIZES))
+    after_window_test_sizes = args.after_window
+    after_windows_string = "-".join(map(str, after_window_test_sizes))
 if args.drift_size > 0:
     tester_constants.MIN_DRIFT_SIZE, tester_constants.MAX_DRIFT_SIZE = args.drift_size, args.drift_size
 print(f"Running tests with {len(diagnosers_output_names)} diagnosers: {diagnosers_output_names}")
@@ -96,7 +96,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         }
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
         print(f"Running tests for {dataset_name}")
-        for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name, diagnosers_data=diagnosers_data):
+        for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name, after_window_test_sizes=after_window_test_sizes, diagnosers_data=diagnosers_data):
             if isinstance(test_result, Exception):
                 if not skip_exceptions:
                     raise test_result

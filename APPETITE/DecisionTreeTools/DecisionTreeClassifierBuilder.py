@@ -4,6 +4,10 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score
 
+from warnings import filterwarnings
+filterwarnings("ignore", message="The number of unique classes is greater than 50%")
+
+
 from APPETITE import Constants as constants
 
 def build_tree(

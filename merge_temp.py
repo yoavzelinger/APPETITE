@@ -12,19 +12,21 @@ parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 args = parser.parse_args()
 
-group_by_columns = ["dataset name", "tree size", "after size", "drift size", "drifted features types", "total drift type", "drift severity level"]
-common_aggregated_columns = ["after accuracy decrease", "after retrain accuracy increase", "before after retrain accuracy increase"]
-diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort", "correctly_identified"]
+group_by_columns = ["dataset name", "tree size", "tree features count", "after size", "drift size", "drifted features types", "total drift type", "drift severity level"]
+common_aggregated_columns = ["after accuracy decrease", "after retrain accuracy increase", "before after retrain accuracy increase"] # results columns common to all diagnosers (relevant to the scenario)
+diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort", "correctly_identified"] # results columns that are relevant to specific diagnosers
 
 columns_dtypes = {
     "dataset name": "string",
+    "tree size": "int64",
+    "tree features count": "int64",
     "after size": "float64",
     "drift size": "int64",
+    "drifted features": "string",
+    "drifted features types": "string",
     "drift severity level": "int64",
     "drift description": "string",
-    "drifted features types": "string",
     "total drift type": "string",
-    "tree size": "int64",
     "after accuracy decrease": "float64",
     "after retrain accuracy increase": "float64",
     "before after retrain accuracy increase": "float64"

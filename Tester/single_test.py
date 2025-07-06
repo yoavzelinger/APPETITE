@@ -112,15 +112,15 @@ def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTION
             faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)
 
             current_results_dict = {
-                "after size": dataset.after_proportion * dataset.after_window_size * 100,
-                "drift size": drift_size,
-                "drift severity level": drift_severity_level,
-                "drift description": drift_description,
-                "drifted features": ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
-                "drifted features types": ", ".join(drifted_features_types),
-                "total drift type": get_total_drift_types(drifted_features_types),
                 "tree size": mapped_tree.node_count,
                 "tree features count": len(mapped_tree.tree_features_set),
+                "after size": dataset.after_proportion * dataset.after_window_size * 100,
+                "drift size": drift_size,
+                "drifted features": ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
+                "drifted features types": ", ".join(drifted_features_types),
+                "drift severity level": drift_severity_level,
+                "drift description": drift_description,
+                "total drift type": get_total_drift_types(drifted_features_types),
                 "after accuracy decrease": drifted_test_accuracy * 100,
                 "after retrain accuracy": after_retrained_accuracy * 100,
                 "after retrain accuracy increase": after_retrained_accuracy_bump * 100,

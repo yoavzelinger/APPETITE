@@ -96,7 +96,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         }
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
         print(f"Running tests for {dataset_name}")
-        for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name + ".csv", diagnosers_data=diagnosers_data):
+        for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name, diagnosers_data=diagnosers_data):
             if isinstance(test_result, Exception):
                 if not skip_exceptions:
                     raise test_result

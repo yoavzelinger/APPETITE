@@ -11,10 +11,11 @@ import traceback
 
 def get_dataset(directory: str,
                 file_name: str,
+                file_extension: str = ".csv",
                 proportions_tuple: int | tuple[float] = constants.PROPORTIONS_TUPLE,
                 after_window_size: float = constants.AFTER_WINDOW_SIZE
                 )-> Dataset:
-    source = os_path.join(directory, file_name)
+    source = os_path.join(directory, f"{file_name}{file_extension}")
     return Dataset(source, proportions_tuple, after_window_size)
 
 def get_sklearn_tree(X_train,
@@ -70,8 +71,8 @@ def get_total_drift_types(drifted_features_types):
         return "numeric"
     return "binary"
 
-def run_single_test(directory, file_name, proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_size=constants.AFTER_WINDOW_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
-    dataset = get_dataset(directory, file_name, proportions_tuple, after_window_size)
+def run_single_test(directory, file_name, file_extension: str = ".csv", proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_size=constants.AFTER_WINDOW_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
+    dataset = get_dataset(directory, file_name, file_extension=file_extension, proportions_tuple=proportions_tuple, after_window_size=after_window_size)
 
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
@@ -162,7 +163,7 @@ def get_example_mapped_tree(directory=tester_constants.DATASETS_FULL_PATH, file_
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
 def sanity_run(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
-    for result in run_single_test(directory=directory, file_name=file_name + ".csv", diagnosers_data=diagnosers_data):
+    for result in run_single_test(directory=directory, file_name=file_name, diagnosers_data=diagnosers_data):
         print(result)
         
 if __name__ == "__main__":

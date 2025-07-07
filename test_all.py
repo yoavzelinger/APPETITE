@@ -5,12 +5,11 @@ from datetime import datetime
 from csv import DictReader
 from pandas import DataFrame
 
+from warnings import filterwarnings, simplefilter as warnings_simplefilter
+warnings_simplefilter(action='ignore', category=FutureWarning)
+filterwarnings("ignore", message="The number of unique classes is greater than 50%")
 
 from Tester import *
-
-from warnings import simplefilter as warnings_simplefilter
-warnings_simplefilter(action='ignore', category=FutureWarning)
-
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m_%H-%M-%S')}")

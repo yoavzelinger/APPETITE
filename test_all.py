@@ -11,12 +11,6 @@ from Tester import *
 from warnings import simplefilter as warnings_simplefilter
 warnings_simplefilter(action='ignore', category=FutureWarning)
 
-DIAGNOSES_NAME_SUFFIX = " diagnoses"
-FAULTY_FEATURES_NAME_SUFFIX = " faulty features"
-WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
-CORRECTLY_IDENTIFIED_NAME_SUFFIX = " correctly_identified"
-FIX_ACCURACY_NAME_SUFFIX = " fix accuracy"
-FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m_%H-%M-%S')}")
@@ -53,6 +47,12 @@ if SPECIFIC_DATASETS:
 
 raw_results_columns = ["dataset name", "tree size", "tree features count", "after size", "drift size", "drifted features", "drifted features types", "drift severity level", "drift description", "total drift type", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
 
+DIAGNOSES_NAME_SUFFIX = " diagnoses"
+FAULTY_FEATURES_NAME_SUFFIX = " faulty features"
+WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
+CORRECTLY_IDENTIFIED_NAME_SUFFIX = " correctly_identified"
+FIX_ACCURACY_NAME_SUFFIX = " fix accuracy"
+FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
 for diagnoser_output_name in diagnosers_output_names:
     raw_results_columns.append(diagnoser_output_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + DIAGNOSES_NAME_SUFFIX)

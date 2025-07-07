@@ -28,15 +28,17 @@ def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
 
 def drift_tree(mapped_tree: MappedDecisionTree,
                dataset: Dataset,
-               after_window_test_sizes: list[float] = tester_constants.AFTER_WINDOW_TEST_SIZES
+               after_window_test_sizes: list[float] = tester_constants.AFTER_WINDOW_TEST_SIZES,
+                min_drift_size: int = tester_constants.MIN_DRIFT_SIZE,
+                max_drift_size: int = tester_constants.MAX_DRIFT_SIZE
                ):
     """
     Generate a drifted in a multiple features
     """
-    current_min_drift_size = max(tester_constants.MIN_DRIFT_SIZE, 1)
+    current_min_drift_size = max(min_drift_size, 1)
     current_max_drift_size = len(mapped_tree.tree_features_set)
-    if tester_constants.MAX_DRIFT_SIZE > 0:
-        current_max_drift_size = min(current_max_drift_size, tester_constants.MAX_DRIFT_SIZE)
+    if max_drift_size > 0:
+        current_max_drift_size = min(current_max_drift_size, max_drift_size)
     for after_window_test_size in after_window_test_sizes:
         print(f"\tAfter size: {after_window_test_size}%")
         dataset.update_after_window_size(after_window_test_size)
@@ -72,7 +74,7 @@ def get_total_drift_types(drifted_features_types):
         return "numeric"
     return "binary"
 
-def run_single_test(directory, file_name, file_extension: str = ".csv", proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_test_sizes=tester_constants.AFTER_WINDOW_TEST_SIZES, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
+def run_single_test(directory, file_name, file_extension: str = ".csv", proportions_tuple=constants.PROPORTIONS_TUPLE, after_window_test_sizes=tester_constants.AFTER_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
     dataset = get_dataset(directory, file_name, file_extension=file_extension, proportions_tuple=proportions_tuple)
 
     X_train, y_train = dataset.get_before_concept()
@@ -88,7 +90,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
     original_after_accuracy, original_test_accuracy = get_accuracy(sklearn_tree_model, X_after, y_after), get_accuracy(sklearn_tree_model, X_test, y_test)
 
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
-    for (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset, after_window_test_sizes=after_window_test_sizes):
+    for (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset, after_window_test_sizes=after_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
         try:
             drifted_after_accuracy, drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after), get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
             drifted_after_accuracy_drop, drifted_test_accuracy_drop = original_after_accuracy - drifted_after_accuracy, original_test_accuracy - drifted_test_accuracy

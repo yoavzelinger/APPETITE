@@ -40,8 +40,10 @@ after_window_test_sizes, after_windows_string = tester_constants.AFTER_WINDOW_TE
 if args.after_window != tester_constants.AFTER_WINDOW_TEST_SIZES:
     after_window_test_sizes = args.after_window
     after_windows_string = "-".join(map(str, after_window_test_sizes))
+min_drift_size, max_drift_size, drift_size_string = tester_constants.MIN_DRIFT_SIZE, tester_constants.MAX_DRIFT_SIZE, ""
 if args.drift_size > 0:
-    tester_constants.MIN_DRIFT_SIZE, tester_constants.MAX_DRIFT_SIZE = args.drift_size, args.drift_size
+    drift_size_string = str(args.drift_size)
+    min_drift_size = max_drift_size = args.drift_size
 print(f"Running tests with {len(diagnosers_output_names)} diagnosers: {diagnosers_output_names}")
 skip_exceptions = args.skip
 datasets_count = args.count
@@ -96,7 +98,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         }
         current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
         print(f"Running tests for {dataset_name}")
-        for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name, after_window_test_sizes=after_window_test_sizes, diagnosers_data=diagnosers_data):
+        for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name, after_window_test_sizes=after_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=diagnosers_data):
             if isinstance(test_result, Exception):
                 if not skip_exceptions:
                     raise test_result
@@ -146,8 +148,8 @@ os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
 
 RESULTS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.RESULTS_FILE_NAME_PREFIX)
 ERRORS_FILE_PATH_PREFIX = os_path.join(RESULTS_FULL_PATH, tester_constants.ERRORS_FILE_NAME_PREFIX)
-if args.drift_size > 0:
-    RESULTS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"
+if drift_size_string:
+    RESULTS_FILE_PATH_PREFIX += f"_drift_size_{drift_size_string}"
     ERRORS_FILE_PATH_PREFIX += f"_drift_size_{args.drift_size}"
 if after_windows_string:
     RESULTS_FILE_PATH_PREFIX += f"_after_window_{after_windows_string}"

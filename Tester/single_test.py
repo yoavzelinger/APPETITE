@@ -29,8 +29,8 @@ def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
 def drift_tree(mapped_tree: MappedDecisionTree,
                dataset: Dataset,
                after_window_test_sizes: list[float] = tester_constants.AFTER_WINDOW_TEST_SIZES,
-                min_drift_size: int = tester_constants.MIN_DRIFT_SIZE,
-                max_drift_size: int = tester_constants.MAX_DRIFT_SIZE
+               min_drift_size: int = tester_constants.MIN_DRIFT_SIZE,
+               max_drift_size: int = tester_constants.MAX_DRIFT_SIZE
                ):
     """
     Generate a drifted in a multiple features

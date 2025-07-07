@@ -46,7 +46,7 @@ GRADIENT_STEP = 0.5
 BARINEL_STAT_TYPE = "DIFFERENCE" # in ["BEFORE", "AFTER", "DIFFERENCE"]
 
 DIAGNOSIS_ALGORITHM = "BARINEL" # in ["SFLDT", "BARINEL"]
-DEFAULT_ADD_STAT = False # Combine STAT Diagnoses
+DEFAULT_COMBINE_STAT = True # Combine STAT Diagnoses
 DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
 DEFAULT_GROUP_TESTS_BY_PATHS = False # Group tests by paths in the decision tree
 DEFAULT_FEATURE_COMPONENTS = False # Use features components

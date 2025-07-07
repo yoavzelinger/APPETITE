@@ -61,13 +61,13 @@ aggregating_functions_dict[aggregated_count_column_name] = "count"
 
 output_df = DataFrame(columns=group_by_columns + aggregated_columns + ["count"]).set_index(group_by_columns)
 
-for current_file_index, current_file_name in enumerate(listdir(tester_constants.TEMP_RESULTS_FULL_PATH), 1):
+for current_file_index, current_file_name in enumerate(listdir(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH), 1):
     print("Working on file", current_file_index, ":", current_file_name)
     if not current_file_name.startswith(tester_constants.RESULTS_FILE_NAME_PREFIX):
         continue
     
     current_results_df = None
-    with open(os_path.join(tester_constants.TEMP_RESULTS_FULL_PATH, current_file_name), "r") as current_file:
+    with open(os_path.join(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH, current_file_name), "r") as current_file:
         current_results_df = read_csv(current_file, dtype=columns_dtypes)
     current_group_by_df = current_results_df.groupby(group_by_columns).agg(aggregating_functions_dict)
     current_group_by_df.rename(columns={aggregated_count_column_name: "count"}, inplace=True)
@@ -77,7 +77,7 @@ for current_file_index, current_file_name in enumerate(listdir(tester_constants.
 
 output_df = output_df[["count"] + aggregated_columns]
 
-output_full_path = os_path.join(tester_constants.RESULTS_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
+output_full_path = os_path.join(tester_constants.OUTPUT_DIRECTORY_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
 merged_results_sheet_name = "merged_results"
 excel_writer_arguments = {
     "path": output_full_path,

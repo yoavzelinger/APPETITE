@@ -160,16 +160,16 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
             diagnoser_info = f", diagnoser: {diagnoser_output_name} ({diagnoser_class_name})" if ('diagnoser_output_name' in locals() and diagnoser_output_name) else ""
             yield Exception(f"{exception_class} in {drift_description}, after window size: {dataset.after_window_size} ({error_file}, line {error_line}{diagnoser_info}: {e}")
         
-def get_example_mapped_tree(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
+def get_example_mapped_tree(directory=tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name + ".csv")
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 
-def sanity_run(directory=tester_constants.DATASETS_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
+def sanity_run(directory=tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
     for result in run_single_test(directory=directory, file_name=file_name, diagnosers_data=diagnosers_data):
         print(result)
         
 if __name__ == "__main__":
     file_name = tester_constants.EXAMPLE_FILE_NAME if len(sys_argv) < 2 else sys_argv[1]
-    sanity_run(tester_constants.DATASETS_FULL_PATH, file_name + ".csv")
+    sanity_run(tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_name)

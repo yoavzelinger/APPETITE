@@ -48,9 +48,9 @@ BARINEL_STAT_TYPE = "DIFFERENCE" # in ["BEFORE", "AFTER", "DIFFERENCE"]
 DIAGNOSIS_ALGORITHM = "BARINEL" # in ["SFLDT", "BARINEL"]
 DEFAULT_ADD_STAT = False # Combine STAT Diagnoses
 DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
-DEFAULT_FUZZY_ERROR = False # Use fuzzy error vector
+DEFAULT_GROUP_TESTS_BY_PATHS = False # Group tests by paths in the decision tree
 DEFAULT_FEATURE_COMPONENTS = False # Use features components
-DEFAULT_USE_CONFIDENCE = False # Use confidence in Error vector calculation
+DEFAULT_USE_TESTS_CONFIDENCE = True # Use confidence in Error vector calculation
 DEFAULT_MERGE_SINGULAR_DIAGNOSES = False # Merge singular diagnoses based on the features
 
 BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5

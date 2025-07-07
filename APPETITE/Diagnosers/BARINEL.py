@@ -63,8 +63,6 @@ class BARINEL(SFLDT):
         self.components_prior_probabilities = None
         self.threshold = 1
         super().__init__(mapped_tree, X, y, **kwargs)
-        if self.use_confidence:
-            self.update_threshold()
 
     def update_threshold(self
     ) -> None:

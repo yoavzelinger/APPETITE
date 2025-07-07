@@ -17,9 +17,9 @@ class SFLDT(ADiagnoser):
                  y: Series,
                  combine_stat: bool = constants.DEFAULT_ADD_STAT,
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
-                 use_fuzzy_error: bool = constants.DEFAULT_FUZZY_ERROR,
+                 group_tests: bool = constants.DEFAULT_GROUP_TESTS_BY_PATHS,
                  use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS,
-                 use_confidence: bool = constants.DEFAULT_USE_CONFIDENCE,
+                 use_tests_confidence: bool = constants.DEFAULT_USE_TESTS_CONFIDENCE,
                  merge_singular_diagnoses: bool = constants.DEFAULT_MERGE_SINGULAR_DIAGNOSES
     ):
         """
@@ -31,22 +31,31 @@ class SFLDT(ADiagnoser):
         y (Series): The target column.
         combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
         use_fuzzy_participation (bool): Whether to use fuzzy components participation.
-        use_fuzzy_error (bool): Whether to use fuzzy error vector.
+        group_tests (bool): Whether to group tests based on the classification paths.
         use_feature_components (bool): Whether to use feature components.
         use_confidence (bool): Whether to use confidence in the error vector calculation.
         merge_singular_diagnoses (bool): Whether to merge singular diagnoses based on the features.
         """
         assert not (use_feature_components and merge_singular_diagnoses), "Cannot merge singular diagnoses with multiple fault diagnoser"
         super().__init__(mapped_tree, X, y)
+        
         self.components_count = mapped_tree.node_count
         self.tests_count = len(X)
+        
         self.spectra = zeros((self.components_count, self.tests_count))
         self.error_vector = zeros(self.tests_count)
         self.paths_depths_vector = zeros(self.tests_count)
-        self.use_fuzzy_participation, self.use_fuzzy_error = use_fuzzy_participation, use_fuzzy_error
+        
+        # Components
+        self.use_fuzzy_participation = use_fuzzy_participation
         self.use_feature_components = use_feature_components
-        self.use_confidence = use_confidence
-        self.merge_singular_diagnoses = merge_singular_diagnoses
+        # Tests
+        self.group_tests = group_tests
+        self.use_tests_confidence = use_tests_confidence
+        self.is_error_fuzzy = self.use_tests_confidence or self.group_tests
+        # Deprecated
+        self.merge_singular_diagnoses = merge_singular_diagnoses # TODO: Remove
+
         self.fill_spectra_and_error_vector(X, y)
         self.stat = STAT(mapped_tree, X, y) if combine_stat else None
 
@@ -63,10 +72,10 @@ class SFLDT(ADiagnoser):
         assert (components_factor <= self.paths_depths_vector).all(), f"Components factor (numerator) vector should be less equal to paths depths (denominator - normalizer). Factor range: [{components_factor.min()}, {components_factor.max()}]; Paths depth: [{self.paths_depths_vector.min()}, {self.paths_depths_vector.max()}]."
         self.spectra = (self.spectra * components_factor) / self.paths_depths_vector
 
-    def update_fuzzy_error(self
+    def group_tests_by_paths(self
     ) -> None:
         """
-        Update the error vector to be fuzzy.
+        Merge the tests by their classification paths.
         Each test will be correspond to classification path in the tree (that has any nodes passed through).
         The error value will be the average error (the misclassification) of the classification path.
         """
@@ -79,6 +88,14 @@ class SFLDT(ADiagnoser):
         self.error_vector = np_array([self.error_vector[test_indices].mean() for test_indices in path_tests_indices.values()])
         self.paths_depths_vector = np_array([self.paths_depths_vector[test_indices].min() for test_indices in path_tests_indices.values()])
         self.tests_count = self.error_vector.shape[0]
+
+    def update_fuzzy_error(self
+    ) -> None:
+        """
+        Update all needed attributes to support the fuzzy error vector
+        """
+        if self.group_tests:
+            self.group_tests_by_paths()
 
     def add_target_to_feature_components(self,
                                          target_name: str = "target"
@@ -136,11 +153,11 @@ class SFLDT(ADiagnoser):
                 self.spectra[node.spectra_index, test_index] = 1
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
-                    if self.use_confidence:
+                    if self.use_tests_confidence:
                         self.error_vector[test_index] *= node.confidence
                     self.paths_depths_vector[test_index] = node.depth + 1
         assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got: \n{self.paths_depths_vector}"
-        if self.use_fuzzy_error:
+        if self.is_error_fuzzy:
             self.update_fuzzy_error()
         if self.use_feature_components:
             self.update_feature_components()
@@ -278,7 +295,7 @@ class SFLDT(ADiagnoser):
         Returns:
             The relevant similarity function
         """
-        are_continuous = self.use_fuzzy_participation, (self.use_fuzzy_error or self.use_confidence)
+        are_continuous = self.use_fuzzy_participation, self.is_error_fuzzy
         if all(are_continuous): # both continuous
             if self.tests_count < 2:    # not enough samples for correlation measure
                 return self.get_cosine_similarity

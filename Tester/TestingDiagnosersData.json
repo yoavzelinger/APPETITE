@@ -44,7 +44,7 @@
         "class_name": "BARINEL",
         "parameters": {
             "combine_stat": true,
-            "use_fuzzy_error": true,
+            "group_tests": true,
             "use_feature_components": true
         }
     },
@@ -63,7 +63,7 @@
         "parameters": {
             "combine_stat": true,
             "use_fuzzy_participation": true,
-            "use_fuzzy_error": true,
+            "group_tests": true,
             "use_feature_components": true
         }
     },
@@ -83,7 +83,7 @@
         "parameters": {
             "combine_stat": true,
             "use_confidence": true,
-            "use_fuzzy_error": true,
+            "group_tests": true,
             "use_feature_components": true
         }
     },
@@ -94,7 +94,7 @@
             "combine_stat": true,
             "use_fuzzy_participation": true,
             "use_confidence": true,
-            "use_fuzzy_error": true,
+            "group_tests": true,
             "use_feature_components": true
         }
     }

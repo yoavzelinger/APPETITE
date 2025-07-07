@@ -43,9 +43,6 @@ BARINEL_RANKING_ALGORITHM = "V2"
 
 GRADIENT_STEP = 0.5
 
-BARINEL_STAT_TYPE = "DIFFERENCE" # in ["BEFORE", "AFTER", "DIFFERENCE"]
-
-DIAGNOSIS_ALGORITHM = "BARINEL" # in ["SFLDT", "BARINEL"]
 DEFAULT_COMBINE_STAT = True # Combine STAT Diagnoses
 DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
 DEFAULT_GROUP_TESTS_BY_PATHS = False # Group tests by paths in the decision tree
@@ -53,4 +50,4 @@ DEFAULT_FEATURE_COMPONENTS = False # Use features components
 DEFAULT_USE_TESTS_CONFIDENCE = True # Use confidence in Error vector calculation
 DEFAULT_MERGE_SINGULAR_DIAGNOSES = False # Merge singular diagnoses based on the features
 
-BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5
+BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5 # setting the error threshold (from which tests considered as failed) for mean + std * BARINEL_THRESHOLD_ABOVE_STD_RATE

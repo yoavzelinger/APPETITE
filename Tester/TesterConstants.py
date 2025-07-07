@@ -5,7 +5,7 @@ MINIMUM_ORIGINAL_ACCURACY = 0.75
 MINIMUM_DRIFT_ACCURACY_DROP = 0.1
 
 DEFAULT_TESTING_DIAGNOSER = {
-    "output_name": "Regular_SFLDT",
+    "output_name": "DEFAULT_TESTING_DIAGNOSER-Regular_SFLDT",
 	"class_name": "SFLDT",
 	"parameters": {}
     }

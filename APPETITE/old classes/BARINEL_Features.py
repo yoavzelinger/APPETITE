@@ -75,14 +75,8 @@ class BARINEL_Features(BARINEL_Paths):
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,
                       retrieve_spectra_indices: bool = False,
-                      diagnosis_algorithm: str = constants.DIAGNOSIS_ALGORITHM,
      ) -> list[list[int]] | list[tuple[list[int], float]]:
-        if diagnosis_algorithm == "BARINEL":
-            BARINEL_Paths.get_diagnoses(self, retrieve_ranks=True, retrieve_spectra_indices=True)
-        elif diagnosis_algorithm == "SFLDT":
-            SFLDT.get_diagnoses(self, retrieve_ranks=True, retrieve_spectra_indices=True)
-        else:
-            raise ValueError(f"Unknown DIAGNOSIS_ALGORITHM: {diagnosis_algorithm}. Use 'BARINEL' or 'SFLDT'.")
+        BARINEL_Paths.get_diagnoses(self, retrieve_ranks=True, retrieve_spectra_indices=True)
         for diagnosis_index, (features_diagnosis, rank) in enumerate(self.diagnoses):
             if isinstance(features_diagnosis, int):
                 features_diagnosis = [features_diagnosis]

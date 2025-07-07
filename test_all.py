@@ -104,7 +104,6 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
                     raise test_result
                 errors = errors._append({"name": dataset_name, "error": test_result}, ignore_index=True)
                 continue
-            test_result["dataset name"] = dataset_name
             drifts_count += 1
             current_aggregated_row_dict["tree size"] = test_result["tree size"]
             current_aggregated_row_dict["average after accuracy decrease"] += test_result["after accuracy decrease"]

@@ -116,6 +116,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
             faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)
 
             current_results_dict = {
+                "dataset name": file_name,
                 "tree size": mapped_tree.node_count,
                 "tree features count": len(mapped_tree.tree_features_set),
                 "after size": dataset.after_proportion * dataset.after_window_size * 100,

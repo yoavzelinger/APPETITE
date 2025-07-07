@@ -15,12 +15,8 @@ DIAGNOSES_NAME_SUFFIX = " diagnoses"
 FAULTY_FEATURES_NAME_SUFFIX = " faulty features"
 WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
 CORRECTLY_IDENTIFIED_NAME_SUFFIX = " correctly_identified"
-AVERAGE_WASTED_EFFORT_NAME_SUFFIX = " average" + WASTED_EFFORT_NAME_SUFFIX
-AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX = " average" + CORRECTLY_IDENTIFIED_NAME_SUFFIX
 FIX_ACCURACY_NAME_SUFFIX = " fix accuracy"
-AVERAGE_FIX_ACCURACY_NAME_SUFFIX = " average" + FIX_ACCURACY_NAME_SUFFIX
 FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
-AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX = " average" + FIX_ACCURACY_INCREASE_NAME_SUFFIX
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m_%H-%M-%S')}")
@@ -56,9 +52,7 @@ if SPECIFIC_DATASETS:
     SPECIFIC_DATASETS = list(map(lambda prefix: prefix.lower(), SPECIFIC_DATASETS))
 
 raw_results_columns = ["dataset name", "tree size", "tree features count", "after size", "drift size", "drifted features", "drifted features types", "drift severity level", "drift description", "total drift type", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
-aggregated_groupby_columns = ["dataset name", "tree size", "drifts count"]
 
-aggregated_summarizes_columns = ["average after accuracy decrease", "average after retrain accuracy", "average after retrain accuracy increase", "average before after retrain accuracy", "average before after retrain accuracy increase"]
 for diagnoser_output_name in diagnosers_output_names:
     raw_results_columns.append(diagnoser_output_name + FAULTY_FEATURES_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + DIAGNOSES_NAME_SUFFIX)
@@ -66,14 +60,8 @@ for diagnoser_output_name in diagnosers_output_names:
     raw_results_columns.append(diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + FIX_ACCURACY_NAME_SUFFIX)
     raw_results_columns.append(diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnoser_output_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnoser_output_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnoser_output_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX)
-    aggregated_summarizes_columns.append(diagnoser_output_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX)
 
-# Create DataFrame for the aggregated results
 raw_results = DataFrame(columns=raw_results_columns)
-aggregated_results = DataFrame(columns=aggregated_groupby_columns + aggregated_summarizes_columns)
 errors = DataFrame(columns=["name", "error"])
 
 with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
@@ -85,18 +73,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         if SPECIFIC_DATASETS and not any(map(lambda specific_dataset: dataset_name.lower() == specific_dataset, SPECIFIC_DATASETS)):
             continue
         datasets_count -= 1
-        drifts_count = 0
 
-        current_aggregated_row_dict = {
-            "dataset name": dataset_name,
-            "tree size": -1,
-            "average after accuracy decrease": 0,
-            "average after retrain accuracy": 0,
-            "average after retrain accuracy increase": 0,
-            "average before after retrain accuracy": 0,
-            "average before after retrain accuracy increase": 0
-        }
-        current_aggregated_row_dict.update({summarize_column_name: 0 for summarize_column_name in aggregated_summarizes_columns})
         print(f"Running tests for {dataset_name}")
         for test_result in run_single_test(tester_constants.DATASETS_FULL_PATH, dataset_name, after_window_test_sizes=after_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=diagnosers_data):
             if isinstance(test_result, Exception):
@@ -104,43 +81,8 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
                     raise test_result
                 errors = errors._append({"name": dataset_name, "error": test_result}, ignore_index=True)
                 continue
-            drifts_count += 1
-            current_aggregated_row_dict["tree size"] = test_result["tree size"]
-            current_aggregated_row_dict["average after accuracy decrease"] += test_result["after accuracy decrease"]
-            current_aggregated_row_dict["average after retrain accuracy"] += test_result["after retrain accuracy"]
-            current_aggregated_row_dict["average after retrain accuracy increase"] += test_result["after retrain accuracy increase"]
-            current_aggregated_row_dict["average before after retrain accuracy"] += test_result["before after retrain accuracy"]
-            current_aggregated_row_dict["average before after retrain accuracy increase"] += test_result["before after retrain accuracy increase"]
-            for diagnoser_output_name in diagnosers_output_names:
-                current_aggregated_row_dict[diagnoser_output_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] += test_result[diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX]
-                current_aggregated_row_dict[diagnoser_output_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] += test_result[diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX]
-                current_aggregated_row_dict[diagnoser_output_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] += test_result[diagnoser_output_name + FIX_ACCURACY_NAME_SUFFIX]
-                current_aggregated_row_dict[diagnoser_output_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] += test_result[diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX]
             raw_results = raw_results._append(test_result, ignore_index=True)
-        if drifts_count == 0:
-            continue
-        current_aggregated_row_dict["drifts count"] = drifts_count
-        for summarize_column_name in aggregated_summarizes_columns:
-            current_aggregated_row_dict[summarize_column_name] /= drifts_count
-        aggregated_results = aggregated_results._append(current_aggregated_row_dict, ignore_index=True)
 
-aggregating_total_row = {
-    "name": "TOTAL",
-    "tree size": raw_results["tree size"].mean(),
-    "drifts count": aggregated_results["drifts count"].mean(),
-    "average after accuracy decrease": raw_results["after accuracy decrease"].mean(),
-    "average after retrain accuracy": raw_results["after retrain accuracy"].mean(),
-    "average after retrain accuracy increase": raw_results["after retrain accuracy increase"].mean(),
-    "average before after retrain accuracy": raw_results["before after retrain accuracy"].mean(),
-    "average before after retrain accuracy increase": raw_results["before after retrain accuracy increase"].mean()
-}
-for diagnoser_output_name in diagnosers_output_names:
-    aggregating_total_row[diagnoser_output_name + AVERAGE_WASTED_EFFORT_NAME_SUFFIX] = raw_results[diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX].mean()
-    aggregating_total_row[diagnoser_output_name + AVERAGE_CORRECTLY_IDENTIFIED_NAME_SUFFIX] = raw_results[diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX].mean()
-    aggregating_total_row[diagnoser_output_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX] = raw_results[diagnoser_output_name + FIX_ACCURACY_NAME_SUFFIX].mean()
-    aggregating_total_row[diagnoser_output_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX] = raw_results[diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()
-
-aggregated_results = aggregated_results._append(aggregating_total_row, ignore_index=True)
 
 RESULTS_FULL_PATH = tester_constants.TEMP_RESULTS_FULL_PATH if SPECIFIC_DATASETS else tester_constants.RESULTS_FULL_PATH
 os.makedirs(RESULTS_FULL_PATH, exist_ok=True)
@@ -157,8 +99,6 @@ if after_windows_string:
 file_name_suffix = "-".join(SPECIFIC_DATASETS) if SPECIFIC_DATASETS else args.output
 RESULTS_FILE_PATH_PREFIX, ERRORS_FILE_PATH_PREFIX = f"{RESULTS_FILE_PATH_PREFIX}_{file_name_suffix}", f"{ERRORS_FILE_PATH_PREFIX}_{file_name_suffix}"
 
-if not SPECIFIC_DATASETS:
-    aggregated_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}_aggregated.csv", index=False)
 if not raw_results.empty:
     raw_results.to_csv(f"{RESULTS_FILE_PATH_PREFIX}.csv", index=False)
 
@@ -167,6 +107,6 @@ if not errors.empty:
 elif os.path.exists(f"{ERRORS_FILE_PATH_PREFIX}.csv"):
     os.remove(f"{ERRORS_FILE_PATH_PREFIX}.csv")
 
-print("All tests are done! average accuracy and the incremental:")
+print("All tests are done! Accuracy Increase, Wasted Effort, Correctly Identified:")
 for diagnoser_output_name in diagnosers_output_names:
-    print(f"{diagnoser_output_name}: {aggregating_total_row[diagnoser_output_name + AVERAGE_FIX_ACCURACY_NAME_SUFFIX]}%, {aggregating_total_row[diagnoser_output_name + AVERAGE_FIX_ACCURACY_INCREASE_NAME_SUFFIX]}%")
+    print(f"{diagnoser_output_name}: {raw_results[diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()}%, {raw_results[diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX].mean()}, {raw_results[diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX].mean()}%")

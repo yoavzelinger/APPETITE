@@ -147,7 +147,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
                     f"{diagnoser_output_name} faulty features": ", ".join(detected_faulty_features),
                     f"{diagnoser_output_name} diagnoses": ", ".join(map(str, diagnoses)),
                     f"{diagnoser_output_name} wasted effort": wasted_effort,
-                    f"{diagnoser_output_name} correctly_identified": correctly_identified,
+                    f"{diagnoser_output_name} correctly_identified": correctly_identified * 100,
                     f"{diagnoser_output_name} fix accuracy": fixed_test_accuracy * 100,
                     f"{diagnoser_output_name} fix accuracy increase": test_accuracy_bump * 100
                 })

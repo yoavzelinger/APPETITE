@@ -10,6 +10,6 @@
 *.out
 
 # temporary files
+# /data/results/*old*
 /data/results/*temp*
-/data/results/*old*
 **/Shaked Code/

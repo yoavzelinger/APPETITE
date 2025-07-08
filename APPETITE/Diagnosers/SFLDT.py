@@ -15,7 +15,7 @@ class SFLDT(ADiagnoser):
                  mapped_tree: MappedDecisionTree,
                  X: DataFrame,
                  y: Series,
-                 combine_stat: bool = constants.DEFAULT_ADD_STAT,
+                 combine_stat: bool = constants.DEFAULT_COMBINE_STAT,
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
                  group_tests: bool = constants.DEFAULT_GROUP_TESTS_BY_PATHS,
                  use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS,

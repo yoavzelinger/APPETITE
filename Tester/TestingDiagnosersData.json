@@ -1,9 +1,15 @@
 [
     {
-        "output_name": "SFLDT",
+        "output_name": "Original_SFLDT",
         "class_name": "SFLDT",
         "parameters": {
             "use_tests_confidence": false
+        }
+    },
+    {
+        "output_name": "Confidence_SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
         }
     },
     {

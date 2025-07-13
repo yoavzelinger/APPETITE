@@ -1,21 +1,10 @@
 from os import path as os_path
+from json import load as load_json
+
 import APPETITE.Constants as constants
 
 MINIMUM_ORIGINAL_ACCURACY = 0.75
 MINIMUM_DRIFT_ACCURACY_DROP = 0.1
-
-DEFAULT_TESTING_DIAGNOSER = {
-    "output_name": "DEFAULT_TESTING_DIAGNOSER-Regular_SFLDT",
-	"class_name": "SFLDT",
-	"parameters": {}
-    }
-
-if isinstance(DEFAULT_TESTING_DIAGNOSER, dict):
-    DEFAULT_TESTING_DIAGNOSER = (DEFAULT_TESTING_DIAGNOSER, )
-assert isinstance(DEFAULT_TESTING_DIAGNOSER, (list, tuple)) and all(isinstance(diagnoser_data, dict) for diagnoser_data in DEFAULT_TESTING_DIAGNOSER), \
-    "DEFAULT_FIXING_DIAGNOSER must be a tuple of dictionaries, each dictionary representing a diagnoser."
-
-TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME = "TestingDiagnosersData"
 
 SKIP_EXCEPTIONS = False
 
@@ -58,3 +47,101 @@ MIN_DRIFT_SIZE = 1 # min amount of features to drift
 MAX_DRIFT_SIZE = 4 # max amount of features to drift, -1 means all features
 
 AFTER_WINDOW_TEST_SIZES = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+
+# Testing Columns
+
+#   DEFAULT TESTING DIAGNOSER
+DEFAULT_TESTING_DIAGNOSER = {
+        "output_name": "SFLDT (BASELINE)",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_tests_confidence": False
+        }
+    }
+
+if isinstance(DEFAULT_TESTING_DIAGNOSER, dict):
+    DEFAULT_TESTING_DIAGNOSER = [DEFAULT_TESTING_DIAGNOSER]
+assert isinstance(DEFAULT_TESTING_DIAGNOSER, list) and all(isinstance(diagnoser_data, dict) for diagnoser_data in DEFAULT_TESTING_DIAGNOSER), \
+    "DEFAULT_FIXING_DIAGNOSER must be a tuple of dictionaries, each dictionary representing a diagnoser."
+
+#   TESTING DIAGNOSERS DATA
+TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME = "TestingDiagnosersData"
+diagnosers_data = {}
+with open(os_path.join(__package__, f"{TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME}.json"), "r") as testing_diagnosers_configuration_file:
+    diagnosers_data = load_json(testing_diagnosers_configuration_file)
+diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output_name"], diagnosers_data))
+
+
+#   TESTING INFO COLUMNS
+DATASET_COLUMN_NAME = "dataset name"
+TREE_SIZE_COLUMN_NAME = "tree size"
+TREE_FEATURES_COUNT_COLUMN_NAME = "tree features count"
+AFTER_SIZE_COLUMN_NAME = "after size"
+DRIFT_SIZE_COLUMN_NAME = "drift size"
+TOTAL_DRIFT_TYPE_COLUMN_NAME = "total drift type"
+DRIFT_SEVERITY_LEVEL_COLUMN_NAME = "drift severity level"
+DRIFTED_FEATURES_COLUMN_NAME = "drifted features"
+DRIFTED_FEATURES_TYPES_COLUMN_NAME = "drifted features types"
+DRIFT_DESCRIPTION_COLUMN_NAME = "drift description"
+
+GROUP_BY_COLUMNS = {
+    DATASET_COLUMN_NAME: "string",
+    TREE_SIZE_COLUMN_NAME: "int64",
+    TREE_FEATURES_COUNT_COLUMN_NAME: "int64",
+    AFTER_SIZE_COLUMN_NAME: "float64",
+    DRIFT_SIZE_COLUMN_NAME: "int64",
+    TOTAL_DRIFT_TYPE_COLUMN_NAME: "string",
+    DRIFT_SEVERITY_LEVEL_COLUMN_NAME: "int64",
+}
+GROUP_BY_COLUMN_NAMES = list(GROUP_BY_COLUMNS.keys())
+
+DRIFT_DESCRIBING_COLUMNS = {
+    DRIFTED_FEATURES_COLUMN_NAME: "string",
+    DRIFTED_FEATURES_TYPES_COLUMN_NAME: "string",
+    DRIFT_DESCRIPTION_COLUMN_NAME: "string",
+}
+
+#   COMMON RESULTS COLUMNS
+AFTER_ACCURACY_DECREASE_COLUMN_NAME = "after accuracy decrease"
+
+#   METRICS SUFFIXES
+FAULTY_FEATURES_NAME_SUFFIX = "faulty features"
+DIAGNOSES_NAME_SUFFIX = "diagnoses"
+WASTED_EFFORT_NAME_SUFFIX = "wasted-effort"
+CORRECTLY_IDENTIFIED_NAME_SUFFIX = "correctly-identified"
+FIX_ACCURACY_NAME_SUFFIX = "fix accuracy"
+FIX_ACCURACY_INCREASE_NAME_SUFFIX = "fix accuracy increase"
+
+#   SOLVING PREFIXES
+AFTER_RETRAIN_COLUMNS_PREFIX = "after_retrain"
+BEFORE_AFTER_RETRAIN_COLUMNS_PREFIX = "before-after_retrain"
+
+BASELINE_RETRAINERS_OUTPUT_NAMES = [AFTER_RETRAIN_COLUMNS_PREFIX, BEFORE_AFTER_RETRAIN_COLUMNS_PREFIX]
+
+METRICS_COLUMNS = {
+    AFTER_ACCURACY_DECREASE_COLUMN_NAME: "float64"
+}
+for baseline_retrainer_output_name in BASELINE_RETRAINERS_OUTPUT_NAMES:
+    METRICS_COLUMNS[f"{baseline_retrainer_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64",
+    METRICS_COLUMNS[f"{baseline_retrainer_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
+
+for diagnoser_output_name in diagnosers_output_names:
+    METRICS_COLUMNS[f"{diagnoser_output_name} {FAULTY_FEATURES_NAME_SUFFIX}"] = "string"
+    METRICS_COLUMNS[f"{diagnoser_output_name} {DIAGNOSES_NAME_SUFFIX}"] = "string"
+    METRICS_COLUMNS[f"{diagnoser_output_name} {WASTED_EFFORT_NAME_SUFFIX}"] = "float64"
+    METRICS_COLUMNS[f"{diagnoser_output_name} {CORRECTLY_IDENTIFIED_NAME_SUFFIX}"] = "float64"
+    METRICS_COLUMNS[f"{diagnoser_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
+    METRICS_COLUMNS[f"{diagnoser_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
+
+
+RAW_RESULTS_COLUMNS = GROUP_BY_COLUMNS | DRIFT_DESCRIBING_COLUMNS | METRICS_COLUMNS
+RAW_RESULTS_COLUMN_NAMES = list(RAW_RESULTS_COLUMNS.keys())
+
+
+#   MERGE RESULTS INFO
+AGGREGATED_TESTS_COUNT_COLUMN = DRIFT_DESCRIPTION_COLUMN_NAME
+TESTS_COUNTS_COLUMN_NAME = "tests count"
+
+AGGREGATED_METRICS_COLUMNS = {metric_column_name: metric_column_dtype for metric_column_name, metric_column_dtype in METRICS_COLUMNS.items() if metric_column_dtype != "string"}
+EXTENDED_METRICS_COLUMNS = AGGREGATED_METRICS_COLUMNS | {TESTS_COUNTS_COLUMN_NAME: "int64"}
+EXTENDED_METRICS_COLUMN_NAMES = list(EXTENDED_METRICS_COLUMNS.keys())

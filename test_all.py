@@ -24,13 +24,11 @@ parser.add_argument("-t", "--test", type=str, help="Test dataset to run if you w
 
 args = parser.parse_args()
 
-diagnosers_data = load_testing_diagnosers_data()
-diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output_name"], diagnosers_data))
-print(f"Running tests with {len(diagnosers_output_names)} diagnosers: {diagnosers_output_names}")
+print(f"Running tests with {len(tester_constants.diagnosers_output_names)} diagnosers: {tester_constants.diagnosers_output_names}")
 
 if args.test:
     print(f"Running single test for {args.test}")
-    single_test.sanity_run(file_name=args.test + ".csv", diagnosers_data=diagnosers_data)
+    single_test.sanity_run(file_name=args.test + ".csv", diagnosers_data=tester_constants.diagnosers_data)
     exit(0)
 
 specific_datasets_string = ""
@@ -69,23 +67,7 @@ print(f"Running tests with drift size: {drift_size_string} ({min_drift_size} -> 
 
 
 ##### Create Results DataFrame #####
-raw_results_columns = ["dataset name", "tree size", "tree features count", "after size", "drift size", "drifted features", "drifted features types", "drift severity level", "drift description", "total drift type", "after accuracy decrease", "after retrain accuracy", "after retrain accuracy increase", "before after retrain accuracy", "before after retrain accuracy increase"]
-
-DIAGNOSES_NAME_SUFFIX = " diagnoses"
-FAULTY_FEATURES_NAME_SUFFIX = " faulty features"
-WASTED_EFFORT_NAME_SUFFIX = " wasted effort"
-CORRECTLY_IDENTIFIED_NAME_SUFFIX = " correctly_identified"
-FIX_ACCURACY_NAME_SUFFIX = " fix accuracy"
-FIX_ACCURACY_INCREASE_NAME_SUFFIX = " fix accuracy increase"
-for diagnoser_output_name in diagnosers_output_names:
-    raw_results_columns.append(diagnoser_output_name + FAULTY_FEATURES_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_output_name + DIAGNOSES_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_output_name + FIX_ACCURACY_NAME_SUFFIX)
-    raw_results_columns.append(diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX)
-
-raw_results = DataFrame(columns=raw_results_columns)
+raw_results = DataFrame(columns=tester_constants.RAW_RESULTS_COLUMN_NAMES)
 errors = DataFrame(columns=["name", "error"])
 
 
@@ -106,7 +88,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         datasets_count -= 1
 
         print(f"Running tests for {dataset_name}")
-        for test_result in run_single_test(tester_constants.DATASETS_DIRECTORY_FULL_PATH, dataset_name, after_window_test_sizes=after_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=diagnosers_data):
+        for test_result in run_single_test(tester_constants.DATASETS_DIRECTORY_FULL_PATH, dataset_name, after_window_test_sizes=after_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=tester_constants.diagnosers_data):
             if isinstance(test_result, Exception):
                 if not skip_exceptions:
                     raise test_result
@@ -146,5 +128,7 @@ elif os.path.exists(errors_file_path):
     os.remove(errors_file_path)
 
 print("All tests are done! Accuracy Increase, Wasted Effort, Correctly Identified:")
-for diagnoser_output_name in diagnosers_output_names:
-    print(f"{diagnoser_output_name}: {raw_results[diagnoser_output_name + FIX_ACCURACY_INCREASE_NAME_SUFFIX].mean()}%, {raw_results[diagnoser_output_name + WASTED_EFFORT_NAME_SUFFIX].mean()}, {raw_results[diagnoser_output_name + CORRECTLY_IDENTIFIED_NAME_SUFFIX].mean()}%")
+for baseline_retrainer_name in tester_constants.BASELINE_RETRAINERS_OUTPUT_NAMES:
+    print(f"{baseline_retrainer_name}: {raw_results[f'{baseline_retrainer_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean()}%")
+for diagnoser_output_name in tester_constants.diagnosers_output_names:
+    print(f"{diagnoser_output_name}: {raw_results[f'{diagnoser_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean()}%, {raw_results[f'{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean()}, {raw_results[f'{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}'].mean()}%")

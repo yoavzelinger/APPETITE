@@ -6,60 +6,16 @@ from os import listdir, path as os_path
 from copy import deepcopy as copy
 from openpyxl import load_workbook
 
-from Tester import tester_constants, load_testing_diagnosers_data
+from Tester import tester_constants
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 args = parser.parse_args()
 
-group_by_columns = ["dataset name", "tree size", "tree features count", "after size", "drift size", "drifted features types", "total drift type", "drift severity level"]
-common_aggregated_columns = ["after accuracy decrease", "after retrain accuracy increase", "before after retrain accuracy increase"] # results columns common to all diagnosers (relevant to the scenario)
-diagnoser_aggregated_columns_suffixes = ["fix accuracy increase", "wasted effort", "correctly_identified"] # results columns that are relevant to specific diagnosers
+aggregating_functions_dict = {metric_column_name: "sum" for metric_column_name in tester_constants.AGGREGATED_METRICS_COLUMNS}
+aggregating_functions_dict[tester_constants.AGGREGATED_TESTS_COUNT_COLUMN] = "count"
 
-columns_dtypes = {
-    "dataset name": "string",
-    "tree size": "int64",
-    "tree features count": "int64",
-    "after size": "float64",
-    "drift size": "int64",
-    "drifted features": "string",
-    "drifted features types": "string",
-    "drift severity level": "int64",
-    "drift description": "string",
-    "total drift type": "string",
-    "after accuracy decrease": "float64",
-    "after retrain accuracy increase": "float64",
-    "before after retrain accuracy increase": "float64"
-}
-
-diagnoser_dtypes_suffixes = {
-    "diagnoses": "string",
-    "faulty features": "string",
-    "wasted effort": "float64",
-    "correctly_identified": "float64",
-    "fix accuracy": "float64",
-    "fix accuracy increase": "float64"
-}
-
-aggregated_columns = copy(common_aggregated_columns)
-aggregating_functions_dict = {common_aggregated_column: "sum" for common_aggregated_column in common_aggregated_columns}
-
-diagnosers_data = load_testing_diagnosers_data()
-diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output_name"], diagnosers_data))
-
-for diagnoser_name in diagnosers_output_names:
-    for diagnoser_aggregated_column_suffix in diagnoser_aggregated_columns_suffixes:
-        diagnoser_aggregated_column = f"{diagnoser_name} {diagnoser_aggregated_column_suffix}"
-        aggregated_columns.append(diagnoser_aggregated_column)
-        aggregating_functions_dict[diagnoser_aggregated_column] = "sum"
-    for diagnoser_column_suffix, diagnoser_column_dtype in diagnoser_dtypes_suffixes.items():
-        diagnoser_column = f"{diagnoser_name} {diagnoser_column_suffix}"
-        columns_dtypes[diagnoser_column] = diagnoser_column_dtype
-aggregated_count_column_name = "drift description"
-aggregating_functions_dict[aggregated_count_column_name] = "count"
-
-
-output_df = DataFrame(columns=group_by_columns + aggregated_columns + ["count"]).set_index(group_by_columns)
+output_df = DataFrame(columns=tester_constants.GROUP_BY_COLUMN_NAMES + tester_constants.EXTENDED_METRICS_COLUMN_NAMES).astype(tester_constants.GROUP_BY_COLUMNS | tester_constants.EXTENDED_METRICS_COLUMNS).set_index(tester_constants.GROUP_BY_COLUMN_NAMES)
 
 for current_file_index, current_file_name in enumerate(listdir(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH), 1):
     print("Working on file", current_file_index, ":", current_file_name)
@@ -68,14 +24,36 @@ for current_file_index, current_file_name in enumerate(listdir(tester_constants.
     
     current_results_df = None
     with open(os_path.join(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH, current_file_name), "r") as current_file:
-        current_results_df = read_csv(current_file, dtype=columns_dtypes)
-    current_group_by_df = current_results_df.groupby(group_by_columns).agg(aggregating_functions_dict)
-    current_group_by_df.rename(columns={aggregated_count_column_name: "count"}, inplace=True)
-    assert all(current_group_by_df.columns == output_df.columns), f"Columns mismatch in {current_file_name}"
-    assert current_group_by_df.index.names == output_df.index.names, f"Index names mismatch in {current_file_name}"
-    output_df = output_df.add(current_group_by_df, fill_value=0)
+        current_results_df = read_csv(current_file, dtype=tester_constants.RAW_RESULTS_COLUMNS)
+    current_group_by_df = current_results_df.groupby(tester_constants.GROUP_BY_COLUMN_NAMES).agg(aggregating_functions_dict)
+    # check that no column contains empty values
+    if current_group_by_df.isnull().values.any():
+        raise ValueError(f"Empty values found in {current_file_name}. Please check the input data.")
+    current_group_by_df.rename(columns={tester_constants.AGGREGATED_TESTS_COUNT_COLUMN: tester_constants.TESTS_COUNTS_COLUMN_NAME}, inplace=True)
+    if len(current_group_by_df.columns) == len(tester_constants.EXTENDED_METRICS_COLUMN_NAMES) and not (all(current_group_by_df.columns == output_df.columns)):
+        raise AssertionError(
+            f"Columns mismatch in {current_file_name}:\n"
+            f"Mismatched columns by position: {[(i, c1, c2) for i, (c1, c2) in enumerate(zip(current_group_by_df.columns, output_df.columns)) if c1 != c2]}\n"
+            f"Extra columns in current_group_by_df: {[c for c in current_group_by_df.columns if c not in output_df.columns]}\n"
+            f"Extra columns in output_df: {[c for c in output_df.columns if c not in current_group_by_df.columns]}"
+        )
+    if not (all(current_group_by_df.dtypes == output_df.dtypes)):
+        current_dict_dtypes = dict(current_group_by_df.dtypes)
+        raise AssertionError(
+            f"Dtypes mismatch in {current_file_name}:\n"
+            f"Extra dtypes in output_df: {[f'{output_column} (output[{output_dtype}] != current[{current_dict_dtypes[output_column]}])' for output_column, output_dtype in dict(output_df.dtypes).items() if output_dtype != current_dict_dtypes[output_column]]}"
+        )
+    if current_group_by_df.index.names != output_df.index.names:
+        raise AssertionError(
+            f"Index names mismatch in {current_file_name}:\n"
+            f"Current index names: {current_group_by_df.index.names}, Output index names: {output_df.index.names}"
+        )
 
-output_df = output_df[["count"] + aggregated_columns]
+    output_df = output_df.add(current_group_by_df, fill_value=0).astype(tester_constants.EXTENDED_METRICS_COLUMNS)
+
+
+
+output_df = output_df[tester_constants.EXTENDED_METRICS_COLUMN_NAMES]
 
 output_full_path = os_path.join(tester_constants.OUTPUT_DIRECTORY_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
 merged_results_sheet_name = "merged_results"

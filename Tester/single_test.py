@@ -116,21 +116,21 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
             faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)
 
             current_results_dict = {
-                "dataset name": file_name,
-                "tree size": mapped_tree.node_count,
-                "tree features count": len(mapped_tree.tree_features_set),
-                "after size": dataset.after_proportion * dataset.after_window_size * 100,
-                "drift size": drift_size,
-                "drifted features": ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
-                "drifted features types": ", ".join(drifted_features_types),
-                "drift severity level": drift_severity_level,
-                "drift description": drift_description,
-                "total drift type": get_total_drift_types(drifted_features_types),
-                "after accuracy decrease": drifted_test_accuracy * 100,
-                "after retrain accuracy": after_retrained_accuracy * 100,
-                "after retrain accuracy increase": after_retrained_accuracy_bump * 100,
-                "before after retrain accuracy": before_after_retrained_accuracy * 100,
-                "before after retrain accuracy increase": before_after_retrained_accuracy_bump * 100
+                tester_constants.DATASET_COLUMN_NAME: file_name,
+                tester_constants.TREE_SIZE_COLUMN_NAME: mapped_tree.node_count,
+                tester_constants.TREE_FEATURES_COUNT_COLUMN_NAME: len(mapped_tree.tree_features_set),
+                tester_constants.AFTER_SIZE_COLUMN_NAME: dataset.after_proportion * dataset.after_window_size * 100,
+                tester_constants.DRIFT_SIZE_COLUMN_NAME: drift_size,
+                tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),
+                tester_constants.DRIFT_SEVERITY_LEVEL_COLUMN_NAME: drift_severity_level,
+                tester_constants.DRIFTED_FEATURES_COLUMN_NAME: ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
+                tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: ", ".join(drifted_features_types),
+                tester_constants.DRIFT_DESCRIPTION_COLUMN_NAME: drift_description,
+                tester_constants.AFTER_ACCURACY_DECREASE_COLUMN_NAME: drifted_test_accuracy * 100,
+                f"{tester_constants.AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": after_retrained_accuracy * 100,
+                f"{tester_constants.AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": after_retrained_accuracy_bump * 100,
+                f"{tester_constants.BEFORE_AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": before_after_retrained_accuracy * 100,
+                f"{tester_constants.BEFORE_AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": before_after_retrained_accuracy_bump * 100
             }
 
             for diagnoser_data in diagnosers_data:
@@ -145,12 +145,12 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
                 wasted_effort = get_wasted_effort(mapped_tree, diagnoses, faulty_features_nodes)
                 correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
                 current_results_dict.update({
-                    f"{diagnoser_output_name} faulty features": ", ".join(detected_faulty_features),
-                    f"{diagnoser_output_name} diagnoses": ", ".join(map(str, diagnoses)),
-                    f"{diagnoser_output_name} wasted effort": wasted_effort,
-                    f"{diagnoser_output_name} correctly_identified": correctly_identified * 100,
-                    f"{diagnoser_output_name} fix accuracy": fixed_test_accuracy * 100,
-                    f"{diagnoser_output_name} fix accuracy increase": test_accuracy_bump * 100
+                    f"{diagnoser_output_name} {tester_constants.FAULTY_FEATURES_NAME_SUFFIX}": ", ".join(detected_faulty_features),
+                    f"{diagnoser_output_name} {tester_constants.DIAGNOSES_NAME_SUFFIX}": ", ".join(map(str, diagnoses)),
+                    f"{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}": wasted_effort,
+                    f"{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}": correctly_identified * 100,
+                    f"{diagnoser_output_name} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
+                    f"{diagnoser_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": test_accuracy_bump * 100
                 })
             yield current_results_dict
         except Exception as e:

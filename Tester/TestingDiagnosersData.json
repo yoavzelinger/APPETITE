@@ -27,7 +27,7 @@
         }
     },
     {
-        "output_name": "Feature-Components_Path-Tests_BARINEL",
+        "output_name": "Feature-Components_Path-Tests_SFLDT",
         "class_name": "SFLDT",
         "parameters": {
             "use_feature_components": true,

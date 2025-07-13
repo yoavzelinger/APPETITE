@@ -123,7 +123,7 @@ METRICS_COLUMNS = {
 }
 for baseline_retrainer_output_name in BASELINE_RETRAINERS_OUTPUT_NAMES:
     METRICS_COLUMNS[f"{baseline_retrainer_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64",
-    METRICS_COLUMNS[f"{baseline_retrainer_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
+    METRICS_COLUMNS[f"{baseline_retrainer_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
 
 for diagnoser_output_name in diagnosers_output_names:
     METRICS_COLUMNS[f"{diagnoser_output_name} {FAULTY_FEATURES_NAME_SUFFIX}"] = "string"

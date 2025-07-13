@@ -12,8 +12,8 @@ parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 args = parser.parse_args()
 
-aggregating_functions_dict = {metric_column_name: "sum" for metric_column_name in tester_constants.AGGREGATED_METRICS_COLUMNS}
-aggregating_functions_dict[tester_constants.AGGREGATED_TESTS_COUNT_COLUMN] = "count"
+aggregating_functions_dict = {tester_constants.AGGREGATED_TESTS_COUNT_COLUMN: "count"}
+aggregating_functions_dict |= {metric_column_name: "sum" for metric_column_name in tester_constants.AGGREGATED_METRICS_COLUMNS}
 
 output_df = DataFrame(columns=tester_constants.GROUP_BY_COLUMN_NAMES + tester_constants.EXTENDED_METRICS_COLUMN_NAMES).astype(tester_constants.GROUP_BY_COLUMNS | tester_constants.EXTENDED_METRICS_COLUMNS).set_index(tester_constants.GROUP_BY_COLUMN_NAMES)
 

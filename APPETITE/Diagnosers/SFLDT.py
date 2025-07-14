@@ -1,4 +1,4 @@
-from numpy import zeros, array as np_array, max as np_max, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, isclose as np_isclose
+from numpy import zeros, array as np_array, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, isclose as np_isclose, where as np_where, nan as np_nan
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.stats import pearsonr as pearson_correlation
 from collections import defaultdict
@@ -61,18 +61,15 @@ class SFLDT(ADiagnoser):
         self.fill_spectra_and_error_vector(X, y)
         self.stat = STAT(mapped_tree, X, y) if combine_stat else None
 
-    def update_fuzzy_participation(self,
-                                   components_factor: ndarray = None
-    ) -> None:
+    def update_fuzzy_participation(self) -> None:
         """
         Update the participation matrix to be fuzzy.
         Each participation will be calculated with a component factor normalized it's classification path depth.
         """
-        if components_factor is None:
-            components_factor = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])[:, None]
-            assert components_factor.all(), f"Components depths vector should be non-zero but got {components_factor}"
-        assert (components_factor <= self.paths_depths_vector).all(), f"Components factor (numerator) vector should be less equal to paths depths (denominator - normalizer). Factor range: [{components_factor.min()}, {components_factor.max()}]; Paths depth: [{self.paths_depths_vector.min()}, {self.paths_depths_vector.max()}]."
+        components_factor = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])[:, None]
+        assert components_factor.all(), f"Components depths vector should be non-zero but got {components_factor}"
         self.spectra = (self.spectra * components_factor) / self.paths_depths_vector
+        assert ((0 <= self.spectra) & (self.spectra <= 1)).all(), f"Components factor (numerator) vector should be less equal to paths depths (denominator - normalizer). Factor range: [{components_factor.min()}, {components_factor.max()}]; Paths depth: [{self.paths_depths_vector.min()}, {self.paths_depths_vector.max()}]."
 
     def aggregate_tests_by_paths(self
     ) -> None:
@@ -127,12 +124,11 @@ class SFLDT(ADiagnoser):
         self.components_count = len(self.feature_indices_dict)
         features_spectra = zeros((self.components_count, self.tests_count))
         features_count_vectors = zeros((self.components_count, self.tests_count))
-        for feature_index, feature_nodes_spectra_indices in self.feature_index_to_node_indices_dict.items():
-            features_count_vectors[feature_index] = self.spectra[feature_nodes_spectra_indices, :].sum(axis=0)
-            features_spectra[feature_index] = (features_count_vectors[feature_index] > 0).astype(int)
+        for feature_index, feature_nodes_spectra_indices in self.feature_index_to_node_indices_dict.items(): #  here
+            current_feature_spectra = self.spectra[feature_nodes_spectra_indices, :]
+            current_feature_participations = np_where(current_feature_spectra > 0, current_feature_spectra, np_nan)
+            features_spectra[feature_index] = np_mean(current_feature_participations, axis=0)
         self.spectra = features_spectra
-        if self.use_fuzzy_participation:
-            self.update_fuzzy_participation(components_factor=features_count_vectors)
 
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
@@ -161,10 +157,10 @@ class SFLDT(ADiagnoser):
         assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got: \n{self.paths_depths_vector}"
         if self.is_error_fuzzy:
             self.update_fuzzy_error()
+        if self.use_fuzzy_participation:
+            self.update_fuzzy_participation()
         if self.use_feature_components:
             self.update_feature_components()
-        elif self.use_fuzzy_participation:
-            self.update_fuzzy_participation()
         
     def convert_features_diagnosis_to_nodes_diagnosis(self,
                                                       features_diagnosis: list[int]

@@ -55,8 +55,8 @@ class SFLDT(ADiagnoser):
         self.aggregate_tests = aggregate_tests
         self.combine_tests_confidence = combine_tests_confidence
         self.is_error_fuzzy = self.combine_tests_confidence or self.aggregate_tests
-        # Deprecated
-        self.merge_singular_diagnoses = merge_singular_diagnoses # TODO: Remove
+        # Deprecated TODO: Remove
+        self.merge_singular_diagnoses = merge_singular_diagnoses
 
         self.fill_spectra_and_error_vector(X, y)
         self.stat = STAT(mapped_tree, X, y) if combine_stat else None

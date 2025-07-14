@@ -3,29 +3,6 @@
         "output_name": "SFLDT",
         "class_name": "SFLDT",
         "parameters": {
-            "use_tests_confidence": false
-        }
-    },
-    {
-        "output_name": "Feature-Components_SFLDT",
-        "class_name": "SFLDT",
-        "parameters": {
-            "use_feature_components": true
-        }
-    },
-    {
-        "output_name": "Path-Tests_SFLDT",
-        "class_name": "SFLDT",
-        "parameters": {
-            "group_tests": true
-        }
-    },
-    {
-        "output_name": "Feature-Components_Path-Tests_SFLDT",
-        "class_name": "SFLDT",
-        "parameters": {
-            "use_feature_components": true,
-            "group_tests": true
         }
     },
     {
@@ -35,25 +12,27 @@
         }
     },
     {
-        "output_name": "Feature-Components_BARINEL",
+        "output_name": "Feature_Components-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
             "use_feature_components": true
         }
     },
     {
-        "output_name": "Path-Tests_BARINEL",
-        "class_name": "BARINEL",
-        "parameters": {
-            "group_tests": true
-        }
-    },
-    {
-        "output_name": "Feature-Components_Path-Tests_BARINEL",
+        "output_name": "Aggregated_Tests-Feature_Components-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
             "use_feature_components": true,
-            "group_tests": true
+            "aggregate_tests": true
+        }
+    },
+    {
+        "output_name": "Confidence-Aggregated_Tests-Feature_Components-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_feature_components": true,
+            "aggregate_tests": true,
+            "combine_tests_confidence": false
         }
     }
 ]

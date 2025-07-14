@@ -19,8 +19,8 @@ class SFLDT(ADiagnoser):
                  use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS,
                  aggregate_tests: bool = constants.DEFAULT_AGGREGATE_TESTS_BY_PATHS,
                  combine_tests_confidence: bool = constants.DEFAULT_COMBINE_TESTS_CONFIDENCE,
-                 merge_singular_diagnoses: bool = constants.DEFAULT_MERGE_SINGULAR_DIAGNOSES
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
+                 merge_singular_diagnoses: bool = constants.DEFAULT_MERGE_SINGULAR_DIAGNOSES    # DEPRECATED
     ):
         """
         Initialize the SFLDT diagnoser.
@@ -34,7 +34,9 @@ class SFLDT(ADiagnoser):
         aggregate_tests (bool): Whether to aggregate tests based on the classification paths.
         use_feature_components (bool): Whether to use feature components.
         use_confidence (bool): Whether to combine the confidence of the tests in the error vector calculation.
-        merge_singular_diagnoses (bool): Whether to merge singular diagnoses based on the features.
+        
+        # DEPRECATED #
+           merge_singular_diagnoses (bool): Whether to merge singular diagnoses based on the features.
         """
         assert not (use_feature_components and merge_singular_diagnoses), "Cannot merge singular diagnoses with multiple fault diagnoser"
         super().__init__(mapped_tree, X, y)

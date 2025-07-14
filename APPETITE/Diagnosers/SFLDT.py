@@ -17,9 +17,9 @@ class SFLDT(ADiagnoser):
                  y: Series,
                  combine_stat: bool = constants.DEFAULT_COMBINE_STAT,
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
-                 group_tests: bool = constants.DEFAULT_GROUP_TESTS_BY_PATHS,
+                 aggregate_tests: bool = constants.DEFAULT_AGGREGATE_TESTS_BY_PATHS,
                  use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS,
-                 use_tests_confidence: bool = constants.DEFAULT_USE_TESTS_CONFIDENCE,
+                 combine_tests_confidence: bool = constants.DEFAULT_COMBINE_TESTS_CONFIDENCE,
                  merge_singular_diagnoses: bool = constants.DEFAULT_MERGE_SINGULAR_DIAGNOSES
     ):
         """
@@ -31,9 +31,9 @@ class SFLDT(ADiagnoser):
         y (Series): The target column.
         combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
         use_fuzzy_participation (bool): Whether to use fuzzy components participation.
-        group_tests (bool): Whether to group tests based on the classification paths.
+        aggregate_tests (bool): Whether to aggregate tests based on the classification paths.
         use_feature_components (bool): Whether to use feature components.
-        use_confidence (bool): Whether to use confidence in the error vector calculation.
+        use_confidence (bool): Whether to combine the confidence of the tests in the error vector calculation.
         merge_singular_diagnoses (bool): Whether to merge singular diagnoses based on the features.
         """
         assert not (use_feature_components and merge_singular_diagnoses), "Cannot merge singular diagnoses with multiple fault diagnoser"
@@ -50,9 +50,9 @@ class SFLDT(ADiagnoser):
         self.use_fuzzy_participation = use_fuzzy_participation
         self.use_feature_components = use_feature_components
         # Tests
-        self.group_tests = group_tests
-        self.use_tests_confidence = use_tests_confidence
-        self.is_error_fuzzy = self.use_tests_confidence or self.group_tests
+        self.aggregate_tests = aggregate_tests
+        self.combine_tests_confidence = combine_tests_confidence
+        self.is_error_fuzzy = self.combine_tests_confidence or self.aggregate_tests
         # Deprecated
         self.merge_singular_diagnoses = merge_singular_diagnoses # TODO: Remove
 
@@ -72,7 +72,7 @@ class SFLDT(ADiagnoser):
         assert (components_factor <= self.paths_depths_vector).all(), f"Components factor (numerator) vector should be less equal to paths depths (denominator - normalizer). Factor range: [{components_factor.min()}, {components_factor.max()}]; Paths depth: [{self.paths_depths_vector.min()}, {self.paths_depths_vector.max()}]."
         self.spectra = (self.spectra * components_factor) / self.paths_depths_vector
 
-    def group_tests_by_paths(self
+    def aggregate_tests_by_paths(self
     ) -> None:
         """
         Merge the tests by their classification paths.
@@ -94,8 +94,8 @@ class SFLDT(ADiagnoser):
         """
         Update all needed attributes to support the fuzzy error vector
         """
-        if self.group_tests:
-            self.group_tests_by_paths()
+        if self.aggregate_tests:
+            self.aggregate_tests_by_paths()
 
     def add_target_to_feature_components(self,
                                          target_name: str = "target"
@@ -153,7 +153,7 @@ class SFLDT(ADiagnoser):
                 self.spectra[node.spectra_index, test_index] = 1
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
-                    if self.use_tests_confidence:
+                    if self.combine_tests_confidence:
                         self.error_vector[test_index] *= node.confidence
                     self.paths_depths_vector[test_index] = node.depth + 1
         assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got: \n{self.paths_depths_vector}"

@@ -95,11 +95,11 @@ class BARINEL(SFLDT):
         stat_diagnoses = self.load_stat_diagnoses()
         stat_diagnoses.sort(key=lambda diagnosis: self.mapped_tree.convert_node_index_to_spectra_index(diagnosis[0][0])) # sort by the components order (to match the spectra indices)
         nodes_stat_rank_vector = np_array([diagnosis[1] for diagnosis in stat_diagnoses])
-        if not self.use_feature_components:
+        if self.use_feature_components:
+            # get for each feature the average of the stat ranks of the components
+            self.components_prior_probabilities = np_array([np_mean(nodes_stat_rank_vector[self.feature_index_to_node_indices_dict[feature_index]]) for feature_index in range(self.components_count)])
+        else:
             self.components_prior_probabilities = nodes_stat_rank_vector
-            return
-        # get for each feature the average of the stat ranks of the components
-        self.components_prior_probabilities = np_array([np_mean(nodes_stat_rank_vector[self.feature_index_to_node_indices_dict[feature_index]]) for feature_index in range(self.components_count)])
 
     def get_diagnoses(self,
                       retrieve_ranks: bool = False,

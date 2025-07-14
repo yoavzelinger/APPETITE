@@ -16,11 +16,11 @@ class SFLDT(ADiagnoser):
                  X: DataFrame,
                  y: Series,
                  combine_stat: bool = constants.DEFAULT_COMBINE_STAT,
-                 use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
-                 aggregate_tests: bool = constants.DEFAULT_AGGREGATE_TESTS_BY_PATHS,
                  use_feature_components: bool = constants.DEFAULT_FEATURE_COMPONENTS,
+                 aggregate_tests: bool = constants.DEFAULT_AGGREGATE_TESTS_BY_PATHS,
                  combine_tests_confidence: bool = constants.DEFAULT_COMBINE_TESTS_CONFIDENCE,
                  merge_singular_diagnoses: bool = constants.DEFAULT_MERGE_SINGULAR_DIAGNOSES
+                 use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
     ):
         """
         Initialize the SFLDT diagnoser.

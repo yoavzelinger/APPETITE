@@ -34,5 +34,15 @@
             "aggregate_tests": true,
             "combine_tests_confidence": false
         }
+    },
+    {
+        "output_name": "Fuzzy_Participation_Confidence-Aggregated_Tests-Feature_Components-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "use_feature_components": true,
+            "aggregate_tests": true,
+            "combine_tests_confidence": false,
+            "use_fuzzy_participation": true
+        }
     }
 ]

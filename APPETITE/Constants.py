@@ -46,8 +46,8 @@ GRADIENT_STEP = 0.5
 DEFAULT_COMBINE_STAT = True # Combine STAT Diagnoses
 DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
 DEFAULT_AGGREGATE_TESTS_BY_PATHS = False # Aggregate tests by paths in the decision tree
-DEFAULT_FEATURE_COMPONENTS = False # Use features components
-DEFAULT_COMBINE_TESTS_CONFIDENCE = False # Use confidence in Error vector calculation
+DEFAULT_MERGE_FEATURE_NODES = False # Merge feature nodes for a single component
+DEFAULT_COMBINE_PRIOR_CONFIDENCE = False # Use the prior confidence in Error vector calculation
 DEFAULT_MERGE_SINGULAR_DIAGNOSES = False # Merge singular diagnoses based on the features
 
 BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5 # setting the error threshold (from which tests considered as failed) for mean + std * BARINEL_THRESHOLD_ABOVE_STD_RATE

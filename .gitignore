@@ -9,6 +9,8 @@
 *.sh
 *.out
 
+# Testing files
+
 # temporary files
 # /data/results/*old*
 /data/results/*temp*

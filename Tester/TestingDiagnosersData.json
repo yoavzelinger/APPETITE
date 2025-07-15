@@ -12,37 +12,44 @@
         }
     },
     {
-        "output_name": "Feature_Components-BARINEL",
+        "output_name": "Prior_Confidence-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "use_feature_components": true
+            "combine_prior_confidence": true
         }
     },
     {
-        "output_name": "Aggregated_Tests-Feature_Components-BARINEL",
+        "output_name": "Aggregated_Tests-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "use_feature_components": true,
             "aggregate_tests": true
         }
     },
     {
-        "output_name": "Confidence-Aggregated_Tests-Feature_Components-BARINEL",
+        "output_name": "Aggregated_Tests-Prior_Confidence-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "use_feature_components": true,
-            "aggregate_tests": true,
-            "combine_tests_confidence": false
+            "combine_prior_confidence": true,
+            "aggregate_tests": true
         }
     },
     {
-        "output_name": "Fuzzy_Participation_Confidence-Aggregated_Tests-Feature_Components-BARINEL",
+        "output_name": "Fuzzy_Participation-Aggregated_Tests-Prior_Confidence-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "use_feature_components": true,
+            "combine_prior_confidence": true,
             "aggregate_tests": true,
-            "combine_tests_confidence": false,
             "use_fuzzy_participation": true
+        }
+    },
+    {
+        "output_name": "Feature_Components-Fuzzy_Participation-Aggregated_Tests-Prior_Confidence-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_prior_confidence": true,
+            "aggregate_tests": true,
+            "use_fuzzy_participation": true,
+            "use_feature_components": true
         }
     }
 ]

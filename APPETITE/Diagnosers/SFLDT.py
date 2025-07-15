@@ -49,7 +49,7 @@ class SFLDT(ADiagnoser):
         self.paths_depths_vector = zeros(self.tests_count)
         
         # Components
-        self.use_fuzzy_participation = use_fuzzy_participation
+        self.use_fuzzy_participation = False # TODO: RETURN TO USE THE GIVEN
         self.merge_feature_nodes = merge_feature_nodes
         # Tests
         self.aggregate_tests = aggregate_tests

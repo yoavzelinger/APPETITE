@@ -49,7 +49,7 @@
             "combine_prior_confidence": true,
             "aggregate_tests": true,
             "use_fuzzy_participation": true,
-            "use_feature_components": true
+            "merge_feature_nodes": true
         }
     }
 ]

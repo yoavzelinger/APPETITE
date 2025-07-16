@@ -14,7 +14,8 @@ class MappedDecisionTree:
                      feature_type: str | None = None,
                      threshold: float | None = None,
                      class_name: str | None = None,
-                     spectra_index: int = -1
+                     spectra_index: int = -1,
+                     class_distribution: tuple[float] | None = None
         ):
             """
             Initialize the DecisionTreeNode.
@@ -39,6 +40,7 @@ class MappedDecisionTree:
             self.conditions_path = []
             self.depth = 0 if parent is None else parent.depth + 1
             self.feature_average_value = None
+            self.class_distribution = class_distribution
 
         def update_children(self, 
                             left_child: 'MappedDecisionTree.DecisionTreeNode', 
@@ -245,6 +247,7 @@ class MappedDecisionTree:
         for ordered_index, node in enumerate(self.tree_dict.values()):
             node.update_condition()
             node.spectra_index = ordered_index
+            node.class_distribution = self.sk_values[node.sk_index]
             if node.feature:
                 self.tree_features_set.add(node.feature)
             if node.class_name:

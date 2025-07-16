@@ -51,7 +51,7 @@ class SFLDT(ADiagnoser):
         # Components
         self.group_feature_nodes = group_feature_nodes
         self.use_fuzzy_participation = use_fuzzy_participation
-        self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model, data=X, model_output="probability") if use_fuzzy_participation else None
+        self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model, data=X.astype(np_float64), model_output="probability") if use_fuzzy_participation else None
         # Tests
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence

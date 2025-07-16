@@ -112,15 +112,14 @@ class SFLDT(ADiagnoser):
         Each feature will be represented by a single spectra index.
         The participation will be based on the average participation of all the nodes that represent the feature (which participated in the relevant test).
         """
-        self.feature_index_to_node_indices_dict = defaultdict(list)  # {feature_index: [node_spectra_indices]}
-        self.feature_indices_dict = {}  # {feature: feature_index}
         # Create feature to feature_index mapping (based on the order in the data)
         tree_columns = [feature for feature in self.X_after.columns if feature in self.mapped_tree.tree_features_set]
+        self.feature_indices_dict = {feature: feature_index for (feature_index, feature) in enumerate(tree_columns)}
+        # Create feature_index to the corresponding nodes mapping
+        self.feature_index_to_node_indices_dict = defaultdict(list)
         for node_spectra_index, node in self.mapped_tree.spectra_dict.items():
             if node.is_terminal():
                 continue
-            if node.feature not in self.feature_indices_dict:
-                self.feature_indices_dict[node.feature] = len(self.feature_indices_dict)
             self.feature_index_to_node_indices_dict[self.feature_indices_dict[node.feature]].append(node_spectra_index)
         # add target
         self.add_target_to_feature_components()

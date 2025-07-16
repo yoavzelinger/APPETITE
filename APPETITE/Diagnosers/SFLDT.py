@@ -87,6 +87,7 @@ class SFLDT(ADiagnoser):
         self.spectra = np_array(list(path_tests_indices.keys())).T
         self.error_vector = np_array([self.error_vector[test_indices].mean() for test_indices in path_tests_indices.values()])
         self.paths_depths_vector = np_array([self.paths_depths_vector[test_indices].min() for test_indices in path_tests_indices.values()])
+        assert self.tests_count > self.error_vector.shape[0], f"Tests count should be changed after aggregation, but it is still the same: previous ({self.tests_count}) == new ({self.error_vector.shape[0]})"
         self.tests_count = self.error_vector.shape[0]
 
     def update_error_vector_to_fuzzy(self

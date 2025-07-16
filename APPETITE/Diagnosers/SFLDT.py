@@ -148,6 +148,7 @@ class SFLDT(ADiagnoser):
             participated_nodes = node_indicator.indices[
                 node_indicator.indptr[test_index] : node_indicator.indptr[test_index + 1]
             ]
+            assert len(participated_nodes) >= 2, f"Test test_index: ({participated_nodes}, total {len(participated_nodes)}) has no participated nodes in the tree, but should have at least 2 (root and terminal node)."
             for node in map(self.mapped_tree.get_node, participated_nodes):
                 self.spectra[node.spectra_index, test_index] = 1
                 if node.is_terminal():

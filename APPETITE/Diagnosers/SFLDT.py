@@ -32,8 +32,8 @@ class SFLDT(ADiagnoser):
         combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
         use_fuzzy_participation (bool): Whether to use fuzzy components participation.
         aggregate_tests (bool): Whether to aggregate tests based on the classification paths.
-        use_feature_components (bool): Whether to use feature components.
-        use_confidence (bool): Whether to combine the confidence of the tests in the error vector calculation.
+        group_feature_nodes (bool): Whether to use feature components.
+        combine_prior_confidence (bool): Whether to combine the confidence of the tests in the error vector calculation.
         
         # DEPRECATED #
            merge_singular_diagnoses (bool): Whether to merge singular diagnoses based on the features.

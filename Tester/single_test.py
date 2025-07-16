@@ -161,7 +161,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
             yield Exception(f"{exception_class} in {drift_description}, after window size: {dataset.after_window_size} ({error_file}, line {error_line}{diagnoser_info}: {e}")
         
 def get_example_mapped_tree(directory=tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
-    dataset = get_dataset(directory, file_name + ".csv")
+    dataset = get_dataset(directory, file_name)
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)

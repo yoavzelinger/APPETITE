@@ -49,8 +49,8 @@ class SFLDT(ADiagnoser):
         self.paths_depths_vector = zeros(self.tests_count)
         
         # Components
-        self.use_fuzzy_participation = use_fuzzy_participation
         self.group_feature_nodes = group_feature_nodes
+        self.use_fuzzy_participation = use_fuzzy_participation
         self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model, data=X, model_output="probability") if use_fuzzy_participation else None
         # Tests
         self.aggregate_tests = aggregate_tests

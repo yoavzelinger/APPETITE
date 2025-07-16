@@ -38,7 +38,10 @@ class SFLDT(ADiagnoser):
         # DEPRECATED #
            merge_singular_diagnoses (bool): Whether to merge singular diagnoses based on the features.
         """
-        assert not (group_feature_nodes and merge_singular_diagnoses), "Cannot merge singular diagnoses with multiple fault diagnoser"
+        if group_feature_nodes:
+            assert not merge_singular_diagnoses, "Cannot merge singular diagnoses with multiple fault diagnoser"
+        else:
+            assert not use_fuzzy_participation, "Cannot use fuzzy participation without feature components"
         super().__init__(mapped_tree, X, y)
         
         self.components_count = mapped_tree.node_count
@@ -61,16 +64,6 @@ class SFLDT(ADiagnoser):
 
         self.fill_spectra_and_error_vector(X, y)
         self.stat = STAT(mapped_tree, X, y) if combine_stat else None
-
-    def update_spectra_to_fuzzy(self) -> None:
-        """
-        Update the participation matrix to be fuzzy.
-        Each participation will be calculated with a component factor normalized it's classification path depth.
-        """
-        components_factor = np_array([self.mapped_tree.get_node(index=spectra_index, use_spectra_index=True).depth + 1 for spectra_index in range(self.components_count)])[:, None]
-        assert components_factor.all(), f"Components depths vector should be non-zero but got {components_factor}"
-        self.spectra = (self.spectra * components_factor) / self.paths_depths_vector
-        assert ((0 <= self.spectra) & (self.spectra <= 1)).all(), f"Components factor (numerator) vector should be less equal to paths depths (denominator - normalizer). Factor range: [{components_factor.min()}, {components_factor.max()}]; Paths depth: [{self.paths_depths_vector.min()}, {self.paths_depths_vector.max()}]."
 
     def aggregate_tests_by_paths(self
     ) -> None:
@@ -136,6 +129,24 @@ class SFLDT(ADiagnoser):
             features_spectra[feature_index] = np_divide(participations_sums, participations_counts, out=np_zeros_like(participations_sums, dtype=float), where=participations_counts != 0)
         self.spectra = nan_to_num(features_spectra)
 
+
+    def update_spectra_to_fuzzy(self) -> None:
+        """
+        Update the participation matrix to be fuzzy. For now only relevant for feature components.
+        The participations are calculated as the weighted average of the SHAP values of the features. The weights are based on the predicted probabilities of the samples.
+        """
+        assert self.group_feature_nodes, "Fuzzy participation is currently supported only for feature components"
+        assert self.explainer is not None, "Explainer is not initialized, cannot calculate fuzzy participation"
+        samples_predicted_probabilities = self.mapped_tree.sklearn_tree_model.predict_proba(self.X_after)   # shape: (|tests|, |classes|)
+        samples_absolute_shap_values = np_abs(self.explainer.shap_values(self.X_after))  # shape: (|tests|, |FEATURES!|, |classes)
+        tree_features_locations = [column_index for column_index, feature in enumerate(self.X_after.columns) if feature in self.mapped_tree.tree_features_set]
+        samples_absolute_shap_values = samples_absolute_shap_values[:, tree_features_locations, :]  # shape: (|tests|, |COMPONENTS!|, |classes)
+        weighted_shap_values = samples_absolute_shap_values * samples_predicted_probabilities[:, None, :]  # shape: (|tests|, |features=components|, |classes)
+        fuzzy_spectra = weighted_shap_values.sum(axis=2).T
+        assert fuzzy_spectra.shape == self.spectra.shape, f"The new fuzzy spectra's shape {fuzzy_spectra.shape} does not match the original spectra's shape {self.spectra.shape}"
+        assert ((0 <= fuzzy_spectra) & (fuzzy_spectra <= 1)).all(), f"Some of the components participation values are not in the range [0, 1] (Min: {fuzzy_spectra.min()}, Max: {fuzzy_spectra.max()}). Spectra: \n{fuzzy_spectra}"
+        self.spectra = fuzzy_spectra
+
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 
                                       y: Series
@@ -162,12 +173,12 @@ class SFLDT(ADiagnoser):
                         self.error_vector[test_index] *= node.confidence
                     self.paths_depths_vector[test_index] = node.depth + 1
         assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got: \n{self.paths_depths_vector}"
-        if self.is_error_fuzzy:
-            self.update_error_vector_to_fuzzy()
-        if self.use_fuzzy_participation:
-            self.update_spectra_to_fuzzy()
         if self.group_feature_nodes:
             self.update_spectra_to_feature_components()
+        if self.use_fuzzy_participation:
+            self.update_spectra_to_fuzzy()
+        if self.is_error_fuzzy:
+            self.update_error_vector_to_fuzzy()
         
     def convert_features_diagnosis_to_nodes_diagnosis(self,
                                                       features_diagnosis: list[int]

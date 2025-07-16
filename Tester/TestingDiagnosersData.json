@@ -32,7 +32,7 @@
         "parameters": {
             "aggregate_tests": true,
             "combine_prior_confidence": true,
-            "merge_feature_nodes": true
+            "group_feature_nodes": true
         }
     },
     {
@@ -41,7 +41,7 @@
         "parameters": {
             "aggregate_tests": true,
             "combine_prior_confidence": true,
-            "merge_feature_nodes": true,
+            "group_feature_nodes": true,
             "use_fuzzy_participation": true
         }
     }

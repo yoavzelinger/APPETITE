@@ -16,7 +16,7 @@ class SFLDT(ADiagnoser):
                  X: DataFrame,
                  y: Series,
                  combine_stat: bool = constants.DEFAULT_COMBINE_STAT,
-                 merge_feature_nodes: bool = constants.DEFAULT_MERGE_FEATURE_NODES,
+                 group_feature_nodes: bool = constants.DEFAULT_GROUP_FEATURE_NODES,
                  aggregate_tests: bool = constants.DEFAULT_AGGREGATE_TESTS_BY_PATHS,
                  combine_prior_confidence: bool = constants.DEFAULT_COMBINE_PRIOR_CONFIDENCE,
                  use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
@@ -38,7 +38,7 @@ class SFLDT(ADiagnoser):
         # DEPRECATED #
            merge_singular_diagnoses (bool): Whether to merge singular diagnoses based on the features.
         """
-        assert not (merge_feature_nodes and merge_singular_diagnoses), "Cannot merge singular diagnoses with multiple fault diagnoser"
+        assert not (group_feature_nodes and merge_singular_diagnoses), "Cannot merge singular diagnoses with multiple fault diagnoser"
         super().__init__(mapped_tree, X, y)
         
         self.components_count = mapped_tree.node_count
@@ -49,8 +49,8 @@ class SFLDT(ADiagnoser):
         self.paths_depths_vector = zeros(self.tests_count)
         
         # Components
-        self.use_fuzzy_participation = False # TODO: RETURN TO USE THE GIVEN
-        self.merge_feature_nodes = merge_feature_nodes
+        self.use_fuzzy_participation = use_fuzzy_participation
+        self.group_feature_nodes = group_feature_nodes
         # Tests
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence
@@ -158,7 +158,7 @@ class SFLDT(ADiagnoser):
             self.update_error_vector_to_fuzzy()
         if self.use_fuzzy_participation:
             self.update_spectra_to_fuzzy()
-        if self.merge_feature_nodes:
+        if self.group_feature_nodes:
             self.update_spectra_to_feature_components()
         
     def convert_features_diagnosis_to_nodes_diagnosis(self,
@@ -186,7 +186,7 @@ class SFLDT(ADiagnoser):
         Parameters:
             retrieve_spectra_indices (bool): Whether to return the spectra indices or the node indices.
         """
-        if self.merge_feature_nodes:
+        if self.group_feature_nodes:
             self.diagnoses = [(self.convert_features_diagnosis_to_nodes_diagnosis(diagnosis), rank) for diagnosis, rank in self.diagnoses]
         if retrieve_spectra_indices:
             return
@@ -327,7 +327,7 @@ class SFLDT(ADiagnoser):
         convert_spectra_to_node_indices_function = lambda spectra_indices: map(self.mapped_tree.convert_spectra_index_to_node_index, spectra_indices)
         get_nodes_stat_ranks_function = lambda spectra_indices: map(stat_diagnoses_dict.get, convert_spectra_to_node_indices_function(spectra_indices))
         get_average_stat_rank_function = lambda spectra_indices: max(0.5, sum(get_nodes_stat_ranks_function(spectra_indices)) / len(spectra_indices))
-        get_nodes_from_features = lambda spectra_indices: self.convert_features_diagnosis_to_nodes_diagnosis(spectra_indices) if self.merge_feature_nodes else spectra_indices
+        get_nodes_from_features = lambda spectra_indices: self.convert_features_diagnosis_to_nodes_diagnosis(spectra_indices) if self.group_feature_nodes else spectra_indices
         self.diagnoses = [(diagnosis, sfldt_rank * get_average_stat_rank_function(get_nodes_from_features(diagnosis))) for diagnosis, sfldt_rank in self.diagnoses]
 
     def update_merge_singular_diagnoses(self

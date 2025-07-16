@@ -113,8 +113,10 @@ class SFLDT(ADiagnoser):
         The participation will be based on the average participation of all the nodes that represent the feature (which participated in the relevant test).
         """
         # Create feature to feature_index mapping (based on the order in the data)
-        tree_columns = [feature for feature in self.X_after.columns if feature in self.mapped_tree.tree_features_set]
-        self.feature_indices_dict = {feature: feature_index for (feature_index, feature) in enumerate(tree_columns)}
+        self.feature_indices_dict = {feature: feature_index
+                                     for (feature_index, feature) in enumerate(
+                                         filter(lambda feature: feature in self.mapped_tree.tree_features_set, self.X_after.columns)
+                                         )}
         # Create feature_index to the corresponding nodes mapping
         self.feature_index_to_node_indices_dict = defaultdict(list)
         for node_spectra_index, node in self.mapped_tree.spectra_dict.items():
@@ -125,11 +127,13 @@ class SFLDT(ADiagnoser):
         self.add_target_to_feature_components()
         self.components_count = len(self.feature_indices_dict)
         features_spectra = zeros((self.components_count, self.tests_count))
-        for feature_index, feature_nodes_spectra_indices in self.feature_index_to_node_indices_dict.items(): #  here
+        for feature_index, feature_nodes_spectra_indices in self.feature_index_to_node_indices_dict.items():
             current_feature_spectra = self.spectra[feature_nodes_spectra_indices, :]
-            current_feature_participations = np_where(current_feature_spectra > 0, current_feature_spectra, np_nan)
-            features_spectra[feature_index] = np_mean(current_feature_participations, axis=0)
-        self.spectra = features_spectra
+            participations_mask = current_feature_spectra > 0
+            participations_sums = (current_feature_spectra * participations_mask).sum(axis=0)
+            participations_counts = participations_mask.sum(axis=0)
+            features_spectra[feature_index] = np_divide(participations_sums, participations_counts, out=np_zeros_like(participations_sums, dtype=float), where=participations_counts != 0)
+        self.spectra = nan_to_num(features_spectra)
 
     def fill_spectra_and_error_vector(self, 
                                       X: DataFrame, 

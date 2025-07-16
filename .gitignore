@@ -10,6 +10,7 @@
 *.out
 
 # Testing files
+tests.ipynb
 
 # temporary files
 # /data/results/*old*

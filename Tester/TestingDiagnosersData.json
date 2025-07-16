@@ -19,7 +19,7 @@
         }
     },
     {
-        "output_name": "Aggregated_Tests-Prior_Confidence-BARINEL",
+        "output_name": "Prior_Confidence-Aggregated_Tests-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
             "aggregate_tests": true,
@@ -27,22 +27,22 @@
         }
     },
     {
-        "output_name": "Fuzzy_Participation-Aggregated_Tests-Prior_Confidence-BARINEL",
+        "output_name": "Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
             "aggregate_tests": true,
             "combine_prior_confidence": true,
-            "use_fuzzy_participation": true
+            "merge_feature_nodes": true
         }
     },
     {
-        "output_name": "Feature_Components-Fuzzy_Participation-Aggregated_Tests-Prior_Confidence-BARINEL",
+        "output_name": "Fuzzy_Participation-Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
             "aggregate_tests": true,
             "combine_prior_confidence": true,
-            "use_fuzzy_participation": true,
-            "merge_feature_nodes": true
+            "merge_feature_nodes": true,
+            "use_fuzzy_participation": true
         }
     }
 ]

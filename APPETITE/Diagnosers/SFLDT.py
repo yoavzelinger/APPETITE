@@ -51,6 +51,7 @@ class SFLDT(ADiagnoser):
         # Components
         self.use_fuzzy_participation = use_fuzzy_participation
         self.group_feature_nodes = group_feature_nodes
+        self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model, data=X, model_output="probability") if use_fuzzy_participation else None
         # Tests
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence
@@ -113,6 +114,8 @@ class SFLDT(ADiagnoser):
         """
         self.feature_index_to_node_indices_dict = defaultdict(list)  # {feature_index: [node_spectra_indices]}
         self.feature_indices_dict = {}  # {feature: feature_index}
+        # Create feature to feature_index mapping (based on the order in the data)
+        tree_columns = [feature for feature in self.X_after.columns if feature in self.mapped_tree.tree_features_set]
         for node_spectra_index, node in self.mapped_tree.spectra_dict.items():
             if node.is_terminal():
                 continue
@@ -272,7 +275,7 @@ class SFLDT(ADiagnoser):
                 ndarray: the binary vector.
                 ndarray: the continuous vector.
             """
-            if self.use_fuzzy_participation:
+            if self.is_error_fuzzy:
                 return participation_vector, error_vector
             return error_vector, participation_vector
         

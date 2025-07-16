@@ -158,7 +158,7 @@ class MappedDecisionTree:
         
         def update_node_data_attributes(self, 
                                         X: DataFrame,
-                                        y: Series = None
+                                        y: Series
          ) -> None:
             """
             Update the average feature value of the node.
@@ -169,9 +169,7 @@ class MappedDecisionTree:
                 y (Series): The target column
             """
             # Get the data that reached the node
-            X = self.get_data_reached_node(X, y)
-            if y is not None:
-                X, y = X
+            X, y = self.get_data_reached_node(X, y)
             self.reached_samples_count = len(X)
             if self.feature_type == "numeric":
                 self.feature_average_value = X[self.feature].mean()

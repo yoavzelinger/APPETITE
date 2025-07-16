@@ -1,4 +1,5 @@
-from numpy import zeros, array as np_array, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, isclose as np_isclose, where as np_where, nan as np_nan
+from shap import TreeExplainer
+from numpy import zeros, array as np_array, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, isclose as np_isclose, where as np_where, nan as np_nan, abs as np_abs, float64 as np_float64, nan_to_num, divide as np_divide, zeros_like as np_zeros_like, max as numpy_max
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.stats import pearsonr as pearson_correlation
 from collections import defaultdict

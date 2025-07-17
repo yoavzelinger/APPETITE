@@ -70,13 +70,6 @@ class BARINEL(SFLDT):
         self.threshold = 1
         self.candidates_spectra = None
         super().__init__(mapped_tree, X, y, **kwargs)
-    
-    def update_spectra_to_fuzzy(self) -> None:
-        """
-        Store the spectra in additional variable before changed.
-        """
-        self.candidates_spectra = self.spectra
-        super().update_spectra_to_fuzzy()
 
     def update_threshold(self
     ) -> None:
@@ -99,6 +92,14 @@ class BARINEL(SFLDT):
                                          target_name: str = "target"
     ) -> None:
         pass
+
+    def update_spectra_to_fuzzy(self) -> None:
+        """
+        Wrapper for the SFLDT implementation.
+        Store the spectra in additional variable before changed.
+        """
+        self.candidates_spectra = self.spectra
+        super().update_spectra_to_fuzzy()
 
     def combine_stat_diagnoses(self
      ) -> None:

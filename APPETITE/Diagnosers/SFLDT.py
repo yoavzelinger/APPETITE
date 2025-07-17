@@ -1,5 +1,5 @@
 from shap import TreeExplainer
-from numpy import zeros, array as np_array, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, isclose as np_isclose, where as np_where, nan as np_nan, abs as np_abs, float64 as np_float64, nan_to_num, divide as np_divide, zeros_like as np_zeros_like, max as numpy_max
+from numpy import zeros, array as np_array, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, isclose as np_isclose, where as np_where, nan as np_nan, abs as np_abs, float64 as np_float64, nan_to_num, divide as np_divide, zeros_like as np_zeros_like, max as numpy_max, isin as np_isin
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.stats import pearsonr as pearson_correlation
 from collections import defaultdict
@@ -201,8 +201,12 @@ class SFLDT(ADiagnoser):
             self.update_spectra_to_feature_components()
         if self.use_fuzzy_participation:
             self.update_spectra_to_fuzzy()
+        else:
+            assert np_isin(self.spectra, [0, 1]).all(), "The spectra isn't binary while use_fuzzy_participation set to False"
         if self.is_error_fuzzy:
             self.update_error_vector_to_fuzzy()
+        else:
+            assert np_isin(self.error_vector, [0, 1]).all(), "The error vector isn't binary while both self.combine_prior_confidence and self.aggregate_tests set to False"
         
     def convert_features_diagnosis_to_nodes_diagnosis(self,
                                                       features_diagnosis: list[int]

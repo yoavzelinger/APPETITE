@@ -1,3 +1,6 @@
+from sys import float_info
+EPSILON = float_info.epsilon
+
 # Dataset partitions sizes
 BEFORE_PROPORTION = 0.7
 AFTER_PROPORTION = 0.1

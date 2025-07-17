@@ -4,8 +4,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from scipy.stats import pearsonr as pearson_correlation
 from collections import defaultdict
 
-from sys import float_info
-EPSILON = float_info.epsilon
 
 from .ADiagnoser import *
 from .STAT import STAT

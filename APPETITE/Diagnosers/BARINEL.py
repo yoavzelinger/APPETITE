@@ -8,8 +8,9 @@ from .SFLDT import SFLDT
 
 def get_barinel_diagnoses(spectra: ndarray,
                           error_vector: ndarray,
-                          components_prior_probabilities: ndarray=None,
-                          error_threshold: float=1
+                          components_prior_probabilities: ndarray = None,
+                          error_threshold: float = 1,
+                          candidates_spectra: ndarray = None
  ) -> list[tuple[list[int], float]]:
     """
     Perform the Barinel diagnosis algorithm on the given spectrum.
@@ -18,7 +19,8 @@ def get_barinel_diagnoses(spectra: ndarray,
     spectra (ndarray): The spectrum.
     error_vector (ndarray): The error vector.
     components_prior_probabilities (ndarray): The components prior probabilities.
-    threshold (float): The threshold for the error vector.
+    error_threshold (float): The threshold for the error vector.
+    candidates_spectra (ndarray): The candidates spectra. If None, the spectra will be used.
 
     Returns:
     list[tuple[list[int], float]]: The diagnoses with their corresponding ranks.
@@ -26,8 +28,12 @@ def get_barinel_diagnoses(spectra: ndarray,
     assert (error_vector >= error_threshold).sum() > 0, f"No path with error above the threshold {error_threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
     
     spectra = np_concatenate((spectra.T, error_vector[:, None]), axis=1)
+    if candidates_spectra is None:
+        candidates_spectra = spectra
+    else:
+        candidates_spectra = np_concatenate((candidates_spectra.T, error_vector[:, None]), axis=1)
     
-    diagnoses = get_candidates(spectra.tolist(), error_threshold=error_threshold)
+    diagnoses = get_candidates(candidates_spectra.tolist(), error_threshold=error_threshold)
     assert len(diagnoses), "No candidate diagnoses found"
     
     diagnoses = list(map(np_array, diagnoses))
@@ -62,7 +68,15 @@ class BARINEL(SFLDT):
         """
         self.components_prior_probabilities = None
         self.threshold = 1
+        self.candidates_spectra = None
         super().__init__(mapped_tree, X, y, **kwargs)
+    
+    def update_spectra_to_fuzzy(self) -> None:
+        """
+        Store the spectra in additional variable before changed.
+        """
+        self.candidates_spectra = self.spectra
+        super().update_spectra_to_fuzzy()
 
     def update_threshold(self
     ) -> None:

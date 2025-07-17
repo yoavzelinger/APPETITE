@@ -84,16 +84,12 @@ class SFLDT(ADiagnoser):
         assert to_shrink_spectra.shape == (self.components_count, self.tests_count)
         return to_shrink_spectra
 
-    def aggregate_tests_by_paths(self,
-                                 additional_spectra_pointer: list[ndarray] | None = None
+    def aggregate_tests_by_paths(self
     ) -> None:
         """
         Merge the tests by their classification paths.
         Each test will be correspond to classification path in the tree (that has any nodes passed through).
         The error value will be the average error (the misclassification) of the classification path.
-
-        Parameters:
-        additional_spectra_pointer (list[ndarray]): update additional spectra based on the same rule.
         """
         assert self.tests_count > len(self.path_tests_indices) or self.tests_count == sum(map(len, self.path_tests_indices.values())), f"Tests count should be changed after aggregation, but it is still the same: previous ({self.tests_count}) == new ({self.error_vector.shape[0]})"
         self.tests_count = len(self.path_tests_indices)
@@ -152,7 +148,6 @@ class SFLDT(ADiagnoser):
             participations_counts = participations_mask.sum(axis=0)
             features_spectra[feature_index] = np_divide(participations_sums, participations_counts)
         self.spectra = nan_to_num(features_spectra)
-
 
     def update_spectra_to_fuzzy(self) -> None:
         """

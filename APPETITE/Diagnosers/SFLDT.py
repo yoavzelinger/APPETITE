@@ -59,28 +59,53 @@ class SFLDT(ADiagnoser):
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence
         self.is_error_fuzzy = self.combine_prior_confidence or self.aggregate_tests
+        self.path_tests_indices = defaultdict(list)
         # Deprecated TODO: Remove
         self.merge_singular_diagnoses = merge_singular_diagnoses
 
         self.fill_spectra_and_error_vector(X, y)
         self.stat = STAT(mapped_tree, X, y) if combine_stat else None
 
-    def aggregate_tests_by_paths(self
+    def shrink_spectra_based_on_paths(self,
+                                      to_shrink_spectra: ndarray,
+                                      paths_example_test_indices: list[int]
+    ) -> ndarray:
+        """
+            Shrink the spectra based on the new tests.
+
+            Parameters:
+            to_shrink_spectra (ndarray): The spectra to shrink.
+            paths_example_test_indices (list[int]): Because all tests belong to the same path have the same "participation vector", holding one test index from each one.
+
+            Returns:
+                The shrunk spectra.
+        """
+        to_shrink_spectra = to_shrink_spectra[:, paths_example_test_indices]
+        assert to_shrink_spectra.shape == (self.components_count, self.tests_count)
+        return to_shrink_spectra
+
+    def aggregate_tests_by_paths(self,
+                                 additional_spectra_pointer: list[ndarray] | None = None
     ) -> None:
         """
         Merge the tests by their classification paths.
         Each test will be correspond to classification path in the tree (that has any nodes passed through).
         The error value will be the average error (the misclassification) of the classification path.
-        """
-        path_tests_indices = defaultdict(list)
-        for test_index in range(self.tests_count):
-            test_participation_vector = tuple(self.spectra[:, test_index])
-            path_tests_indices[test_participation_vector].append(test_index)
 
-        self.spectra = np_array(list(path_tests_indices.keys())).T
-        self.error_vector = np_array([self.error_vector[test_indices].mean() for test_indices in path_tests_indices.values()])
-        assert self.tests_count > self.error_vector.shape[0], f"Tests count should be changed after aggregation, but it is still the same: previous ({self.tests_count}) == new ({self.error_vector.shape[0]})"
-        self.tests_count = self.error_vector.shape[0]
+        Parameters:
+        additional_spectra_pointer (list[ndarray]): update additional spectra based on the same rule.
+        """
+        assert self.tests_count > len(self.path_tests_indices) or self.tests_count == sum(map(len, self.path_tests_indices.values())), f"Tests count should be changed after aggregation, but it is still the same: previous ({self.tests_count}) == new ({self.error_vector.shape[0]})"
+        self.tests_count = len(self.path_tests_indices)
+        paths_error_vector = zeros(self.tests_count)
+        paths_first_test_indices = []
+        for path_index, path_test_indices in enumerate(self.path_tests_indices.values()):
+            paths_first_test_indices.append(path_test_indices[0])
+            paths_error_vector[path_index] = self.error_vector[path_test_indices].mean()
+        
+        self.error_vector = paths_error_vector
+        
+        self.spectra = self.shrink_spectra_based_on_paths(self.spectra, paths_first_test_indices)
 
     def update_error_vector_to_fuzzy(self
     ) -> None:

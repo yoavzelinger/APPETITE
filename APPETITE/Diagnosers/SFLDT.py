@@ -50,7 +50,6 @@ class SFLDT(ADiagnoser):
         
         self.spectra = zeros((self.components_count, self.tests_count))
         self.error_vector = zeros(self.tests_count)
-        self.paths_depths_vector = zeros(self.tests_count)
         
         # Components
         self.group_feature_nodes = group_feature_nodes
@@ -80,7 +79,6 @@ class SFLDT(ADiagnoser):
 
         self.spectra = np_array(list(path_tests_indices.keys())).T
         self.error_vector = np_array([self.error_vector[test_indices].mean() for test_indices in path_tests_indices.values()])
-        self.paths_depths_vector = np_array([self.paths_depths_vector[test_indices].min() for test_indices in path_tests_indices.values()])
         assert self.tests_count > self.error_vector.shape[0], f"Tests count should be changed after aggregation, but it is still the same: previous ({self.tests_count}) == new ({self.error_vector.shape[0]})"
         self.tests_count = self.error_vector.shape[0]
 
@@ -172,8 +170,8 @@ class SFLDT(ADiagnoser):
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
                     if self.combine_prior_confidence:
                         self.error_vector[test_index] *= node.confidence
-                    self.paths_depths_vector[test_index] = node.depth + 1
-        assert self.paths_depths_vector.all(), f"Paths depths vector should be non-zero but got: \n{self.paths_depths_vector}"
+            test_participation_vector = self.spectra[:, test_index]
+            self.path_tests_indices[tuple(test_participation_vector)].append(test_index)
         if self.group_feature_nodes:
             self.update_spectra_to_feature_components()
         if self.use_fuzzy_participation:

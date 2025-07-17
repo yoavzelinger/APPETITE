@@ -81,6 +81,14 @@ class BARINEL(SFLDT):
         self.threshold = error_average + constants.BARINEL_THRESHOLD_ABOVE_STD_RATE * error_std
         self.threshold = min(self.threshold, max(self.error_vector)) # decrease to catch at least one error
 
+    def shrink_spectra_based_on_paths(self,
+                                      to_shrink_spectra: ndarray,
+                                      paths_example_test_indices: list[int]
+    ) -> ndarray:
+        if self.candidates_spectra is not None:
+            self.candidates_spectra = super().shrink_spectra_based_on_paths(self.candidates_spectra, paths_example_test_indices)
+        return super().shrink_spectra_based_on_paths(to_shrink_spectra, paths_example_test_indices)
+
     def update_error_vector_to_fuzzy(self
     ) -> None:
         """

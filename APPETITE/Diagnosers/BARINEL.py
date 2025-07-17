@@ -20,12 +20,13 @@ def get_barinel_diagnoses(spectra: ndarray,
     error_vector (ndarray): The error vector.
     components_prior_probabilities (ndarray): The components prior probabilities.
     error_threshold (float): The threshold for the error vector.
-    candidates_spectra (ndarray): The candidates spectra. If None, the spectra will be used.
+    candidates_spectra (ndarray): The candidates spectra. If not provided, the spectra will be used.
 
     Returns:
     list[tuple[list[int], float]]: The diagnoses with their corresponding ranks.
     """
     assert (error_vector >= error_threshold).sum() > 0, f"No path with error above the threshold {error_threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
+    assert candidates_spectra is None or spectra.shape == candidates_spectra.shape, f"The candidates spectra must have the same shape as the spectra: {spectra.shape} != {candidates_spectra.shape}"
     
     spectra = np_concatenate((spectra.T, error_vector[:, None]), axis=1)
     if candidates_spectra is None:

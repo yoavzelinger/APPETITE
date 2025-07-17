@@ -1,9 +1,11 @@
-import os
-from sys import exit
+import sys
 from argparse import ArgumentParser
-from datetime import datetime
+import os
 from csv import DictReader
-from pandas import DataFrame
+
+import pandas as pd
+
+from datetime import datetime
 
 from warnings import filterwarnings, simplefilter as warnings_simplefilter
 warnings_simplefilter(action='ignore', category=FutureWarning)
@@ -29,7 +31,7 @@ print(f"Running tests with {len(tester_constants.diagnosers_output_names)} diagn
 if args.test:
     print(f"Running single test for {args.test}")
     single_test.sanity_run(file_name=args.test + ".csv", diagnosers_data=tester_constants.diagnosers_data)
-    exit(0)
+    sys.exit(0)
 
 specific_datasets_string = ""
 specific_datasets, specific_prefixes = args.names, args.prefixes
@@ -67,8 +69,8 @@ print(f"Running tests with drift size: {drift_size_string} ({min_drift_size} -> 
 
 
 ##### Create Results DataFrame #####
-raw_results = DataFrame(columns=tester_constants.RAW_RESULTS_COLUMN_NAMES)
-errors = DataFrame(columns=["name", "error"])
+raw_results = pd.DataFrame(columns=tester_constants.RAW_RESULTS_COLUMN_NAMES)
+errors = pd.DataFrame(columns=["name", "error"])
 
 
 ###### Run Tests #####
@@ -113,8 +115,8 @@ results_file_name, errors_file_name = f"{tester_constants.RESULTS_FILE_NAME_PREF
 if raw_results.empty:
     results_file_name = f"{tester_constants.EMPTY_RESULTS_FILE_NAME_PREFIX}_{results_file_name}"
 
-results_file_path = os_path.join(output_path, results_file_name)
-errors_file_path = os_path.join(output_path, errors_file_name)
+results_file_path = os.path.join(output_path, results_file_name)
+errors_file_path = os.path.join(output_path, errors_file_name)
 
 
 ##### Save Results and Errors #####

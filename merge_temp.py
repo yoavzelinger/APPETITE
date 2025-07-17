@@ -1,10 +1,11 @@
 print("Starting import")
-from pandas import DataFrame, ExcelWriter, read_csv
 from argparse import ArgumentParser
-from datetime import datetime
-from os import listdir, path as os_path
-from copy import deepcopy as copy
+import os
 from openpyxl import load_workbook
+
+import pandas as pd
+
+from datetime import datetime
 
 from Tester import tester_constants
 
@@ -15,16 +16,16 @@ args = parser.parse_args()
 aggregating_functions_dict = {tester_constants.AGGREGATED_TESTS_COUNT_COLUMN: "count"}
 aggregating_functions_dict |= {metric_column_name: "sum" for metric_column_name in tester_constants.AGGREGATED_METRICS_COLUMNS}
 
-output_df = DataFrame(columns=tester_constants.GROUP_BY_COLUMN_NAMES + tester_constants.EXTENDED_METRICS_COLUMN_NAMES).astype(tester_constants.GROUP_BY_COLUMNS | tester_constants.EXTENDED_METRICS_COLUMNS).set_index(tester_constants.GROUP_BY_COLUMN_NAMES)
+output_df = pd.DataFrame(columns=tester_constants.GROUP_BY_COLUMN_NAMES + tester_constants.EXTENDED_METRICS_COLUMN_NAMES).astype(tester_constants.GROUP_BY_COLUMNS | tester_constants.EXTENDED_METRICS_COLUMNS).set_index(tester_constants.GROUP_BY_COLUMN_NAMES)
 
-for current_file_index, current_file_name in enumerate(listdir(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH), 1):
+for current_file_index, current_file_name in enumerate(os.listdir(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH), 1):
     print("Working on file", current_file_index, ":", current_file_name)
     if not current_file_name.startswith(tester_constants.RESULTS_FILE_NAME_PREFIX):
         continue
     
     current_results_df = None
-    with open(os_path.join(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH, current_file_name), "r") as current_file:
-        current_results_df = read_csv(current_file, dtype=tester_constants.RAW_RESULTS_COLUMNS)
+    with open(os.path.join(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH, current_file_name), "r") as current_file:
+        current_results_df = pd.read_csv(current_file, dtype=tester_constants.RAW_RESULTS_COLUMNS)
     current_group_by_df = current_results_df.groupby(tester_constants.GROUP_BY_COLUMN_NAMES).agg(aggregating_functions_dict)
     # check that no column contains empty values
     if current_group_by_df.isnull().values.any():
@@ -55,17 +56,17 @@ for current_file_index, current_file_name in enumerate(listdir(tester_constants.
 
 output_df = output_df[tester_constants.EXTENDED_METRICS_COLUMN_NAMES]
 
-output_full_path = os_path.join(tester_constants.OUTPUT_DIRECTORY_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
+output_full_path = os.path.join(tester_constants.OUTPUT_DIRECTORY_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
 merged_results_sheet_name = "merged_results"
 excel_writer_arguments = {
     "path": output_full_path,
     "mode": "w",
     "engine": "openpyxl"
 }
-if os_path.exists(output_full_path):
+if os.path.exists(output_full_path):
     excel_writer_arguments["mode"] = "a"
     excel_writer_arguments["if_sheet_exists"] = "replace"
-with ExcelWriter(**excel_writer_arguments) as excel_writer:
+with pd.ExcelWriter(**excel_writer_arguments) as excel_writer:
     output_df.to_excel(excel_writer, sheet_name=merged_results_sheet_name, merge_cells=False)
 output_workbook = load_workbook(output_full_path)
 output_workbook[merged_results_sheet_name].sheet_view.rightToLeft = True

@@ -1,16 +1,18 @@
-from numpy import ndarray, array as np_array, concatenate as np_concatenate, mean as np_mean
-from pandas import DataFrame, Series
+import numpy as np
 
+from APPETITE import Constants as constants
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
-from .barinel_utils import *
+
 from .ADiagnoser import *
 from .SFLDT import SFLDT
 
-def get_barinel_diagnoses(spectra: ndarray,
-                          error_vector: ndarray,
-                          components_prior_probabilities: ndarray = None,
+from .barinel_utils import *
+
+def get_barinel_diagnoses(spectra: np.ndarray,
+                          error_vector: np.ndarray,
+                          components_prior_probabilities: np.ndarray = None,
                           error_threshold: float = 1,
-                          candidates_spectra: ndarray = None
+                          candidates_spectra: np.ndarray = None
  ) -> list[tuple[list[int], float]]:
     """
     Perform the Barinel diagnosis algorithm on the given spectrum.
@@ -28,16 +30,16 @@ def get_barinel_diagnoses(spectra: ndarray,
     assert (error_vector >= error_threshold).sum() > 0, f"No path with error above the threshold {error_threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
     assert candidates_spectra is None or spectra.shape == candidates_spectra.shape, f"The candidates spectra must have the same shape as the spectra: {spectra.shape} != {candidates_spectra.shape}"
     
-    spectra = np_concatenate((spectra.T, error_vector[:, None]), axis=1)
+    spectra = np.concatenate((spectra.T, error_vector[:, None]), axis=1)
     if candidates_spectra is None:
         candidates_spectra = spectra
     else:
-        candidates_spectra = np_concatenate((candidates_spectra.T, error_vector[:, None]), axis=1)
+        candidates_spectra = np.concatenate((candidates_spectra.T, error_vector[:, None]), axis=1)
     
     diagnoses = get_candidates(candidates_spectra.tolist(), error_threshold=error_threshold)
     assert len(diagnoses), "No candidate diagnoses found"
     
-    diagnoses = list(map(np_array, diagnoses))
+    diagnoses = list(map(np.array, diagnoses))
     diagnoses = rank_diagnoses(spectra, diagnoses, components_prior_probabilities)
     diagnoses = [(diagnosis[0].tolist(), diagnosis[1]) for diagnosis in diagnoses]
 
@@ -54,8 +56,8 @@ class BARINEL(SFLDT):
 
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
-                 X: DataFrame,
-                 y: Series,
+                 X: pd.DataFrame,
+                 y: pd.Series,
                  **kwargs: object
     ):
         """
@@ -82,9 +84,9 @@ class BARINEL(SFLDT):
         self.threshold = min(self.threshold, max(self.error_vector)) # decrease to catch at least one error
 
     def shrink_spectra_based_on_paths(self,
-                                      to_shrink_spectra: ndarray,
+                                      to_shrink_spectra: np.ndarray,
                                       paths_example_test_indices: list[int]
-    ) -> ndarray:
+    ) -> np.ndarray:
         if self.candidates_spectra is not None:
             self.candidates_spectra = super().shrink_spectra_based_on_paths(self.candidates_spectra, paths_example_test_indices)
         return super().shrink_spectra_based_on_paths(to_shrink_spectra, paths_example_test_indices)
@@ -118,10 +120,10 @@ class BARINEL(SFLDT):
         """
         stat_diagnoses = self.load_stat_diagnoses()
         stat_diagnoses.sort(key=lambda diagnosis: self.mapped_tree.convert_node_index_to_spectra_index(diagnosis[0][0])) # sort by the components order (to match the spectra indices)
-        nodes_stat_rank_vector = np_array([diagnosis[1] for diagnosis in stat_diagnoses])
+        nodes_stat_rank_vector = np.array([diagnosis[1] for diagnosis in stat_diagnoses])
         if self.group_feature_nodes:
             # get for each feature the average of the stat ranks of the components
-            self.components_prior_probabilities = np_array([np_mean(nodes_stat_rank_vector[self.feature_index_to_node_indices_dict[feature_index]]) for feature_index in range(self.components_count)])
+            self.components_prior_probabilities = np.array([np.mean(nodes_stat_rank_vector[self.feature_index_to_node_indices_dict[feature_index]]) for feature_index in range(self.components_count)])
         else:
             self.components_prior_probabilities = nodes_stat_rank_vector
 

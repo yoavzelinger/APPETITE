@@ -1,8 +1,10 @@
-from os import path as os_path
-from pandas import read_csv, DataFrame, Series, Categorical, get_dummies
+import os
 from scipy.io.arff import loadarff
+
+import pandas as pd
+import math
+
 from typing import Generator
-from math import ceil
 
 from APPETITE import Constants as constants
 
@@ -12,7 +14,7 @@ class Dataset:
     partitions = ["before", "after", "test"]
 
     def __init__(self, 
-                 source: str | DataFrame,
+                 source: str | pd.DataFrame,
                  size: int | tuple[float] = constants.PROPORTIONS_TUPLE,
                  after_window_size: float = constants.AFTER_WINDOW_SIZE,
                  to_shuffle: bool = True,
@@ -35,13 +37,13 @@ class Dataset:
         """
         # Get data
         if type(source) == str:    # Path to the file
-            self.name, source_format = os_path.splitext(os_path.basename(source))
+            self.name, source_format = os.path.splitext(os.path.basename(source))
             if source_format in (".csv", ".data", ".txt"):
-                source = read_csv(source)
+                source = pd.read_csv(source)
             elif source_format == ".arff":
                 data, _ = loadarff(source)
-                source = DataFrame(data)
-        assert isinstance(source, DataFrame)
+                source = pd.DataFrame(data)
+        assert isinstance(source, pd.DataFrame)
 
         self.target_name = source.columns[-1]
         self.data, y = self.split_features_targets(source)
@@ -59,16 +61,16 @@ class Dataset:
             if len(self.data[column_name].unique()) <= 2: # Consider as binary
                 column_type = bool
             if column_type == bool or not one_hot_encoding:
-                self.data[column_name] = Categorical(self.data[column_name])
+                self.data[column_name] = pd.Categorical(self.data[column_name])
                 self.data[column_name] = self.data[column_name].cat.codes
                 self.feature_types[column_name] = "binary" if column_type == bool else "categorical" 
                 continue
             # One hot encoding with multiple values
             one_hot_encoded_dict.update({f"{column_name}_{value}": "binary" for value in self.data[column_name].unique()})
-            self.data = get_dummies(self.data, columns=[column_name])
+            self.data = pd.get_dummies(self.data, columns=[column_name])
         self.feature_types.update(one_hot_encoded_dict)
 
-        self.data[self.target_name] = Categorical(y.fillna(y.mode().iloc[0]))
+        self.data[self.target_name] = pd.Categorical(y.fillna(y.mode().iloc[0]))
         self.data[self.target_name] = self.data[self.target_name].cat.codes
 
         if to_shuffle:  # shuffle data - same shuffle always
@@ -109,11 +111,11 @@ class Dataset:
         self.update_total_after_size()
 
     def update_total_after_size(self) -> None:
-        self.total_after_size = ceil(max(self.after_size * self.after_window_size, 1 / constants.VALIDATION_SIZE))
+        self.total_after_size = math.ceil(max(self.after_size * self.after_window_size, 1 / constants.VALIDATION_SIZE))
 
     def split_features_targets(self, 
-                               data: DataFrame
-     ) -> tuple[DataFrame, Series]:
+                               data: pd.DataFrame
+     ) -> tuple[pd.DataFrame, pd.Series]:
         """
         Split the data to X and y
         
@@ -127,19 +129,19 @@ class Dataset:
         y = data[self.target_name].reset_index(drop=True)
         return X, y
 
-    def get_before_concept(self) -> tuple[DataFrame, Series]:
+    def get_before_concept(self) -> tuple[pd.DataFrame, pd.Series]:
         before_concept_data = self.data.iloc[:self.before_size]
         return self.split_features_targets(before_concept_data)
     
-    def get_after_concept(self) -> tuple[DataFrame, Series]:
+    def get_after_concept(self) -> tuple[pd.DataFrame, pd.Series]:
         after_concept_data = self.data.iloc[self.before_size: self.before_size + self.total_after_size]
         return self.split_features_targets(after_concept_data)
     
-    def get_test_concept(self) -> tuple[DataFrame, Series]:
+    def get_test_concept(self) -> tuple[pd.DataFrame, pd.Series]:
         test_concept_data = self.data.iloc[-self.test_size:]
         return self.split_features_targets(test_concept_data)
     
-    def get_total_after_concept(self) -> tuple[DataFrame, Series]:
+    def get_total_after_concept(self) -> tuple[pd.DataFrame, pd.Series]:
         """
         Get the total after concept data, including the after and test concepts
         
@@ -150,10 +152,10 @@ class Dataset:
         return self.split_features_targets(after_concept_data)
 
     def _drift_data_generator(self,
-                   data: DataFrame,
+                   data: pd.DataFrame,
                    drift_features: str | list[str],
                    severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
-     ) -> Generator[DataFrame, None, None]:
+     ) -> Generator[pd.DataFrame, None, None]:
         """
         Create a drift in the data
         
@@ -178,7 +180,7 @@ class Dataset:
                         drift_features: str | set[str],
                         partition: str = "after",
                         severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
-     ) -> Generator[tuple[tuple[DataFrame, Series], str, list[str]], None, None]:
+     ) -> Generator[tuple[tuple[pd.DataFrame, pd.Series], str, list[str]], None, None]:
         """
         Drift generator for a specific partition
         

@@ -1,15 +1,13 @@
-from numpy import full, arange, vectorize
+import numpy as np
 from math import prod
-from numpy.typing import NDArray
-
 from scipy.optimize import minimize
 
 from APPETITE import Constants as constants
 
-def get_total_likelihood(diagnosis: NDArray,
-                         healthiness_probabilities: NDArray,
-                         spectrum: NDArray,
-                         fuzzy_error_vector: NDArray
+def get_total_likelihood(diagnosis: np.ndarray,
+                         healthiness_probabilities: np.ndarray,
+                         spectrum: np.ndarray,
+                         fuzzy_error_vector: np.ndarray
  ) -> float:
     """
     Get the likelihood of the diagnosis.
@@ -23,8 +21,8 @@ def get_total_likelihood(diagnosis: NDArray,
     Returns:
     float: The likelihood of the diagnosis.
     """
-    def get_single_test_likelihood(participated_components: NDArray,
-                                   participation_vector: NDArray,
+    def get_single_test_likelihood(participated_components: np.ndarray,
+                                   participation_vector: np.ndarray,
                                     fuzzy_error: float
         ) -> float:
         """"
@@ -38,10 +36,10 @@ def get_total_likelihood(diagnosis: NDArray,
     tests_likelihoods = map(get_single_test_likelihood, tests_diagnosis_components, spectrum, fuzzy_error_vector)
     return -prod(tests_likelihoods) # Maximize the likelihood
 
-def rank_diagnosis(diagnosis: NDArray,
-                   spectrum: NDArray,
-                   fuzzy_error_vector: NDArray,
-                   components_prior_probabilities: NDArray
+def rank_diagnosis(diagnosis: np.ndarray,
+                   spectrum: np.ndarray,
+                   fuzzy_error_vector: np.ndarray,
+                   components_prior_probabilities: np.ndarray
  ) -> float:
     """
     Rank the diagnosis.
@@ -56,10 +54,10 @@ def rank_diagnosis(diagnosis: NDArray,
     """
     components_count = spectrum.shape[1]
     components_prior_probabilities = components_prior_probabilities.copy()
-    vectorized_flip_probability = vectorize(lambda spectrum_index, probability: probability if spectrum_index in diagnosis else 1 - probability)
-    components_prior_probabilities = vectorized_flip_probability(arange(components_count), components_prior_probabilities)
+    np.vectorized_flip_probability = np.vectorize(lambda spectrum_index, probability: probability if spectrum_index in diagnosis else 1 - probability)
+    components_prior_probabilities = np.vectorized_flip_probability(np.arange(components_count), components_prior_probabilities)
     prior_probability = components_prior_probabilities.prod()
-    healthiness_probabilities = full(components_count, 0.5)
+    healthiness_probabilities = np.full(components_count, 0.5)
     healthiness_bounds = [(0, 1) for _ in range(components_count)]
     likelihood_objective_function = lambda healthiness_probabilities: get_total_likelihood(diagnosis, healthiness_probabilities, spectrum, fuzzy_error_vector)
     mle_model = minimize(likelihood_objective_function, healthiness_probabilities, bounds=healthiness_bounds, options={"maxiter": 1000})
@@ -67,10 +65,10 @@ def rank_diagnosis(diagnosis: NDArray,
     maximum_likelihood = -mle_model.fun
     return maximum_likelihood * prior_probability
 
-def rank_diagnoses(spectrum: NDArray,
-                   diagnoses: list[NDArray],
-                   components_prior_probabilities: NDArray = None
- ) -> list[tuple[NDArray, float]]:
+def rank_diagnoses(spectrum: np.ndarray,
+                   diagnoses: list[np.ndarray],
+                   components_prior_probabilities: np.ndarray = None
+ ) -> list[tuple[np.ndarray, float]]:
     """
     Rank the diagnoses.
 
@@ -84,5 +82,5 @@ def rank_diagnoses(spectrum: NDArray,
     """
     spectrum, fuzzy_error_vector = spectrum[:, :-1], spectrum[:, -1]
     if components_prior_probabilities is None:
-        components_prior_probabilities = full(spectrum.shape[1], constants.BARINEL_COMPONENT_PRIOR_PROBABILITY)
+        components_prior_probabilities = np.full(spectrum.shape[1], constants.BARINEL_COMPONENT_PRIOR_PROBABILITY)
     return [(diagnosis, rank_diagnosis(diagnosis, spectrum, fuzzy_error_vector, components_prior_probabilities)) for diagnosis in diagnoses]

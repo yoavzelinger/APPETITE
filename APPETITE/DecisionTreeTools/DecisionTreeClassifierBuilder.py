@@ -1,17 +1,17 @@
-from pandas import DataFrame, Series, concat
-from numpy.random import seed as numpy_seed
+import pandas as pd
+import numpy as np
+
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score
 
-
 from APPETITE import Constants as constants
 
 def build_tree(
-        X_train: DataFrame,
-        y_train: Series,
-        X_validation: DataFrame = None,
-        y_validation: Series = None,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_validation: pd.DataFrame = None,
+        y_validation: pd.Series = None,
         is_retraining_model: bool = False
         ) -> DecisionTreeClassifier:
     """
@@ -28,7 +28,7 @@ def build_tree(
     Returns:
         DecisionTreeClassifier: The decision tree classifier.
     """
-    numpy_seed(constants.RANDOM_STATE)
+    np.random.seed(constants.RANDOM_STATE)
     if X_validation is None:
         X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=constants.VALIDATION_SIZE, random_state=constants.RANDOM_STATE)
     assert set(X_train.columns) == set(X_validation.columns), "Validation data must have the same columns as the training data"
@@ -41,8 +41,8 @@ def build_tree(
         min_classes = classes_counts[classes_counts == 1].index
         for class_name in min_classes:
             sample_filter = (modified_y_train == class_name)
-            modified_X_train = concat([modified_X_train, modified_X_train[sample_filter]], ignore_index=True)
-            modified_y_train = concat([modified_y_train, Series([class_name])], ignore_index=True)
+            modified_X_train = pd.concat([modified_X_train, modified_X_train[sample_filter]], ignore_index=True)
+            modified_y_train = pd.concat([modified_y_train, pd.Series([class_name])], ignore_index=True)
     cross_validation_split_count = min(constants.CROSS_VALIDATION_SPLIT_COUNT , modified_y_train.value_counts().min())
 
     decision_tree_classifier = DecisionTreeClassifier(random_state=constants.RANDOM_STATE)

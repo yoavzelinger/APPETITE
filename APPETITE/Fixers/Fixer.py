@@ -1,18 +1,17 @@
-from pandas import DataFrame, Series
-from numpy import max as numpy_max
+import pandas as pd
+import numpy as np
 from typing import Generator
 from copy import deepcopy
 
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
-from APPETITE.Diagnosers import *
 
-from APPETITE import Constants as constants
+from APPETITE.Diagnosers import *
 
 class Fixer:
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
-                 X: DataFrame,
-                 y: Series,
+                 X: pd.DataFrame,
+                 y: pd.Series,
                  diagnoser__class_name: str,
                  diagnoser_parameters: dict[str, object],
                  diagnoser_output_name: str=None
@@ -40,7 +39,7 @@ class Fixer:
 
     def _filter_data_reached_faults_generator(self,
                                   faults_count: int                           
-        ) -> DataFrame | Generator[DataFrame, None, None]:
+        ) -> Generator[pd.DataFrame, None, None]:
         """
         Filter the data that reached the faulty nodes.
 
@@ -62,7 +61,7 @@ class Fixer:
 
     def _fix_terminal_faulty_node(self,
                                  faulty_node_index: int,
-                                 data_reached_faulty_node: DataFrame
+                                 data_reached_faulty_node: pd.DataFrame
      ) -> None:
         """
         Fix a terminal faulty node.
@@ -82,7 +81,7 @@ class Fixer:
             most_common_class_index = reached_labels.value_counts().idxmax()
 
             # Make the most common class the class with the max count in the node
-            max_value_count = numpy_max(values)
+            max_value_count = np.max(values)
             values[0][most_common_class_index] = max_value_count + 1
         else:
             # Switch between top and second top classes
@@ -99,7 +98,7 @@ class Fixer:
 
     def _fix_numeric_faulty_node(self, 
                                   faulty_node_index: int,
-                                  data_reached_faulty_node: DataFrame
+                                  data_reached_faulty_node: pd.DataFrame
      ) -> None:
         """
         Fix a numeric faulty node.
@@ -140,7 +139,7 @@ class Fixer:
           
     def fix_faulty_node(self,
                         faulty_node_index: int,
-                        data_reached_faulty_node: DataFrame
+                        data_reached_faulty_node: pd.DataFrame
      ) -> None:
         """
         Fix a faulty node.

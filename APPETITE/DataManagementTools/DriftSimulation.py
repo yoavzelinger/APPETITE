@@ -1,7 +1,9 @@
-from pandas import DataFrame, Series, read_csv
-from pandas.api.types import is_numeric_dtype
-from random import seed, choices
+import pandas as pd
+import random
+
 from typing import Callable, Generator
+
+from pandas.api.types import is_numeric_dtype
 
 from APPETITE import Constants as constants
 
@@ -37,9 +39,9 @@ Good Luck!
 """
 
 def _numeric_drift_generator(
-        column: Series,
+        column: pd.Series,
         severity_level: int
- ) -> Generator[tuple[Series, str], None, None]:
+ ) -> Generator[tuple[pd.Series, str], None, None]:
     """
     Generator for all type of concept drifts in a numeric feature.
 
@@ -56,7 +58,7 @@ def _numeric_drift_generator(
     #   Nested function
     def simulate_numeric_drift_of_size_k(
             k: int
-     ) -> tuple[Series, str]:
+     ) -> tuple[pd.Series, str]:
         """
         Simulate concept drift in a specific numeric feature of size k.
 
@@ -75,9 +77,9 @@ def _numeric_drift_generator(
 
 
 def _categorical_drift_generator(
-        column: Series,
+        column: pd.Series,
         severity_level: int
- ) -> Generator[tuple[Series, str], None, None]:
+ ) -> Generator[tuple[pd.Series, str], None, None]:
     """
     Simulate concept drift in a specific categorical feature.
     The drift is simulated in every feature value in every relevant proportion size.
@@ -97,7 +99,7 @@ def _categorical_drift_generator(
     def categorical_drift_in_value_generator(
             fixed_value: str,
             severities: tuple[float]
-     ) -> list[tuple[Series, str]]:
+     ) -> list[tuple[pd.Series, str]]:
         """
         Simulate concept drift in a specific value of a feature (for all proportions).
 
@@ -113,7 +115,7 @@ def _categorical_drift_generator(
         #   Double nested function
         def simulate_categorical_drift_in_value_proportion(
                 p: float
-         ) -> tuple[Series, str]:
+         ) -> tuple[pd.Series, str]:
             """
             Simulate concept drift in a specific value of a feature for a given proportion.
             The Drift is done by fixing a given value for a proportion of the data.
@@ -129,8 +131,8 @@ def _categorical_drift_generator(
             remaining_indices = column != fixed_value
             remaining_count = remaining_indices.values.sum()
             remaining_indices = column[remaining_indices].index.values
-            seed(constants.RANDOM_STATE)
-            fixed_indices = choices(remaining_indices, k=int(remaining_count * p))
+            random.seed(constants.RANDOM_STATE)
+            fixed_indices = random.choices(remaining_indices, k=int(remaining_count * p))
             drifted_column[fixed_indices] = fixed_value
 
             return (drifted_column, f"CategoricalFeature[{column.name}={fixed_value};p={str(p).replace('.',',')}]")
@@ -148,9 +150,9 @@ def _categorical_drift_generator(
             yield drifted_column
 
 def _get_feature_generator_function(
-        column: Series,
+        column: pd.Series,
         type: str = None
- ) -> Callable[[Series], Generator[tuple[Series, str], None, None]]:
+ ) -> Callable[[pd.Series], Generator[tuple[pd.Series, str], None, None]]:
     """
     Get the relevant drift generator function for a given feature.
     
@@ -169,10 +171,10 @@ def _get_feature_generator_function(
 
 # The magic starts here
 def multiple_features_concept_drift_generator(
-        original_df: DataFrame, 
+        original_df: pd.DataFrame, 
         drifting_features: dict[str, str],
         severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
- ) -> Generator[tuple[DataFrame, int, str], None, None]:
+ ) -> Generator[tuple[pd.DataFrame, int, str], None, None]:
     """
     Generate all possible concept drifts in a given list of features.
     Parameters:
@@ -201,11 +203,11 @@ def multiple_features_concept_drift_generator(
             yield (drifted_df, severity_level, drift_description)
 
 def single_feature_concept_drift_generator(
-        data: DataFrame | Series, 
+        data: pd.DataFrame | pd.Series, 
         feature: str = "",
         feature_type: str = None,
         severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
- ) -> Generator[tuple[DataFrame, int, str], None, None]:
+ ) -> Generator[tuple[pd.DataFrame, int, str], None, None]:
     """
     Generate all possible concept drifts in a given feature.
     Parameters:
@@ -218,10 +220,10 @@ def single_feature_concept_drift_generator(
         Generator[tuple[DataFrame, int, str], None, None]: A generator of all possible drifts in the feature, with the severities and the description of the drift.
     """
     column, is_data_df = data, False
-    if isinstance(data, DataFrame):
+    if isinstance(data, pd.DataFrame):
         assert feature is not None and feature in data.columns
         column, is_data_df = data[feature], True
-    assert isinstance(column, Series)
+    assert isinstance(column, pd.Series)
 
     generator_function = _get_feature_generator_function(column, feature_type)
     for severity_level in severity_levels:
@@ -235,7 +237,7 @@ def single_feature_concept_drift_generator(
 
 def example_preparation(
         single_drift: bool = False
- ) -> tuple[DataFrame , dict[str, str]]:
+ ) -> tuple[pd.DataFrame , dict[str, str]]:
     DIRECTORY = "data\\Classification_Datasets"
     FILE_PATH = "white-clover.csv"
     DRIFTING_FEATURES = {
@@ -245,18 +247,18 @@ def example_preparation(
         "Weeds-94": None
     }
 
-    df = read_csv(f"{DIRECTORY}\\{FILE_PATH}")
+    df = pd.read_csv(f"{DIRECTORY}\\{FILE_PATH}")
     df.attrs['name'] = FILE_PATH.split("\\")[-1].split(".")[0]
     if single_drift:
         return df, *list(DRIFTING_FEATURES.items())[0]
     return df, DRIFTING_FEATURES
 
-def multiple_drifts_example() -> Generator[tuple[DataFrame, str], None, None]:
+def multiple_drifts_example() -> Generator[tuple[pd.DataFrame, str], None, None]:
     df, drifting_features = example_preparation()
     for drifted_df, drift_description in multiple_features_concept_drift_generator(df, drifting_features):
         yield (drifted_df, drift_description)
 
-def single_drift_example() -> Generator[tuple[DataFrame, str], None, None]:
+def single_drift_example() -> Generator[tuple[pd.DataFrame, str], None, None]:
     df, feature, feature_type = example_preparation(True)
     for drifted_df, drift_description in single_feature_concept_drift_generator(df, feature, feature_type):
         yield (drifted_df, drift_description)

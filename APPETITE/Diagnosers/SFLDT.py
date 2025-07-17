@@ -1,19 +1,20 @@
-from shap import TreeExplainer
-from numpy import zeros, array as np_array, ndarray, exp as np_exp, clip, mean as np_mean, log as np_log, isclose as np_isclose, where as np_where, nan as np_nan, abs as np_abs, float64 as np_float64, nan_to_num, divide as np_divide, zeros_like as np_zeros_like, max as numpy_max, isin as np_isin
-from sklearn.metrics.pairwise import cosine_similarity
-from scipy.stats import pearsonr as pearson_correlation
+import numpy as np
 from collections import defaultdict
 
+from sklearn.metrics.pairwise import cosine_similarity
+from scipy.stats import pearsonr as pearson_correlation
+from shap import TreeExplainer
+
+from APPETITE import Constants as constants
 
 from .ADiagnoser import *
 from .STAT import STAT
-from APPETITE import Constants as constants
 
 class SFLDT(ADiagnoser):
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
-                 X: DataFrame,
-                 y: Series,
+                 X: pd.DataFrame,
+                 y: pd.Series,
                  combine_stat: bool = constants.DEFAULT_COMBINE_STAT,
                  group_feature_nodes: bool = constants.DEFAULT_GROUP_FEATURE_NODES,
                  aggregate_tests: bool = constants.DEFAULT_AGGREGATE_TESTS_BY_PATHS,
@@ -46,13 +47,13 @@ class SFLDT(ADiagnoser):
         self.components_count = mapped_tree.node_count
         self.tests_count = len(X)
         
-        self.spectra = zeros((self.components_count, self.tests_count))
-        self.error_vector = zeros(self.tests_count)
+        self.spectra = np.zeros((self.components_count, self.tests_count))
+        self.error_vector = np.zeros(self.tests_count)
         
         # Components
         self.group_feature_nodes = group_feature_nodes
         self.use_fuzzy_participation = use_fuzzy_participation
-        self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model, data=X.astype(np_float64), model_output="probability") if self.use_fuzzy_participation else None
+        self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model, data=X.astype(np.float64), model_output="probability") if self.use_fuzzy_participation else None
         # Tests
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence
@@ -65,9 +66,9 @@ class SFLDT(ADiagnoser):
         self.stat = STAT(mapped_tree, X, y) if combine_stat else None
 
     def shrink_spectra_based_on_paths(self,
-                                      to_shrink_spectra: ndarray,
+                                      to_shrink_spectra: np.ndarray,
                                       paths_example_test_indices: list[int]
-    ) -> ndarray:
+    ) -> np.ndarray:
         """
             Shrink the spectra based on the new tests.
 
@@ -91,7 +92,7 @@ class SFLDT(ADiagnoser):
         """
         assert self.tests_count > len(self.path_tests_indices) or self.tests_count == sum(map(len, self.path_tests_indices.values())), f"Tests count should be changed after aggregation, but it is still the same: previous ({self.tests_count}) == new ({self.error_vector.shape[0]})"
         self.tests_count = len(self.path_tests_indices)
-        paths_error_vector = zeros(self.tests_count)
+        paths_error_vector = np.zeros(self.tests_count)
         paths_first_test_indices = []
         for path_index, path_test_indices in enumerate(self.path_tests_indices.values()):
             paths_first_test_indices.append(path_test_indices[0])
@@ -138,14 +139,14 @@ class SFLDT(ADiagnoser):
         # add target
         self.add_target_to_feature_components()
         self.components_count = len(self.feature_indices_dict)
-        features_spectra = zeros((self.components_count, self.tests_count))
+        features_spectra = np.zeros((self.components_count, self.tests_count))
         for feature_index, feature_nodes_spectra_indices in self.feature_index_to_node_indices_dict.items():
             current_feature_spectra = self.spectra[feature_nodes_spectra_indices, :]
             participations_mask = current_feature_spectra > 0
             participations_sums = (current_feature_spectra * participations_mask).sum(axis=0)
             participations_counts = participations_mask.sum(axis=0)
-            features_spectra[feature_index] = np_divide(participations_sums, participations_counts, out=np_zeros_like(participations_sums, dtype=float), where=participations_counts != 0)
-        self.spectra = nan_to_num(features_spectra)
+            features_spectra[feature_index] = np.divide(participations_sums, participations_counts, out=np.zeros_like(participations_sums, dtype=float), where=participations_counts != 0)
+        self.spectra = np.nan_to_num(features_spectra)
 
     def update_spectra_to_fuzzy(self) -> None:
         """
@@ -155,7 +156,7 @@ class SFLDT(ADiagnoser):
         assert self.group_feature_nodes, "Fuzzy participation is currently supported only for feature components"
         assert self.explainer is not None, "Explainer is not initialized, cannot calculate fuzzy participation"
         samples_predicted_probabilities = self.mapped_tree.sklearn_tree_model.predict_proba(self.X_after)   # shape: (|tests|, |classes|)
-        samples_absolute_shap_values = np_abs(self.explainer.shap_values(self.X_after))  # shape: (|tests|, |FEATURES!|, |classes)
+        samples_absolute_shap_values = np.abs(self.explainer.shap_values(self.X_after))  # shape: (|tests|, |FEATURES!|, |classes)
         tree_features_locations = [column_index for column_index, feature in enumerate(self.X_after.columns) if feature in self.mapped_tree.tree_features_set]
         samples_absolute_shap_values = samples_absolute_shap_values[:, tree_features_locations, :]  # shape: (|tests|, |COMPONENTS!|, |classes)
         weighted_shap_values = samples_absolute_shap_values * samples_predicted_probabilities[:, None, :]  # shape: (|tests|, |features=components|, |classes)
@@ -165,8 +166,8 @@ class SFLDT(ADiagnoser):
         self.spectra = fuzzy_spectra
 
     def fill_spectra_and_error_vector(self, 
-                                      X: DataFrame, 
-                                      y: Series
+                                      X: pd.DataFrame, 
+                                      y: pd.Series
     ) -> None:
         """
         Fill the spectra matrix and the error vector.
@@ -195,11 +196,11 @@ class SFLDT(ADiagnoser):
         if self.use_fuzzy_participation:
             self.update_spectra_to_fuzzy()
         else:
-            assert np_isin(self.spectra, [0, 1]).all(), "The spectra isn't binary while use_fuzzy_participation set to False"
+            assert np.isin(self.spectra, [0, 1]).all(), "The spectra isn't binary while use_fuzzy_participation set to False"
         if self.is_error_fuzzy:
             self.update_error_vector_to_fuzzy()
         else:
-            assert np_isin(self.error_vector, [0, 1]).all(), "The error vector isn't binary while both self.combine_prior_confidence and self.aggregate_tests set to False"
+            assert np.isin(self.error_vector, [0, 1]).all(), "The error vector isn't binary while both self.combine_prior_confidence and self.aggregate_tests set to False"
         
     def convert_features_diagnosis_to_nodes_diagnosis(self,
                                                       features_diagnosis: list[int]
@@ -238,7 +239,7 @@ class SFLDT(ADiagnoser):
 
 # Similarity functions
 
-    def get_faith_similarity(self, participation_vector: ndarray, error_vector: ndarray) -> float:
+    def get_faith_similarity(self, participation_vector: np.ndarray, error_vector: np.ndarray) -> float:
         """
         Get the faith similarity of the component to the error vector.
 
@@ -259,7 +260,7 @@ class SFLDT(ADiagnoser):
         
         return (n11 +  0.5 * n00) / (n11 + n10 + n01 + n00)
 
-    def get_cosine_similarity(self, participation_vector: ndarray, error_vector: ndarray) -> float:
+    def get_cosine_similarity(self, participation_vector: np.ndarray, error_vector: np.ndarray) -> float:
         """
         Get the cosine similarity of the component to the error vector.
         Parameters:
@@ -272,7 +273,7 @@ class SFLDT(ADiagnoser):
         participation_vector, error_vector = participation_vector[None, :], error_vector[None, :]
         return cosine_similarity(participation_vector, error_vector)[0][0]
 
-    def get_correlation(self, participation_vector: ndarray, error_vector: ndarray) -> float:
+    def get_correlation(self, participation_vector: np.ndarray, error_vector: np.ndarray) -> float:
         """
         Get the correlation of the component to the error vector.
         Parameters:
@@ -283,11 +284,11 @@ class SFLDT(ADiagnoser):
             float: The correlation similarity between the vectors.
         """
         # check if the participation vector is all 0
-        if all(np_isclose(participation_vector, participation_vector[0])):  # constant participation, cannot calculate correlation, using cosine similarity instead
+        if all(np.isclose(participation_vector, participation_vector[0])):  # constant participation, cannot calculate correlation, using cosine similarity instead
             return self.get_cosine_similarity(participation_vector, error_vector)
         return pearson_correlation(participation_vector, error_vector)[0]
 
-    def get_BCE_similarity(self, participation_vector: ndarray, error_vector: ndarray) -> float:
+    def get_BCE_similarity(self, participation_vector: np.ndarray, error_vector: np.ndarray) -> float:
         """
         Get binary-cross-entropy similarity between the two vectors.
         for this similarity one of the vectors should be binary.
@@ -299,9 +300,9 @@ class SFLDT(ADiagnoser):
         Returns:
             float: The binary-cross-entropy similarity between the vectors.
         """
-        def get_binary_continuous_vectors(participation_vector: ndarray,
-                                          error_vector: ndarray
-        ) -> tuple[ndarray]:
+        def get_binary_continuous_vectors(participation_vector: np.ndarray,
+                                          error_vector: np.ndarray
+        ) -> tuple[np.ndarray]:
             """
             determine which vector is binary and which is continuous.
             Parameters:
@@ -317,9 +318,9 @@ class SFLDT(ADiagnoser):
             return error_vector, participation_vector
         
         binary_vector, continuous_vector = get_binary_continuous_vectors(participation_vector, error_vector)
-        continuous_vector = clip(continuous_vector, EPSILON, 1 - EPSILON)
-        bce_loss = -np_mean(binary_vector * np_log(continuous_vector) + (1 - binary_vector) * np_log(1 - continuous_vector))
-        return np_exp(-bce_loss)
+        continuous_vector = np.clip(continuous_vector, constants.EPSILON, 1 - constants.EPSILON)
+        bce_loss = -np.mean(binary_vector * np.log(continuous_vector) + (1 - binary_vector) * np.log(1 - continuous_vector))
+        return np.exp(-bce_loss)
     
     def get_relevant_similarity_function(self):
         """

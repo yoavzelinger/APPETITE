@@ -2,7 +2,6 @@ import os
 import importlib
 import inspect
 
-from APPETITE import Constants as constants
 from .ADiagnoser import ADiagnoser
 
 DIAGNOSER_CLASSES_DICT = {}
@@ -38,3 +37,5 @@ def get_diagnoser(diagnoser_name: str
     assert diagnoser_name in DIAGNOSER_CLASSES_DICT, f"Diagnoser {diagnoser_name} is not supported"
     
     return DIAGNOSER_CLASSES_DICT[diagnoser_name]
+
+__all__ = ["ADiagnoser", "get_diagnoser"]

@@ -1,7 +1,8 @@
-from sklearn.metrics import accuracy_score
 from copy import deepcopy
+from sklearn.metrics import accuracy_score
 
 from APPETITE import *
+
 import Tester.TesterConstants as tester_constants
 
 def get_accuracy(model, X, y):

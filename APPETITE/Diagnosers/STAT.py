@@ -5,8 +5,8 @@ from .ADiagnoser import *
 class STAT(ADiagnoser):
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
-                 X: DataFrame,
-                 y: Series
+                 X: pd.DataFrame,
+                 y: pd.Series
     ):
         super().__init__(mapped_tree, X, y)
 

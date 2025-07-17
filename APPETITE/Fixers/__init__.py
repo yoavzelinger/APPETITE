@@ -1,1 +1,1 @@
-from .Fixer import Fixer, get_diagnoser
+from .Fixer import Fixer

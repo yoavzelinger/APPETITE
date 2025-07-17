@@ -1,14 +1,13 @@
+import pandas as pd
 from abc import ABC, abstractmethod
-from pandas import DataFrame, Series
 
-from APPETITE import Constants as constants
 from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
 
 class ADiagnoser(ABC):
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
-                 X: DataFrame,
-                 y: Series
+                 X: pd.DataFrame,
+                 y: pd.Series
     ):
         """
         Initialize the STAT diagnoser.

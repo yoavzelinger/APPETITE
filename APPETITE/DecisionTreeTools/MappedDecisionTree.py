@@ -1,7 +1,8 @@
+import pandas as pd
+import numpy as np
+
 from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.tree._tree import TREE_LEAF
-from pandas import DataFrame, Series
-from numpy import argmax
 
 class MappedDecisionTree:
     class DecisionTreeNode:
@@ -134,9 +135,9 @@ class MappedDecisionTree:
             return str(self.sk_index)
         
         def get_data_reached_node(self,
-                                  X: DataFrame,
-                                  y: Series = None
-         ) -> DataFrame | tuple[DataFrame, Series]:
+                                  X: pd.DataFrame,
+                                  y: pd.Series = None
+         ) -> pd.DataFrame | tuple[pd.DataFrame, pd.Series]:
             """
             Filter the data that reached the node.
 
@@ -159,15 +160,15 @@ class MappedDecisionTree:
             return X if y is None else (X, y)
         
         def update_node_data_attributes(self, 
-                                        X: DataFrame,
-                                        y: Series
+                                        X: pd.DataFrame,
+                                        y: pd.Series
          ) -> None:
             """
             Update the average feature value of the node.
             The average is calculated on the data that reached the node.
 
             Parameters:
-                X (DataFrame): The data.
+                X (pd.DataFrame): The data.
                 y (Series): The target column
             """
             # Get the data that reached the node
@@ -204,8 +205,8 @@ class MappedDecisionTree:
                  sklearn_tree_model: DecisionTreeClassifier,
                  feature_types: dict[str, str] = None,
                  prune: bool = True,
-                 X: DataFrame = None,
-                 y: Series = None
+                 X: pd.DataFrame = None,
+                 y: pd.Series = None
     ):
         """
         Initialize the MappedDecisionTree.
@@ -231,8 +232,8 @@ class MappedDecisionTree:
         self.update_tree_attributes(X, y)
 
     def update_tree_attributes(self,
-                               X: DataFrame = None,
-                               y: Series = None
+                               X: pd.DataFrame = None,
+                               y: pd.Series = None
      ) -> None:
         """
         Update the tree attributes. those attributes are aggregated from the nodes.
@@ -278,7 +279,7 @@ class MappedDecisionTree:
 
             if left_child_index == right_child_index:  # Leaf
                 current_node_value = self.sk_values[current_index]
-                class_name = argmax(current_node_value)
+                class_name = np.argmax(current_node_value)
                 class_name = sk_class_names[class_name]
                 current_node.class_name = class_name
                 continue

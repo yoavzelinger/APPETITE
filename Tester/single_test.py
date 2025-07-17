@@ -1,13 +1,14 @@
-from os import path as os_path
-from sys import argv as sys_argv
-from pandas import concat as pd_concat
+import os
+import sys
+import pandas as pd
 from itertools import combinations
+
+import traceback
 
 from APPETITE import *
 
 import Tester.TesterConstants as tester_constants
 from Tester.metrics import get_accuracy, get_wasted_effort, get_correctly_identified_ratio
-import traceback
 
 def get_dataset(directory: str,
                 file_name: str,
@@ -15,7 +16,7 @@ def get_dataset(directory: str,
                 proportions_tuple: int | tuple[float] = constants.PROPORTIONS_TUPLE,
                 after_window_size: float = constants.AFTER_WINDOW_SIZE
                 )-> Dataset:
-    source = os_path.join(directory, f"{file_name}{file_extension}")
+    source = os.path.join(directory, f"{file_name}{file_extension}")
     return Dataset(source, proportions_tuple, after_window_size)
 
 def get_sklearn_tree(X_train,
@@ -82,7 +83,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
 
     X_after, y_after = dataset.get_after_concept()
     X_test, y_test = dataset.get_test_concept()
-    original_accuracy = get_accuracy(sklearn_tree_model, pd_concat([X_after, X_test]), pd_concat([y_after, y_test]))
+    original_accuracy = get_accuracy(sklearn_tree_model, pd.concat([X_after, X_test]), pd.concat([y_after, y_test]))
     if original_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
         # print(f"Original model is not good enough, accuracy: {original_accuracy}")
         return
@@ -103,7 +104,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
             drifted_features_types = [drifted_features_types] if isinstance(drifted_features_types, str) else drifted_features_types
 
 
-            X_before_after_concat, y_before_after_concat = pd_concat([X_train, X_after_drifted]), pd_concat([y_train, y_after])
+            X_before_after_concat, y_before_after_concat = pd.concat([X_train, X_after_drifted]), pd.concat([y_train, y_after])
             before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat, is_retraining_model=True)
             before_after_retrained_accuracy = get_accuracy(before_after_retrained_tree, X_test_drifted, y_test)
             before_after_retrained_accuracy_bump = before_after_retrained_accuracy - drifted_test_accuracy
@@ -171,5 +172,5 @@ def sanity_run(directory=tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_nam
         print(result)
         
 if __name__ == "__main__":
-    file_name = tester_constants.EXAMPLE_FILE_NAME if len(sys_argv) < 2 else sys_argv[1]
+    file_name = tester_constants.EXAMPLE_FILE_NAME if len(sys.argv) < 2 else sys.argv[1]
     sanity_run(tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_name)

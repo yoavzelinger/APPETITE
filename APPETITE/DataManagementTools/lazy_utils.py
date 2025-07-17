@@ -1,4 +1,4 @@
-from typing import Generator, Callable
+from typing import Callable, Generator
 
 """
 This module contains the generic lazy_product function.

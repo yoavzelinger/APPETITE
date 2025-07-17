@@ -150,7 +150,7 @@ class SFLDT(ADiagnoser):
             participations_mask = current_feature_spectra > 0
             participations_sums = (current_feature_spectra * participations_mask).sum(axis=0)
             participations_counts = participations_mask.sum(axis=0)
-            features_spectra[feature_index] = np_divide(participations_sums, participations_counts, out=np_zeros_like(participations_sums, dtype=float), where=participations_counts != 0)
+            features_spectra[feature_index] = np_divide(participations_sums, participations_counts)
         self.spectra = nan_to_num(features_spectra)
 
 

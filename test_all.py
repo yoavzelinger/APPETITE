@@ -129,8 +129,8 @@ if not errors.empty:
 elif os.path.exists(errors_file_path):
     os.remove(errors_file_path)
 
-print("All tests are done! Accuracy Increase, Wasted Effort, Correctly Identified:")
+print("All tests are done! Wasted-Effort; Correctly-Identified; Accuracy Increase:")
 for baseline_retrainer_name in tester_constants.BASELINE_RETRAINERS_OUTPUT_NAMES:
-    print(f"{baseline_retrainer_name}: {raw_results[f'{baseline_retrainer_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean()}%, X, X")
+    print(f"{baseline_retrainer_name}: X; X; {raw_results[f'{baseline_retrainer_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean()}%")
 for diagnoser_output_name in tester_constants.diagnosers_output_names:
-    print(f"{diagnoser_output_name}: {raw_results[f'{diagnoser_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean()}%, {raw_results[f'{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean()}, {raw_results[f'{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}'].mean()}%")
+    print(f"{diagnoser_output_name}: {raw_results[f'{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean()}; {raw_results[f'{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}'].mean()}%; {raw_results[f'{diagnoser_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean()}%")

@@ -155,14 +155,17 @@ class SFLDT(ADiagnoser):
         """
         assert self.group_feature_nodes, "Fuzzy participation is currently supported only for feature components"
         assert self.explainer is not None, "Explainer is not initialized, cannot calculate fuzzy participation"
+        
         samples_predicted_probabilities = self.mapped_tree.sklearn_tree_model.predict_proba(self.X_after)   # shape: (|tests|, |classes|)
         samples_absolute_shap_values = np.abs(self.explainer.shap_values(self.X_after))  # shape: (|tests|, |FEATURES!|, |classes)
         tree_features_locations = [column_index for column_index, feature in enumerate(self.X_after.columns) if feature in self.mapped_tree.tree_features_set]
         samples_absolute_shap_values = samples_absolute_shap_values[:, tree_features_locations, :]  # shape: (|tests|, |COMPONENTS!|, |classes)
         weighted_shap_values = samples_absolute_shap_values * samples_predicted_probabilities[:, None, :]  # shape: (|tests|, |features=components|, |classes)
+        
         fuzzy_spectra = weighted_shap_values.sum(axis=2).T
         assert fuzzy_spectra.shape == self.spectra.shape, f"The new fuzzy spectra's shape {fuzzy_spectra.shape} does not match the original spectra's shape {self.spectra.shape}"
         assert ((0 <= fuzzy_spectra) & (fuzzy_spectra <= 1)).all(), f"Some of the components participation values are not in the range [0, 1] (Min: {fuzzy_spectra.min()}, Max: {fuzzy_spectra.max()}). Spectra: \n{fuzzy_spectra}"
+        
         self.spectra = fuzzy_spectra
 
     def fill_spectra_and_error_vector(self, 

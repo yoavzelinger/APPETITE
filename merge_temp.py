@@ -25,13 +25,13 @@ if args.input:
 assert os.path.isdir(temp_output_directory_full_path)
 print(f"Merging all temp files from {temp_output_directory_full_path}")
 
-for current_file_index, current_file_name in enumerate(os.listdir(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH), 1):
+for current_file_index, current_file_name in enumerate(os.listdir(temp_output_directory_full_path), 1):
     print("Working on file", current_file_index, ":", current_file_name)
     if not current_file_name.startswith(tester_constants.RESULTS_FILE_NAME_PREFIX):
         continue
     
     current_results_df = None
-    with open(os.path.join(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH, current_file_name), "r") as current_file:
+    with open(os.path.join(temp_output_directory_full_path, current_file_name), "r") as current_file:
         current_results_df = pd.read_csv(current_file, dtype=tester_constants.RAW_RESULTS_COLUMNS)
     current_group_by_df = current_results_df.groupby(tester_constants.GROUP_BY_COLUMN_NAMES).agg(aggregating_functions_dict)
     # check that no column contains empty values

@@ -15,7 +15,7 @@ from Tester import *
 
 ##### Parser Arguments #####
 parser = ArgumentParser(description="Run all tests")
-parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m_%H-%M-%S')}")
+parser.add_argument("-o", "--output", type=str, help=f"Output file name prefix, default is the result_{tester_constants.DEFAULT_RESULTS_FILENAME_PREFIX}_<TIMESTAMP>", default=f"{tester_constants.DEFAULT_RESULTS_FILENAME_PREFIX}_{datetime.now().strftime('%d-%m_%H-%M-%S')}")
 parser.add_argument("-s", "--skip", action="store_true", help=f"skip exceptions, default is {tester_constants.SKIP_EXCEPTIONS}. If true will write the errors to errors file", default=tester_constants.SKIP_EXCEPTIONS)
 parser.add_argument("-n", "--names", type=str, nargs="+", help="Specific datasets to run, default is all", default=())
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all. Relevant only if names argument is not provided", default=())

@@ -110,7 +110,10 @@ if specific_datasets_string:
 
 output_files_suffix, output_path = args.output, tester_constants.OUTPUT_DIRECTORY_FULL_PATH
 if temp_files_suffix:
-    output_files_suffix, output_path = temp_files_suffix, tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH
+    output_path = tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH
+    if not output_files_suffix.startswith(tester_constants.DEFAULT_RESULTS_FILENAME_PREFIX):
+        output_path = f"{output_path}_{output_files_suffix}"
+    output_files_suffix = temp_files_suffix
 results_file_name, errors_file_name = f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{output_files_suffix}.csv", f"{tester_constants.ERRORS_FILE_NAME_PREFIX}_{output_files_suffix}.csv"
 if raw_results.empty:
     results_file_name = f"{tester_constants.EMPTY_RESULTS_FILE_NAME_PREFIX}_{results_file_name}"

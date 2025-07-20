@@ -156,10 +156,9 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
             yield current_results_dict
         except Exception as e:
             exception_class = e.__class__.__name__
-            tb = traceback.extract_tb(e.__traceback__)
-            error_line, error_file = tb[-1].lineno, tb[-1].filename
-            diagnoser_info = f", diagnoser: {diagnoser_output_name} ({diagnoser_class_name})" if ('diagnoser_output_name' in locals() and diagnoser_output_name) else ""
-            yield Exception(f"{exception_class} in {drift_description}, after window size: {dataset.after_window_size} ({error_file}, line {error_line}{diagnoser_info}: {e}")
+            diagnoser_info = f"(diagnoser: {diagnoser_class_name} - {diagnoser_output_name})" if 'diagnoser_output_name' in locals() else ""
+            yield Exception(f"{exception_class} in {drift_description}, after window size: {dataset.after_window_size} {diagnoser_info} :\n "
+                            f"{''.join(traceback.format_exception(type(e), e, e.__traceback__))}")
         
 def get_example_mapped_tree(directory=tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name)

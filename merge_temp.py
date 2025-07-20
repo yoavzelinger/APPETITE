@@ -23,6 +23,7 @@ temp_output_directory_full_path = tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PA
 if args.input:
    temp_output_directory_full_path = f"{temp_output_directory_full_path}_{args.input}"
 assert os.path.isdir(temp_output_directory_full_path)
+print(f"Merging all temp files from {temp_output_directory_full_path}")
 
 for current_file_index, current_file_name in enumerate(os.listdir(tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH), 1):
     print("Working on file", current_file_index, ":", current_file_name)

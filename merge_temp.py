@@ -5,13 +5,11 @@ from openpyxl import load_workbook
 
 import pandas as pd
 
-from datetime import datetime
-
 from Tester import tester_constants
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-i", "--input", type=str, help=f"Input folder prefix (after the temp), default is None ({tester_constants.TEMP_OUTPUT_DIRECTORY_NAME})", default="")
-parser.add_argument("-o", "--output", type=str, help="Output file name prefix, default is the result_TIMESTAMP", default=f"{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
+parser.add_argument("-o", "--output", type=str, help=f"Output file name prefix, default is the result_{tester_constants.DEFAULT_RESULTS_FILENAME_PREFIX}_<TIMESTAMP>", default=tester_constants.DEFAULT_RESULTS_FILENAME_EXTENDED_PREFIX)
 args = parser.parse_args()
 
 aggregating_functions_dict = {tester_constants.AGGREGATED_TESTS_COUNT_COLUMN: "count"}

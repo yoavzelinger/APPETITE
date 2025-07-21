@@ -1,5 +1,6 @@
 from os import path as os_path
 from json import load as load_json
+from datetime import datetime
 
 import APPETITE.Constants as constants
 
@@ -40,6 +41,7 @@ RESULTS_FILE_NAME_PREFIX = "results"
 EMPTY_RESULTS_FILE_NAME_PREFIX = "EMPTY"
 ERRORS_FILE_NAME_PREFIX = "ERRORS"
 DEFAULT_RESULTS_FILENAME_PREFIX = "time"
+DEFAULT_RESULTS_FILENAME_EXTENDED_PREFIX = f"{DEFAULT_RESULTS_FILENAME_PREFIX}_{datetime.now().strftime('%d-%m_%H-%M-%S')}" # Unique file prefix
 
 
 EXAMPLE_FILE_NAME = "bank"

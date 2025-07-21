@@ -5,6 +5,9 @@ import os
 from csv import DictReader
 
 import pandas as pd
+from scipy import __version__ as scipy_version
+print(f"python version: {sys.version}")
+print(f"scipy version: {scipy_version}")
 
 from warnings import filterwarnings, simplefilter as warnings_simplefilter
 warnings_simplefilter(action='ignore', category=FutureWarning)

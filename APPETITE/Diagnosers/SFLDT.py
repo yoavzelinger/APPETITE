@@ -171,6 +171,7 @@ class SFLDT(ADiagnoser):
         # Globally-normalize the values in the spectra
         fuzzy_spectra =  fuzzy_spectra / fuzzy_spectra.sum()
         
+        assert not np.isnan(fuzzy_spectra).any(), "Fuzzy spectra contains NaN values"
         assert ((0 <= fuzzy_spectra) & (fuzzy_spectra <= 1)).all(), f"Some of the components participation values are not in the range [0, 1] (Min: {fuzzy_spectra.min()}, Max: {fuzzy_spectra.max()}). Spectra: \n{fuzzy_spectra}"
         
         self.spectra = fuzzy_spectra

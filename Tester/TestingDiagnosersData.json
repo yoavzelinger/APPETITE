@@ -44,5 +44,13 @@
             "group_feature_nodes": true,
             "use_shap_contribution": true
         }
+    },
+    {
+        "output_name": "SHAP_Participation-Feature_Components-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "group_feature_nodes": true,
+            "use_shap_contribution": true
+        }
     }
 ]

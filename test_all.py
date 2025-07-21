@@ -105,7 +105,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
 temp_files_suffix = ""
 if drift_size_string:
     temp_files_suffix += f"_drift_size_{drift_size_string}"
-if drift_size_string:
+if after_windows_string:
     temp_files_suffix += f"_after_window_{after_windows_string}"
 if specific_datasets_string:
     temp_files_suffix += f"_{specific_datasets_string}"

@@ -31,13 +31,12 @@ def get_barinel_diagnoses(spectra: np.ndarray,
     assert candidates_spectra is None or spectra.shape == candidates_spectra.shape, f"The candidates spectra must have the same shape as the spectra: {spectra.shape} != {candidates_spectra.shape}"
     
     spectra = np.concatenate((spectra.T, error_vector[:, None]), axis=1)
-    if candidates_spectra is None:
-        candidates_spectra = spectra
-    else:
-        candidates_spectra = np.concatenate((candidates_spectra.T, error_vector[:, None]), axis=1)
     
-    diagnoses = get_candidates(candidates_spectra.tolist(), error_threshold=error_threshold)
-    assert len(diagnoses), "No candidate diagnoses found"
+    diagnoses = get_candidates(spectra.tolist(), error_threshold=error_threshold)
+    # if not diagnoses and candidates_spectra is not None:
+    #     candidates_spectra = np.concatenate((candidates_spectra.T, error_vector[:, None]), axis=1)
+    #     diagnoses = get_candidates(candidates_spectra.tolist(), error_threshold=error_threshold)
+    assert diagnoses, "No candidate diagnoses found"
     
     diagnoses = list(map(np.array, diagnoses))
     diagnoses = rank_diagnoses(spectra, diagnoses, components_prior_probabilities)

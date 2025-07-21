@@ -5,7 +5,7 @@ from .DDIFMAS import _barinel_diagnosis, _rank_diagnoses as rank_diagnoses_v1
 __author__ = "Avi Natan"
 __homepage__ = "https://github.com/avi-natan/DDIFMAS"
 
-def get_candidates(spectrum, error_threshold=1):
+def get_candidates(spectrum, error_threshold=1) -> list[list[int]]:
     """
     Get the candidates.
 
@@ -13,7 +13,7 @@ def get_candidates(spectrum, error_threshold=1):
     spectrum (ndarray): The spectrum.
 
     Returns:
-        list: The candidates.
+        list[list[int]]: The candidates.
     """
     diagnoses, _ = _barinel_diagnosis(spectrum, [], error_threshold=error_threshold)
     return diagnoses

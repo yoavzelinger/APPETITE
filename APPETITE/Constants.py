@@ -47,7 +47,7 @@ BARINEL_RANKING_ALGORITHM = "V2"
 GRADIENT_STEP = 0.5
 
 DEFAULT_COMBINE_STAT = True # Combine STAT Diagnoses
-DEFAULT_FUZZY_PARTICIPATION = False # Use fuzzy participation matrix
+DEFAULT_USE_SHAP_CONTRIBUTION = False # Try to use SHAP contributions for the participation
 DEFAULT_AGGREGATE_TESTS_BY_PATHS = False # Aggregate tests by paths in the decision tree
 DEFAULT_GROUP_FEATURE_NODES = False # Group feature nodes to a single component
 DEFAULT_COMBINE_PRIOR_CONFIDENCE = False # Use the prior confidence in Error vector calculation

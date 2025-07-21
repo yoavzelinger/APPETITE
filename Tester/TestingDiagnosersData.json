@@ -42,7 +42,7 @@
             "aggregate_tests": true,
             "combine_prior_confidence": true,
             "group_feature_nodes": true,
-            "use_fuzzy_participation": true
+            "use_shap_contribution": true
         }
     }
 ]

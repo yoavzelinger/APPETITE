@@ -19,7 +19,7 @@ class SFLDT(ADiagnoser):
                  group_feature_nodes: bool = constants.DEFAULT_GROUP_FEATURE_NODES,
                  aggregate_tests: bool = constants.DEFAULT_AGGREGATE_TESTS_BY_PATHS,
                  combine_prior_confidence: bool = constants.DEFAULT_COMBINE_PRIOR_CONFIDENCE,
-                 use_fuzzy_participation: bool = constants.DEFAULT_FUZZY_PARTICIPATION,
+                 use_shap_contribution: bool = constants.DEFAULT_USE_SHAP_CONTRIBUTION,
                  merge_singular_diagnoses: bool = constants.DEFAULT_MERGE_SINGULAR_DIAGNOSES    # DEPRECATED
     ):
         """
@@ -30,7 +30,7 @@ class SFLDT(ADiagnoser):
         X (DataFrame): The data.
         y (Series): The target column.
         combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
-        use_fuzzy_participation (bool): Whether to use fuzzy components participation.
+        use_shap_contribution (bool): Whether to use SHAP contributions for the participation.
         aggregate_tests (bool): Whether to aggregate tests based on the classification paths.
         group_feature_nodes (bool): Whether to use feature components.
         combine_prior_confidence (bool): Whether to combine the confidence of the tests in the error vector calculation.
@@ -40,8 +40,6 @@ class SFLDT(ADiagnoser):
         """
         if group_feature_nodes:
             assert not merge_singular_diagnoses, "Cannot merge singular diagnoses with multiple fault diagnoser"
-        else:
-            assert not use_fuzzy_participation, "Cannot use fuzzy participation without feature components"
         super().__init__(mapped_tree, X, y)
         
         self.components_count = mapped_tree.node_count
@@ -52,8 +50,9 @@ class SFLDT(ADiagnoser):
         
         # Components
         self.group_feature_nodes = group_feature_nodes
-        self.use_fuzzy_participation = use_fuzzy_participation
-        self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model, data=X.astype(float), model_output="probability") if self.use_fuzzy_participation else None
+        self.use_shap_contribution = use_shap_contribution
+        self.is_participation_fuzzy = self.use_shap_contribution
+        self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model, data=X.astype(float), model_output="probability") if self.use_shap_contribution else None
         # Tests
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence
@@ -148,9 +147,9 @@ class SFLDT(ADiagnoser):
             features_spectra[feature_index] = np.divide(participations_sums, participations_counts, out=np.zeros_like(participations_sums, dtype=float), where=participations_counts != 0)
         self.spectra = np.nan_to_num(features_spectra)
 
-    def update_spectra_to_fuzzy(self) -> None:
+    def combine_shap_contributions(self) -> None:
         """
-        Update the participation matrix to be fuzzy. For now only relevant for feature components.
+        Update the participation matrix to use the shap contributions. For now only relevant for feature components.
         The participations are calculated as the weighted average of the SHAP values of the features. The weights are based on the predicted probabilities of the samples.
         """
         assert self.group_feature_nodes, "Fuzzy participation is currently supported only for feature components"
@@ -169,12 +168,19 @@ class SFLDT(ADiagnoser):
         assert fuzzy_spectra.shape == self.spectra.shape, f"The new fuzzy spectra's shape {fuzzy_spectra.shape} does not match the original spectra's shape {self.spectra.shape}"
         
         # Globally-normalize the values in the spectra
+        assert fuzzy_spectra.sum() > 0, f"No participations: \n{fuzzy_spectra}"
         fuzzy_spectra =  fuzzy_spectra / fuzzy_spectra.sum()
-        
-        assert not np.isnan(fuzzy_spectra).any(), "Fuzzy spectra contains NaN values"
-        assert ((0 <= fuzzy_spectra) & (fuzzy_spectra <= 1)).all(), f"Some of the components participation values are not in the range [0, 1] (Min: {fuzzy_spectra.min()}, Max: {fuzzy_spectra.max()}). Spectra: \n{fuzzy_spectra}"
-        
+                
         self.spectra = fuzzy_spectra
+    
+    def update_spectra_to_fuzzy(self
+    ) -> None:
+        """
+        Update all needed attributes to support the fuzzy participation spectra
+        """
+        if self.use_shap_contribution:
+            assert self.group_feature_nodes, "Cannot use SHAP contributions without feature components"
+            self.combine_shap_contributions()
 
     def fill_spectra_and_error_vector(self, 
                                       X: pd.DataFrame, 
@@ -204,14 +210,20 @@ class SFLDT(ADiagnoser):
             self.path_tests_indices[tuple(test_participation_vector)].append(test_index)
         if self.group_feature_nodes:
             self.update_spectra_to_feature_components()
-        if self.use_fuzzy_participation:
+        if self.is_participation_fuzzy:
             self.update_spectra_to_fuzzy()
-        else:
-            assert np.isin(self.spectra, [0, 1]).all(), "The spectra isn't binary while use_fuzzy_participation set to False"
         if self.is_error_fuzzy:
             self.update_error_vector_to_fuzzy()
+        
+        if self.is_participation_fuzzy:
+            assert ((0 <= self.spectra) & (self.spectra <= 1)).all(), f"Participation spectra suppose to be fuzzy, while some of the components participation values are not in the range [0, 1] (Min: {self.spectra.min()}, Max: {self.spectra.max()})."
         else:
-            assert np.isin(self.error_vector, [0, 1]).all(), "The error vector isn't binary while both self.combine_prior_confidence and self.aggregate_tests set to False"
+            assert np.isin(self.spectra, [0, 1]).all(), f"The spectra isn't binary while suppose to be (values: {np.unique(self.spectra)})"
+
+        if self.is_error_fuzzy:
+            assert ((0 <= self.error_vector) & (self.error_vector <= 1)).all(), f"Error vector suppose to be fuzzy, while some of the tests results not in the range [0, 1] (Min: {self.error_vector.min()}, Max: {self.error_vector.max()})."
+        else:
+            assert np.isin(self.error_vector, [0, 1]).all(), f"The error vector isn't binary while suppose to be (values: {np.unique(self.error_vector)})"
         
     def convert_features_diagnosis_to_nodes_diagnosis(self,
                                                       features_diagnosis: list[int]
@@ -344,7 +356,7 @@ class SFLDT(ADiagnoser):
         Returns:
             The relevant similarity function
         """
-        are_continuous = self.use_fuzzy_participation, self.is_error_fuzzy
+        are_continuous = self.is_participation_fuzzy, self.is_error_fuzzy
         if all(are_continuous): # both continuous
             if self.tests_count < 2:    # not enough samples for correlation measure
                 return self.get_cosine_similarity

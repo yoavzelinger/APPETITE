@@ -1,3 +1,4 @@
+print("Initializing")
 import sys
 from argparse import ArgumentParser
 import os

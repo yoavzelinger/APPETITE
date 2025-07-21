@@ -167,9 +167,14 @@ class SFLDT(ADiagnoser):
         fuzzy_spectra = weighted_shap_values.sum(axis=2).T
         assert fuzzy_spectra.shape == self.spectra.shape, f"The new fuzzy spectra's shape {fuzzy_spectra.shape} does not match the original spectra's shape {self.spectra.shape}"
         
+        total_participation_sum = fuzzy_spectra.sum()
+        if not total_participation_sum:
+            # Constant classifications - cannot use fuzzy participation
+            self.is_participation_fuzzy = False
+            return
+        
         # Globally-normalize the values in the spectra
-        assert fuzzy_spectra.sum() > 0, f"No participations: \n{fuzzy_spectra}"
-        fuzzy_spectra =  fuzzy_spectra / fuzzy_spectra.sum()
+        fuzzy_spectra =  fuzzy_spectra / total_participation_sum
                 
         self.spectra = fuzzy_spectra
     

@@ -33,9 +33,9 @@ def get_barinel_diagnoses(spectra: np.ndarray,
     spectra = np.concatenate((spectra.T, error_vector[:, None]), axis=1)
     
     diagnoses = get_candidates(spectra.tolist(), error_threshold=error_threshold)
-    # if not diagnoses and candidates_spectra is not None:
-    #     candidates_spectra = np.concatenate((candidates_spectra.T, error_vector[:, None]), axis=1)
-    #     diagnoses = get_candidates(candidates_spectra.tolist(), error_threshold=error_threshold)
+    if not diagnoses and candidates_spectra is not None:
+        candidates_spectra = np.concatenate((candidates_spectra.T, error_vector[:, None]), axis=1)
+        diagnoses = get_candidates(candidates_spectra.tolist(), error_threshold=error_threshold)
     assert diagnoses, "No candidate diagnoses found"
     
     diagnoses = list(map(np.array, diagnoses))

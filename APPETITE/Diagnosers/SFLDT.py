@@ -168,15 +168,8 @@ class SFLDT(ADiagnoser):
         fuzzy_spectra = weighted_shap_values.sum(axis=2).T
         assert fuzzy_spectra.shape == self.spectra.shape, f"The new fuzzy spectra's shape {fuzzy_spectra.shape} does not match the original spectra's shape {self.spectra.shape}"
         
-        # Min-max normalize each test values
-        tests_min_participations, tests_max_participations = fuzzy_spectra.min(axis=1, keepdims=True), fuzzy_spectra.max(axis=1, keepdims=True)
-        tests_participation_differences = tests_max_participations - tests_min_participations
-        non_constant_rows = tests_participation_differences != 0
-        fuzzy_spectra[non_constant_rows[:, 0]] = (
-            (fuzzy_spectra[non_constant_rows[:, 0]] - tests_min_participations[non_constant_rows[:, 0]]) /
-            tests_participation_differences[non_constant_rows[:, 0]]
-        )
-        fuzzy_spectra[np.logical_not(non_constant_rows[:, 0])] = 0.5
+        # Globally-normalize the values in the spectra
+        fuzzy_spectra =  fuzzy_spectra / fuzzy_spectra.sum()
         
         assert ((0 <= fuzzy_spectra) & (fuzzy_spectra <= 1)).all(), f"Some of the components participation values are not in the range [0, 1] (Min: {fuzzy_spectra.min()}, Max: {fuzzy_spectra.max()}). Spectra: \n{fuzzy_spectra}"
         

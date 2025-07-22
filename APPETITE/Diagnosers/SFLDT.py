@@ -157,7 +157,7 @@ class SFLDT(ADiagnoser):
         
         samples_predicted_probabilities = self.mapped_tree.sklearn_tree_model.predict_proba(self.X_after)   # shape: (|tests|, |classes|)
         samples_predicted_probabilities = (samples_predicted_probabilities == samples_predicted_probabilities.max(axis=1, keepdims=True)).astype(int)
-        samples_positive_shap_values = np.maximum(self.explainer.shap_values(self.X_after), 0)  # shape: (|tests|, |FEATURES!|, |classes)
+        samples_positive_shap_values = np.maximum(self.explainer.shap_values(self.X_after), constants.EPSILON)  # shape: (|tests|, |FEATURES!|, |classes)
         tree_features_locations = [column_index for column_index, feature in enumerate(self.X_after.columns) if feature in self.mapped_tree.tree_features_set]
         samples_positive_shap_values = samples_positive_shap_values[:, tree_features_locations, :]  # shape: (|tests|, |COMPONENTS!|, |classes)
         weighted_shap_values = samples_positive_shap_values * samples_predicted_probabilities[:, None, :]  # shape: (|tests|, |features=components|, |classes)

@@ -174,7 +174,7 @@ class SFLDT(ADiagnoser):
         # Globally-normalize the values in the spectra
         fuzzy_spectra =  fuzzy_spectra / total_participation_sum
                 
-        self.spectra = fuzzy_spectra
+        self.spectra = fuzzy_spectra * self.spectra
     
     def update_spectra_to_fuzzy(self
     ) -> None:

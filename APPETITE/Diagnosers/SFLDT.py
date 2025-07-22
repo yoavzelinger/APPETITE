@@ -165,13 +165,20 @@ class SFLDT(ADiagnoser):
         fuzzy_spectra = weighted_shap_values.sum(axis=2).T
         assert fuzzy_spectra.shape == self.spectra.shape, f"The new fuzzy spectra's shape {fuzzy_spectra.shape} does not match the original spectra's shape {self.spectra.shape}"
         
-        if not fuzzy_spectra.sum():
-            # Constant classifications - cannot use fuzzy participation
+        if fuzzy_spectra.sum() in [0, fuzzy_spectra.size]:
+            # Constant value for all spectra - cannot use fuzzy participation
             self.is_participation_fuzzy = False
             return
-        
+          
+        tests_min_participations, tests_max_participations = np.min(fuzzy_spectra, axis=0), np.max(fuzzy_spectra, axis=0)
+        with np.errstate(invalid='ignore', divide='ignore'):
+            fuzzy_spectra = (fuzzy_spectra - tests_min_participations) / (tests_max_participations - tests_min_participations)
+        fuzzy_spectra[np.isnan(fuzzy_spectra)] = np.nanmean(fuzzy_spectra)
+        assert not np.isnan(fuzzy_spectra).any(), f"The fuzzy spectra contains nan values. Global mean: {np.nanmean(fuzzy_spectra)}"
+
         fuzzy_spectra[fuzzy_spectra == 0] = constants.EPSILON
-                        
+
+        # Including the shap contributions only for the paths participations                        
         self.spectra = fuzzy_spectra * self.spectra
     
     def update_spectra_to_fuzzy(self

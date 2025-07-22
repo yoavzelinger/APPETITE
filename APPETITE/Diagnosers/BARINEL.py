@@ -72,7 +72,6 @@ class BARINEL(SFLDT):
         """
         self.components_prior_probabilities = None
         self.threshold = 1
-        self.candidates_spectra = None
         super().__init__(mapped_tree, X, y, **kwargs)
 
     def update_threshold(self
@@ -83,14 +82,6 @@ class BARINEL(SFLDT):
         error_average, error_std = self.error_vector.mean(), self.error_vector.std()
         self.threshold = error_average + constants.BARINEL_THRESHOLD_ABOVE_STD_RATE * error_std
         self.threshold = min(self.threshold, max(self.error_vector)) # decrease to catch at least one error
-
-    def shrink_spectra_based_on_paths(self,
-                                      to_shrink_spectra: np.ndarray,
-                                      paths_example_test_indices: list[int]
-    ) -> np.ndarray:
-        if self.candidates_spectra is not None:
-            self.candidates_spectra = super().shrink_spectra_based_on_paths(self.candidates_spectra, paths_example_test_indices)
-        return super().shrink_spectra_based_on_paths(to_shrink_spectra, paths_example_test_indices)
 
     def update_error_vector_to_fuzzy(self
     ) -> None:
@@ -104,14 +95,6 @@ class BARINEL(SFLDT):
                                          target_name: str = "target"
     ) -> None:
         pass
-
-    def update_spectra_to_fuzzy(self) -> None:
-        """
-        Wrapper for the SFLDT implementation.
-        Store the spectra in additional variable before changed.
-        """
-        self.candidates_spectra = self.spectra
-        super().update_spectra_to_fuzzy()
 
     def combine_stat_diagnoses(self
      ) -> None:
@@ -149,6 +132,6 @@ class BARINEL(SFLDT):
         if self.diagnoses is None:
             if self.stat:
                 self.combine_stat_diagnoses()
-            self.diagnoses = get_barinel_diagnoses(spectra=self.spectra, error_vector=self.error_vector, components_prior_probabilities=self.components_prior_probabilities, error_threshold=self.threshold, candidates_spectra=self.candidates_spectra)
+            self.diagnoses = get_barinel_diagnoses(spectra=self.spectra, error_vector=self.error_vector, components_prior_probabilities=self.components_prior_probabilities, error_threshold=self.threshold)
         return super().get_diagnoses(retrieve_ranks, retrieve_spectra_indices)
         

@@ -7,7 +7,8 @@ from APPETITE import Constants as constants
 def get_total_likelihood(diagnosis: np.ndarray,
                          healthiness_probabilities: np.ndarray,
                          spectrum: np.ndarray,
-                         fuzzy_error_vector: np.ndarray
+                         fuzzy_error_vector: np.ndarray,
+                         use_components_participation: bool = True
  ) -> float:
     """
     Get the likelihood of the diagnosis.
@@ -17,19 +18,21 @@ def get_total_likelihood(diagnosis: np.ndarray,
     healthiness_probabilities (ndarray): The healthiness probabilities.
     spectrum (ndarray): The spectrum.
     fuzzy_error_vector (ndarray): The fuzzy error vector.
+    use_components_participation (bool): Whether to include the components participations in the likelihood calculation.
 
     Returns:
     float: The likelihood of the diagnosis.
     """
     def get_single_test_likelihood(participated_components: np.ndarray,
                                    participation_vector: np.ndarray,
-                                    fuzzy_error: float
+                                   fuzzy_error: float
         ) -> float:
         """"
         Get the likelihood of the single test.
         """
         transaction_goodness = healthiness_probabilities[participated_components].prod()
-        transaction_goodness *= participation_vector[participated_components].prod()
+        if use_components_participation:
+            transaction_goodness *= participation_vector[participated_components].prod()
         return fuzzy_error * (1 - transaction_goodness) + (1 - fuzzy_error) * transaction_goodness
     get_diagnosis_participated_components = lambda test_participation_vector: diagnosis[test_participation_vector[diagnosis] > 0]
     tests_diagnosis_components = map(get_diagnosis_participated_components, spectrum)

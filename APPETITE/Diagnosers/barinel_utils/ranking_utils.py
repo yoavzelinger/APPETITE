@@ -37,7 +37,7 @@ def get_total_likelihood(diagnosis: np.ndarray,
     get_diagnosis_participated_components = lambda test_participation_vector: diagnosis[test_participation_vector[diagnosis] > 0]
     tests_diagnosis_components = map(get_diagnosis_participated_components, spectrum)
     tests_likelihoods = map(get_single_test_likelihood, tests_diagnosis_components, spectrum, fuzzy_error_vector)
-    return -prod(tests_likelihoods) # Maximize the likelihood
+    return prod(tests_likelihoods)
 
 def rank_diagnosis(diagnosis: np.ndarray,
                    spectrum: np.ndarray,
@@ -62,7 +62,7 @@ def rank_diagnosis(diagnosis: np.ndarray,
     prior_probability = components_prior_probabilities.prod()
     healthiness_probabilities = np.full(components_count, 0.5)
     healthiness_bounds = [(0, 1) for _ in range(components_count)]
-    likelihood_objective_function = lambda healthiness_probabilities: get_total_likelihood(diagnosis, healthiness_probabilities, spectrum, fuzzy_error_vector)
+    likelihood_objective_function = lambda healthiness_probabilities: -get_total_likelihood(diagnosis, healthiness_probabilities, spectrum, fuzzy_error_vector)  # Maximize the likelihood
     mle_model = minimize(likelihood_objective_function, healthiness_probabilities, bounds=healthiness_bounds, options={"maxiter": 1000})
     # Get maximum likelihood estimation
     maximum_likelihood = -mle_model.fun

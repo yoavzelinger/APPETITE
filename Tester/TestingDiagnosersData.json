@@ -6,6 +6,13 @@
         }
     },
     {
+        "output_name": "BARINEL (No STAT)",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": false
+        }
+    },
+    {
         "output_name": "BARINEL",
         "class_name": "BARINEL",
         "parameters": {

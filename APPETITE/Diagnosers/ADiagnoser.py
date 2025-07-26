@@ -1,7 +1,7 @@
 import pandas as pd
 from abc import ABC, abstractmethod
 
-from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from APPETITE.MappedDecisionTree import MappedDecisionTree
 
 class ADiagnoser(ABC):
     def __init__(self, 

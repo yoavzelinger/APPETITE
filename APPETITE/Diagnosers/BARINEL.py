@@ -1,7 +1,7 @@
 import numpy as np
 
 from APPETITE import Constants as constants
-from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from APPETITE.MappedDecisionTree import MappedDecisionTree
 
 from .ADiagnoser import *
 from .SFLDT import SFLDT

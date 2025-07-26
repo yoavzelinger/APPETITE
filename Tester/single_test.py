@@ -9,6 +9,7 @@ from APPETITE import *
 
 import Tester.TesterConstants as tester_constants
 from Tester.DataManagementTools import *
+from Tester.DecisionTreeClassifierBuilder import build_tree
 from Tester.metrics import get_accuracy, get_wasted_effort, get_correctly_identified_ratio
 
 def get_dataset(directory: str,

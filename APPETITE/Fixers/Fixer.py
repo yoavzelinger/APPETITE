@@ -3,7 +3,7 @@ import numpy as np
 from typing import Generator
 from copy import deepcopy
 
-from APPETITE.DecisionTreeTools.MappedDecisionTree import MappedDecisionTree
+from APPETITE.MappedDecisionTree import MappedDecisionTree
 
 from APPETITE.Diagnosers import *
 

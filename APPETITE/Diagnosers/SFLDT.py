@@ -319,9 +319,6 @@ class SFLDT(ADiagnoser):
             Returns:
                 float: The correlation similarity between the vectors.
             """
-            # check if the participation vector is all 0
-            if all(np.isclose(participation_vector, participation_vector[0])):  # constant participation, cannot calculate correlation, using cosine similarity instead
-                return self.get_cosine_similarity(participation_vector, error_vector)
             return pearson_correlation(participation_vector, error_vector)[0]
 
         def get_BCE_similarity(participation_vector: np.ndarray, error_vector: np.ndarray) -> float:
@@ -361,8 +358,14 @@ class SFLDT(ADiagnoser):
     
         # Get the relevant function
         are_continuous = self.is_participation_fuzzy, self.is_error_fuzzy
+        is_constant_vector = lambda vector: np.all(np.isclose(vector, vector[0]))
         if all(are_continuous): # both continuous
+            # Check whether correlation test can be performed. For correlation test we need at least 2 samples and that no vector will be constant (either participation or error)
             if self.tests_count < 2:    # not enough samples for correlation measure
+                return get_cosine_similarity
+            is_any_participation_vector_constant, is_error_vector_constant = any(map(is_constant_vector, self.spectra)), is_constant_vector(self.error_vector)
+            if any((is_any_participation_vector_constant, is_error_vector_constant)):
+                # constant participation, cannot calculate correlation, using cosine similarity instead
                 return get_cosine_similarity
             return get_correlation
         if any(are_continuous): # one binary one continuous

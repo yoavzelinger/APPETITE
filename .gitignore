@@ -13,6 +13,5 @@
 tests.ipynb
 
 # temporary files
-# /data/results/*old*
-/data/results/*temp*
+results/*temp*
 **/Shaked Code/

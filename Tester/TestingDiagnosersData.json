@@ -38,5 +38,15 @@
             "group_feature_nodes": true,
             "use_shap_contribution": true
         }
+    },
+    {
+        "output_name": "SHAP_Participation-Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "aggregate_tests": true,
+            "combine_prior_confidence": true,
+            "group_feature_nodes": true,
+            "use_shap_contribution": true
+        }
     }
 ]

@@ -159,8 +159,12 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
         except Exception as e:
             exception_class = e.__class__.__name__
             diagnoser_info = f"(diagnoser: {diagnoser_class_name} - {diagnoser_output_name})" if 'diagnoser_output_name' in locals() else ""
-            yield Exception(f"{exception_class} in {drift_description}, after window size: {dataset.after_window_size} {diagnoser_info} :\n "
-                            f"{''.join(traceback.format_exception(type(e), e, e.__traceback__))}")
+            scenario_description = f"{drift_description}, after window size: {dataset.after_window_size} {diagnoser_info}"
+            yield Exception(f"{exception_class} in {scenario_description}:\n "
+                            f"{e}:\n "
+                            f"{''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
+                            f"Scenario: {scenario_description}"
+                            )
         
 def get_example_mapped_tree(directory=tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name)

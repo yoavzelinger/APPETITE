@@ -34,8 +34,6 @@ class SFLDT(ADiagnoser):
         group_feature_nodes (bool): Whether to use feature components.
         combine_prior_confidence (bool): Whether to combine the confidence of the tests in the error vector calculation.
         """
-        if group_feature_nodes:
-            assert not merge_singular_diagnoses, "Cannot merge singular diagnoses with multiple fault diagnoser"
         super().__init__(mapped_tree, X, y)
         
         self.components_count = mapped_tree.node_count

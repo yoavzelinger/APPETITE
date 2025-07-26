@@ -106,6 +106,9 @@ class SFLDT(ADiagnoser):
     def add_target_to_feature_components(self,
                                          target_name: str = "target"
     ) -> None:
+        if self.use_shap_contribution:
+            # cannot include shap contribution with with the target as a feature
+            return
         target_feature_index = len(self.feature_indices_dict)
         self.feature_indices_dict[target_name] = target_feature_index
         target_nodes = [node_spectra_index for node_spectra_index, node in self.mapped_tree.spectra_dict.items() if node.is_terminal()]

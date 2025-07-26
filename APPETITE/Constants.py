@@ -5,9 +5,13 @@ EPSILON = float_info.epsilon
 RANDOM_STATE = 7
 
 BARINEL_COMPONENT_PRIOR_PROBABILITY = 1 / 1000
+
+# BARINEL ranking v1
+BARINEL_GRADIENT_STEP = 0.5
+
 # Choose the BARINEL ranking algorithm
 # V1: discrete error ranking algorithm taken from DDIFMAS
-# V2: new ranking algorithm, supporting fuzzy error and participation matrix
+# V2: new ranking algorithm, supporting fuzzy error and participation matrix, and custom prior probabilities
 BARINEL_RANKING_ALGORITHM_VERSION = 2
 
 GRADIENT_STEP = 0.5

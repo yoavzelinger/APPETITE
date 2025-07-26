@@ -27,7 +27,7 @@ def rank_diagnoses(spectrum, diagnoses, components_prior_probabilities=None):
         ndarray: The ranked diagnoses.
     """
     if constants.BARINEL_RANKING_ALGORITHM_VERSION == 1:
-        return _rank_diagnoses_v1(spectrum, diagnoses, constants.GRADIENT_STEP)
+        return _rank_diagnoses_v1(spectrum, diagnoses, constants.BARINEL_GRADIENT_STEP)
     return _rank_diagnoses_v2(spectrum, diagnoses, components_prior_probabilities)
 
 

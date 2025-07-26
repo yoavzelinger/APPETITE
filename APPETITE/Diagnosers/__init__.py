@@ -30,7 +30,6 @@ def _load_diagnoser_classes():
                     DIAGNOSER_CLASSES_DICT[cls.__name__] = cls
 
 _load_diagnoser_classes()
-print(DIAGNOSER_CLASSES_DICT)
 
 def get_diagnoser(diagnoser_name: str
  ) -> ADiagnoser:

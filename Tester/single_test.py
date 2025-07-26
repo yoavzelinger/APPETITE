@@ -130,9 +130,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
                 tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: ", ".join(drifted_features_types),
                 tester_constants.DRIFT_DESCRIPTION_COLUMN_NAME: drift_description,
                 tester_constants.AFTER_ACCURACY_DECREASE_COLUMN_NAME: drifted_test_accuracy * 100,
-                f"{tester_constants.AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": after_retrained_accuracy * 100,
                 f"{tester_constants.AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": after_retrained_accuracy_bump * 100,
-                f"{tester_constants.BEFORE_AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": before_after_retrained_accuracy * 100,
                 f"{tester_constants.BEFORE_AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": before_after_retrained_accuracy_bump * 100
             }
 
@@ -152,7 +150,6 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
                     f"{diagnoser_output_name} {tester_constants.DIAGNOSES_NAME_SUFFIX}": ", ".join(map(str, diagnoses)),
                     f"{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}": wasted_effort,
                     f"{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}": correctly_identified * 100,
-                    f"{diagnoser_output_name} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
                     f"{diagnoser_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": test_accuracy_bump * 100
                 })
             yield current_results_dict

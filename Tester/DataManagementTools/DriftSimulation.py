@@ -5,7 +5,7 @@ from typing import Callable, Generator
 
 from pandas.api.types import is_numeric_dtype
 
-from APPETITE import Constants as constants
+from Tester import TesterConstants as tester_constants
 
 from . import lazy_utils
 
@@ -52,7 +52,7 @@ def _numeric_drift_generator(
     Return:
         Generator[tuple[Series, str], None, None]: A generator of all drifts in the feature and the description of the drift.
     """
-    assert severity_level in constants.NUMERIC_DRIFT_SEVERITIES, f"Severity level {severity_level} is not available. Please use one of {constants.NUMERIC_DRIFT_SEVERITIES.keys()}"
+    assert severity_level in tester_constants.NUMERIC_DRIFT_SEVERITIES, f"Severity level {severity_level} is not available. Please use one of {tester_constants.NUMERIC_DRIFT_SEVERITIES.keys()}"
     feature_std = column.std()
 
     #   Nested function
@@ -71,7 +71,7 @@ def _numeric_drift_generator(
         return (column + k * feature_std, f"NumericFeature[{column.name};{'+' if k >= 0 else ''}{k}std]")
     
     #   Using it in iterations
-    for k in constants.NUMERIC_DRIFT_SEVERITIES[severity_level]:
+    for k in tester_constants.NUMERIC_DRIFT_SEVERITIES[severity_level]:
         yield simulate_numeric_drift_of_size_k(k)
 
 
@@ -91,7 +91,7 @@ def _categorical_drift_generator(
     Returns:
         Generator[tuple[Series, str], None, None]: A generator of all drifts in the feature and the description of the drift.
     """
-    assert severity_level in constants.CATEGORICAL_DRIFT_SEVERITIES, f"Severity level {severity_level} is not available. Please use one of {constants.CATEGORICAL_DRIFT_SEVERITIES.keys()}"
+    assert severity_level in tester_constants.CATEGORICAL_DRIFT_SEVERITIES, f"Severity level {severity_level} is not available. Please use one of {tester_constants.CATEGORICAL_DRIFT_SEVERITIES.keys()}"
     unique_values = column.unique()
     unique_values.sort()
     
@@ -131,7 +131,7 @@ def _categorical_drift_generator(
             remaining_indices = column != fixed_value
             remaining_count = remaining_indices.values.sum()
             remaining_indices = column[remaining_indices].index.values
-            random.seed(constants.RANDOM_STATE)
+            random.seed(tester_constants.RANDOM_STATE)
             fixed_indices = random.choices(remaining_indices, k=int(remaining_count * p))
             drifted_column[fixed_indices] = fixed_value
 
@@ -144,7 +144,7 @@ def _categorical_drift_generator(
         )
     
     # Using the intermediate generator
-    severities = constants.CATEGORICAL_DRIFT_SEVERITIES[severity_level]
+    severities = tester_constants.CATEGORICAL_DRIFT_SEVERITIES[severity_level]
     for feature_value in unique_values:
         for drifted_column in categorical_drift_in_value_generator(feature_value, severities):
             yield drifted_column
@@ -173,7 +173,7 @@ def _get_feature_generator_function(
 def multiple_features_concept_drift_generator(
         original_df: pd.DataFrame, 
         drifting_features: dict[str, str],
-        severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
+        severity_levels: tuple = tester_constants.DEFAULT_GENERATED_SEVERITY_LEVELS
  ) -> Generator[tuple[pd.DataFrame, int, str], None, None]:
     """
     Generate all possible concept drifts in a given list of features.
@@ -206,7 +206,7 @@ def single_feature_concept_drift_generator(
         data: pd.DataFrame | pd.Series, 
         feature: str = "",
         feature_type: str = None,
-        severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
+        severity_levels: tuple = tester_constants.DEFAULT_GENERATED_SEVERITY_LEVELS
  ) -> Generator[tuple[pd.DataFrame, int, str], None, None]:
     """
     Generate all possible concept drifts in a given feature.

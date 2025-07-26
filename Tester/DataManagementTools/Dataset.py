@@ -6,7 +6,7 @@ import math
 
 from typing import Generator
 
-from APPETITE import Constants as constants
+import Tester.TesterConstants as tester_constants
 
 from .DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
@@ -15,10 +15,10 @@ class Dataset:
 
     def __init__(self, 
                  source: str | pd.DataFrame,
-                 size: int | tuple[float] = constants.PROPORTIONS_TUPLE,
-                 after_window_size: float = constants.AFTER_WINDOW_SIZE,
+                 size: int | tuple[float] = tester_constants.PROPORTIONS_TUPLE,
+                 after_window_size: float = tester_constants.AFTER_WINDOW_SIZE,
                  to_shuffle: bool = True,
-                 one_hot_encoding: bool = constants.one_hot_encoding
+                 one_hot_encoding: bool = tester_constants.one_hot_encoding
     ):
         """
         source: str or DataFrame
@@ -74,12 +74,12 @@ class Dataset:
         self.data[self.target_name] = self.data[self.target_name].cat.codes
 
         if to_shuffle:  # shuffle data - same shuffle always
-            self.data = self.data.sample(frac=1, random_state=constants.RANDOM_STATE).reset_index(drop=True)
+            self.data = self.data.sample(frac=1, random_state=tester_constants.RANDOM_STATE).reset_index(drop=True)
 
         self.data.attrs["name"] = self.name
 
         n_samples = len(self.data)
-        before_proportion, after_proportion, test_proportion = constants.BEFORE_PROPORTION, constants.AFTER_PROPORTION, constants.TEST_PROPORTION
+        before_proportion, after_proportion, test_proportion = tester_constants.BEFORE_PROPORTION, tester_constants.AFTER_PROPORTION, tester_constants.TEST_PROPORTION
         if isinstance(size, int):   # Concept size
             self.before_size = size
             before_proportion = 1.0 * self.before_size / n_samples
@@ -111,7 +111,7 @@ class Dataset:
         self.update_total_after_size()
 
     def update_total_after_size(self) -> None:
-        self.total_after_size = math.ceil(max(self.after_size * self.after_window_size, 1 / constants.VALIDATION_SIZE))
+        self.total_after_size = math.ceil(max(self.after_size * self.after_window_size, 1 / tester_constants.VALIDATION_SIZE))
 
     def split_features_targets(self, 
                                data: pd.DataFrame
@@ -154,7 +154,7 @@ class Dataset:
     def _drift_data_generator(self,
                    data: pd.DataFrame,
                    drift_features: str | list[str],
-                   severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
+                   severity_levels: tuple = tester_constants.DEFAULT_GENERATED_SEVERITY_LEVELS
      ) -> Generator[pd.DataFrame, None, None]:
         """
         Create a drift in the data
@@ -179,7 +179,7 @@ class Dataset:
     def drift_generator(self,
                         drift_features: str | set[str],
                         partition: str = "after",
-                        severity_levels: tuple = constants.DEFAULT_GENERATED_SEVERITY_LEVELS
+                        severity_levels: tuple = tester_constants.DEFAULT_GENERATED_SEVERITY_LEVELS
      ) -> Generator[tuple[tuple[pd.DataFrame, pd.Series], str, list[str]], None, None]:
         """
         Drift generator for a specific partition

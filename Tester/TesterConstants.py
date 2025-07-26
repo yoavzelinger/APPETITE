@@ -4,6 +4,42 @@ from datetime import datetime
 
 import APPETITE.Constants as constants
 
+RANDOM_STATE = constants.RANDOM_STATE
+
+# Dataset partitions sizes
+BEFORE_PROPORTION = 0.7
+AFTER_PROPORTION = 0.1
+TEST_PROPORTION = 0.2
+PROPORTIONS_TUPLE = (BEFORE_PROPORTION, AFTER_PROPORTION, TEST_PROPORTION)
+AFTER_WINDOW_SIZE = 1
+
+VALIDATION_SIZE = 0.2
+
+# one hot encode categorical features to modify decision trees creation
+one_hot_encoding = True
+
+# Drift severity levels
+NUMERIC_DRIFT_SEVERITIES = {
+    1: (-0.5, 0.5),
+    2: (-1, 1),
+    3: (-2, 2)
+}
+CATEGORICAL_DRIFT_SEVERITIES = {
+    1: (0.3, ),
+    2: (0.5, 0.7),
+    3: (0.9, )
+}
+DEFAULT_GENERATED_SEVERITY_LEVELS = (2, )
+
+# Grid search parameters
+CROSS_VALIDATION_SPLIT_COUNT = 5
+_CRITERIONS = ["gini", "entropy"]
+_MAX_LEAF_NODES = [10, 20, 30]
+PARAM_GRID = {
+    "criterion": _CRITERIONS,
+    "max_leaf_nodes": _MAX_LEAF_NODES
+}
+
 MINIMUM_ORIGINAL_ACCURACY = 0.75
 MINIMUM_DRIFT_ACCURACY_DROP = 0.1
 

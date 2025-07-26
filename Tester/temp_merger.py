@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 
 import pandas as pd
 
-from Tester import tester_constants
+import Tester.TesterConstants as tester_constants
 
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-i", "--input", type=str, help=f"Input folder prefix (after the temp), default is None ({tester_constants.TEMP_OUTPUT_DIRECTORY_NAME})", default="")

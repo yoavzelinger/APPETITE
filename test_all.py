@@ -140,3 +140,5 @@ for baseline_retrainer_name in tester_constants.BASELINE_RETRAINERS_OUTPUT_NAMES
 print()
 for diagnoser_output_name in tester_constants.diagnosers_output_names:
     print(f"{diagnoser_output_name}: {raw_results[f'{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean():.3f}; {raw_results[f'{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}'].mean():.2f}%; {raw_results[f'{diagnoser_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean():.2f}%")
+
+print(f"Results saved to {results_file_path}")

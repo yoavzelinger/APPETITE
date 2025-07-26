@@ -106,8 +106,7 @@ class SFLDT(ADiagnoser):
     def add_target_to_feature_components(self,
                                          target_name: str = "target"
     ) -> None:
-        if self.use_shap_contribution:
-            # cannot include shap contribution with with the target as a feature
+        if any(self.is_participation_fuzzy, self.is_error_fuzzy):
             return
         target_feature_index = len(self.feature_indices_dict)
         self.feature_indices_dict[target_name] = target_feature_index

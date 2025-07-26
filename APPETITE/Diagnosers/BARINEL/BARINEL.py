@@ -1,12 +1,12 @@
 import numpy as np
+import pandas as pd
 
 from APPETITE import Constants as constants
 from APPETITE.MappedDecisionTree import MappedDecisionTree
 
-from .ADiagnoser import *
-from .SFLDT import SFLDT
+from APPETITE.Diagnosers.SFLDT import SFLDT
 
-from .barinel_utils import *
+from .utils import *
 
 def get_barinel_diagnoses(spectra: np.ndarray,
                           error_vector: np.ndarray,

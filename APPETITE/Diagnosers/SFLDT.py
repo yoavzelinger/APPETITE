@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from collections import defaultdict
 
 from sklearn.metrics.pairwise import cosine_similarity
@@ -6,8 +7,9 @@ from scipy.stats import pearsonr as pearson_correlation
 from shap import TreeExplainer
 
 from APPETITE import Constants as constants
+from APPETITE.MappedDecisionTree import MappedDecisionTree
 
-from .ADiagnoser import *
+from .ADiagnoser import ADiagnoser
 from .STAT import STAT
 
 class SFLDT(ADiagnoser):

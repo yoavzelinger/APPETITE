@@ -8,17 +8,29 @@ DIAGNOSER_CLASSES_DICT = {}
 
 def _load_diagnoser_classes():
     """
-    Load all classes in the current module that inherit from ADiagnoser.
+    Load all classes in this package and subpackages that inherit from ADiagnoser.
     """
-    for module_name, _ in filter(lambda filename_splitted: len(filename_splitted) == 2 and filename_splitted[1] == "py" and filename_splitted[0] != "__init__",
-                                 map(lambda filename: filename.split('.'),
-                                     os.listdir(os.path.dirname(__file__))
-                                     )):
-        module = importlib.import_module(f".{module_name}", package=__name__)
-        for _, module_class in inspect.getmembers(module, lambda module_class: inspect.isclass(module_class) and issubclass(module_class, ADiagnoser) and module_class is not ADiagnoser):
-            DIAGNOSER_CLASSES_DICT[module_class.__name__] = module_class
-        
+    base_dir = os.path.dirname(__file__)
+    base_pkg = __name__
+
+    for dirpath, _, filenames in os.walk(base_dir):
+        for filename in filenames:
+            if filename.endswith(".py") and filename != "__init__.py":
+                # Build module path
+                full_path = os.path.join(dirpath, filename)
+                rel_path = os.path.relpath(full_path, base_dir)
+                module_name = rel_path[:-3].replace(os.sep, '.')
+                full_module_name = f"{base_pkg}.{module_name}"
+
+                module = importlib.import_module(full_module_name)
+                for _, cls in inspect.getmembers(
+                    module,
+                    lambda c: inspect.isclass(c) and issubclass(c, ADiagnoser) and c is not ADiagnoser
+                ):
+                    DIAGNOSER_CLASSES_DICT[cls.__name__] = cls
+
 _load_diagnoser_classes()
+print(DIAGNOSER_CLASSES_DICT)
 
 def get_diagnoser(diagnoser_name: str
  ) -> ADiagnoser:

@@ -76,12 +76,12 @@ def rank_diagnoses(spectrum: np.ndarray,
     Rank the diagnoses.
 
     Parameters:
-    spectrum (ndarray): The spectrum.
-    diagnoses (list[ndarray]): The diagnoses.
-    fuzzy_error_vector (ndarray): The fuzzy error vector.
+        spectrum (ndarray): The spectrum.
+        diagnoses (list[ndarray]): The diagnoses.
+        fuzzy_error_vector (ndarray): The fuzzy error vector.
 
     Returns:
-    list[tuple[ndarray, float]]: The ranked diagnoses.
+        list[tuple[ndarray, float]]: The ranked diagnoses.
     """
     spectrum, fuzzy_error_vector = spectrum[:, :-1], spectrum[:, -1]
     if components_prior_probabilities is None:

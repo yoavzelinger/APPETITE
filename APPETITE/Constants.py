@@ -42,7 +42,7 @@ BARINEL_COMPONENT_PRIOR_PROBABILITY = 1 / 1000
 # Choose the BARINEL ranking algorithm
 # V1: discrete error ranking algorithm taken from DDIFMAS
 # V2: new ranking algorithm, supporting fuzzy error and participation matrix
-BARINEL_RANKING_ALGORITHM = "V2"
+BARINEL_RANKING_ALGORITHM_VERSION = 2
 
 GRADIENT_STEP = 0.5
 

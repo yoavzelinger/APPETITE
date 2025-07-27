@@ -6,23 +6,36 @@
         }
     },
     {
-        "output_name": "Feature_Components-SFLDT",
-        "class_name": "SFLDT",
+        "output_name": "BARINEL (No STAT)",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_stat": false
+        }
+    },
+    {
+        "output_name": "BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+        }
+    },
+    {
+        "output_name": "Feature_Components-BARINEL",
+        "class_name": "BARINEL",
         "parameters": {
             "group_feature_nodes": true
         }
     },
     {
-        "output_name": "SHAP_Participation-Feature_Components-SFLDT",
-        "class_name": "SFLDT",
+        "output_name": "SHAP_Participation-Feature_Components-BARINEL",
+        "class_name": "BARINEL",
         "parameters": {
             "group_feature_nodes": true,
             "use_shap_contribution": true
         }
     },
     {
-        "output_name": "Aggregated_Tests-SHAP_Participation-Feature_Components-SFLDT",
-        "class_name": "SFLDT",
+        "output_name": "Aggregated_Tests-SHAP_Participation-Feature_Components-BARINEL",
+        "class_name": "BARINEL",
         "parameters": {
             "group_feature_nodes": true,
             "use_shap_contribution": true,
@@ -30,8 +43,8 @@
         }
     },
     {
-        "output_name": "Prior_Confidence-Aggregated_Tests-SHAP_Participation-Feature_Components-SFLDT",
-        "class_name": "SFLDT",
+        "output_name": "Prior_Confidence-Aggregated_Tests-SHAP_Participation-Feature_Components-BARINEL",
+        "class_name": "BARINEL",
         "parameters": {
             "group_feature_nodes": true,
             "use_shap_contribution": true,

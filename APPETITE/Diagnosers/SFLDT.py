@@ -147,7 +147,6 @@ class SFLDT(ADiagnoser):
         Update the participation matrix to use the shap contributions. For now only relevant for feature components.
         The participations are calculated as the weighted average of the SHAP values of the features. The weights are based on the predicted probabilities of the samples.
         """
-        assert self.group_feature_nodes, "Fuzzy participation is currently supported only for feature components"
         explainer = TreeExplainer(self.mapped_tree.sklearn_tree_model)
         
         samples_predicted_probabilities = self.mapped_tree.sklearn_tree_model.predict_proba(self.X_after)   # shape: (|tests|, |classes|)

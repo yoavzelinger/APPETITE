@@ -48,7 +48,6 @@ class SFLDT(ADiagnoser):
         self.group_feature_nodes = group_feature_nodes
         self.use_shap_contribution = use_shap_contribution
         self.is_participation_fuzzy = self.use_shap_contribution
-        self.explainer = TreeExplainer(mapped_tree.sklearn_tree_model) if self.use_shap_contribution else None
         # Tests
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence
@@ -149,11 +148,11 @@ class SFLDT(ADiagnoser):
         The participations are calculated as the weighted average of the SHAP values of the features. The weights are based on the predicted probabilities of the samples.
         """
         assert self.group_feature_nodes, "Fuzzy participation is currently supported only for feature components"
-        assert self.explainer is not None, "Explainer is not initialized, cannot calculate fuzzy participation"
+        explainer = TreeExplainer(self.mapped_tree.sklearn_tree_model)
         
         samples_predicted_probabilities = self.mapped_tree.sklearn_tree_model.predict_proba(self.X_after)   # shape: (|tests|, |classes|)
         samples_predicted_probabilities = (samples_predicted_probabilities == samples_predicted_probabilities.max(axis=1, keepdims=True)).astype(int)
-        samples_positive_shap_values = np.maximum(self.explainer.shap_values(self.X_after), 0)  # shape: (|tests|, |FEATURES!|, |classes)
+        samples_positive_shap_values = np.maximum(explainer.shap_values(self.X_after), 0)  # shape: (|tests|, |FEATURES!|, |classes)
         tree_features_locations = [column_index for column_index, feature in enumerate(self.X_after.columns) if feature in self.mapped_tree.tree_features_set]
         samples_positive_shap_values = samples_positive_shap_values[:, tree_features_locations, :]  # shape: (|tests|, |COMPONENTS!|, |classes)
         weighted_shap_values = samples_positive_shap_values * samples_predicted_probabilities[:, None, :]  # shape: (|tests|, |features=components|, |classes)

@@ -16,7 +16,7 @@ AFTER_WINDOW_SIZE = 1
 VALIDATION_SIZE = 0.2
 
 # one hot encode categorical features to modify decision trees creation
-one_hot_encoding = True
+one_hot_encoding = False
 
 # Drift severity levels
 NUMERIC_DRIFT_SEVERITIES = {
@@ -29,7 +29,7 @@ CATEGORICAL_DRIFT_SEVERITIES = {
     2: (0.5, 0.7),
     3: (0.9, )
 }
-DEFAULT_GENERATED_SEVERITY_LEVELS = (2, )
+DEFAULT_GENERATED_SEVERITY_LEVELS = (1, 2, 3)
 
 # Grid search parameters
 CROSS_VALIDATION_SPLIT_COUNT = 5

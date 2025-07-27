@@ -22,6 +22,7 @@ class SFLDT(ADiagnoser):
                  aggregate_tests: bool = constants.DEFAULT_AGGREGATE_TESTS_BY_PATHS,
                  combine_prior_confidence: bool = constants.DEFAULT_COMBINE_PRIOR_CONFIDENCE,
                  use_shap_contribution: bool = constants.DEFAULT_USE_SHAP_CONTRIBUTION,
+                 combine_components_depth: bool = constants.DEFAULT_COMBINE_COMPONENTS_DEPTH
     ):
         """
         Initialize the SFLDT diagnoser.
@@ -35,6 +36,7 @@ class SFLDT(ADiagnoser):
         aggregate_tests (bool): Whether to aggregate tests based on the classification paths.
         group_feature_nodes (bool): Whether to use feature components.
         combine_prior_confidence (bool): Whether to combine the confidence of the tests in the error vector calculation.
+        combine_components_depth (bool): whether to include the components depth in the components' participations.
         """
         super().__init__(mapped_tree, X, y)
         
@@ -47,7 +49,8 @@ class SFLDT(ADiagnoser):
         # Components
         self.group_feature_nodes = group_feature_nodes
         self.use_shap_contribution = use_shap_contribution
-        self.is_participation_fuzzy = self.use_shap_contribution
+        self.combine_components_depth = combine_components_depth
+        self.is_participation_fuzzy = self.use_shap_contribution or combine_components_depth
         # Tests
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence
@@ -200,7 +203,7 @@ class SFLDT(ADiagnoser):
             path_length = len(participated_nodes)
             assert path_length >= 2, f"Test test_index: ({participated_nodes}, total {path_length}) has no participated nodes in the tree, but should have at least 2 (root and terminal node)."
             for node in map(self.mapped_tree.get_node, participated_nodes):
-                self.spectra[node.spectra_index, test_index] = 1
+                self.spectra[node.spectra_index, test_index] = (node.depth + 1) / path_length if self.combine_components_depth else 1
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
                     if self.combine_prior_confidence:

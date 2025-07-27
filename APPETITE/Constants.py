@@ -23,5 +23,6 @@ DEFAULT_USE_SHAP_CONTRIBUTION = False # Try to use SHAP contributions for the pa
 DEFAULT_AGGREGATE_TESTS_BY_PATHS = False # Aggregate tests by paths in the decision tree
 DEFAULT_GROUP_FEATURE_NODES = False # Group feature nodes to a single component
 DEFAULT_COMBINE_PRIOR_CONFIDENCE = False # Use the prior confidence in Error vector calculation
+DEFAULT_COMBINE_COMPONENTS_DEPTH = False # Include the components depth in the components' participations
 
 BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5 # setting the error threshold (from which tests considered as failed) for mean + std * BARINEL_THRESHOLD_ABOVE_STD_RATE

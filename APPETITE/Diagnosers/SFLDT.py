@@ -214,12 +214,12 @@ class SFLDT(ADiagnoser):
             self.update_error_vector_to_fuzzy()
         
         if self.is_participation_fuzzy:
-            assert ((0 <= self.spectra) & (self.spectra <= 1)).all(), f"Participation spectra suppose to be fuzzy, while some of the components participation values are not in the range [0, 1] (Min: {self.spectra.min()}, Max: {self.spectra.max()})."
+            assert np.all((0 <= self.spectra) & (self.spectra <= 1)), f"Participation spectra suppose to be fuzzy, while some of the components participation values are not in the range [0, 1] (Min: {np.min(self.spectra)}, Max: {np.max(self.spectra)})."
         else:
             assert np.isin(self.spectra, [0, 1]).all(), f"The spectra isn't binary while suppose to be (values: {np.unique(self.spectra)})"
 
         if self.is_error_fuzzy:
-            assert ((0 <= self.error_vector) & (self.error_vector <= 1)).all(), f"Error vector suppose to be fuzzy, while some of the tests results not in the range [0, 1] (Min: {self.error_vector.min()}, Max: {self.error_vector.max()})."
+            assert np.all((0 <= self.error_vector) & (self.error_vector <= 1)), f"Error vector suppose to be fuzzy, while some of the tests results not in the range [0, 1] (Min: {np.min(self.error_vector)}, Max: {np.max(self.error_vector)})."
         else:
             assert np.isin(self.error_vector, [0, 1]).all(), f"The error vector isn't binary while suppose to be (values: {np.unique(self.error_vector)})"
         

@@ -90,7 +90,7 @@ class SFLDT(ADiagnoser):
             paths_first_test_indices.append(path_test_indices[0])
             paths_error_vector[path_index] = self.error_vector[path_test_indices].mean()
         
-        self.error_vector = paths_error_vector
+        self.error_vector = paths_error_vector / paths_error_vector.sum()
         
         self.spectra = self.shrink_spectra_based_on_paths(self.spectra, paths_first_test_indices)
 

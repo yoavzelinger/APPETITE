@@ -6,51 +6,104 @@
         }
     },
     {
+        "output_name": "Feature_Components-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "group_feature_nodes": true
+        }
+    },
+    {
+        "output_name": "SHAP_Participation-Feature_Components-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "group_feature_nodes": true,
+            "use_shap_contribution": true
+        }
+    },
+    {
+        "output_name": "Components_Depth-Feature_Components-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "group_feature_nodes": true,
+            "combine_components_depth": true
+        }
+    },
+    {
+        "output_name": "Components_Depth-SHAP_Participation-Feature_Components-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "group_feature_nodes": true,
+            "use_shap_contribution": true,
+            "combine_components_depth": true
+        }
+    },
+    {
+        "output_name": "Components_Depth-SHAP_Participation-Feature_Components-Aggregated_Tests-Prior_Confidence-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "aggregate_tests": true,
+            "combine_prior_confidence": true,
+            "group_feature_nodes": true,
+            "use_shap_contribution": true,
+            "combine_components_depth": true
+        }
+    },
+    {
         "output_name": "BARINEL",
         "class_name": "BARINEL",
         "parameters": {
         }
     },
     {
-        "output_name": "Aggregated_Tests-BARINEL",
+        "output_name": "Prior_Confidence-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "aggregate_tests": true
-        }
-    },
-    {
-        "output_name": "Prior_Confidence-Aggregated_Tests-BARINEL",
-        "class_name": "BARINEL",
-        "parameters": {
-            "aggregate_tests": true,
             "combine_prior_confidence": true
         }
     },
     {
-        "output_name": "Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
+        "output_name": "Aggregated_Tests-Prior_Confidence-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "aggregate_tests": true,
             "combine_prior_confidence": true,
+            "aggregate_tests": true
+        }
+    },
+    {
+        "output_name": "Feature_Components-Aggregated_Tests-Prior_Confidence-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_prior_confidence": true,
+            "aggregate_tests": true,
             "group_feature_nodes": true
         }
     },
     {
-        "output_name": "SHAP_Participation-Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
+        "output_name": "SHAP_Participation-Feature_Components-Aggregated_Tests-Prior_Confidence-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "aggregate_tests": true,
             "combine_prior_confidence": true,
+            "aggregate_tests": true,
             "group_feature_nodes": true,
             "use_shap_contribution": true
         }
     },
     {
-        "output_name": "Components_Depth-SHAP_Participation-Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
+        "output_name": "Components_Depth-Feature_Components-Aggregated_Tests-Prior_Confidence-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "aggregate_tests": true,
             "combine_prior_confidence": true,
+            "aggregate_tests": true,
+            "group_feature_nodes": true,
+            "combine_components_depth": true
+        }
+    },
+    {
+        "output_name": "Components_Depth-SHAP_Participation-Feature_Components-Aggregated_Tests-Prior_Confidence-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_prior_confidence": true,
+            "aggregate_tests": true,
             "group_feature_nodes": true,
             "use_shap_contribution": true,
             "combine_components_depth": true

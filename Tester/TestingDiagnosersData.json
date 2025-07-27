@@ -27,33 +27,33 @@
         }
     },
     {
-        "output_name": "Components_Depth-Prior_Confidence-Aggregated_Tests-BARINEL",
+        "output_name": "Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
             "aggregate_tests": true,
             "combine_prior_confidence": true,
-            "combine_components_depth": true
-        }
-    },
-    {
-        "output_name": "Feature_Components-Components_Depth-Prior_Confidence-Aggregated_Tests-BARINEL",
-        "class_name": "BARINEL",
-        "parameters": {
-            "aggregate_tests": true,
-            "combine_prior_confidence": true,
-            "combine_components_depth": true,
             "group_feature_nodes": true
         }
     },
     {
-        "output_name": "SHAP_Participation-Feature_Components-Components_Depth-Prior_Confidence-Aggregated_Tests-BARINEL",
+        "output_name": "SHAP_Participation-Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
             "aggregate_tests": true,
             "combine_prior_confidence": true,
-            "combine_components_depth": true,
             "group_feature_nodes": true,
             "use_shap_contribution": true
+        }
+    },
+    {
+        "output_name": "Components_Depth-SHAP_Participation-Feature_Components-Prior_Confidence-Aggregated_Tests-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "aggregate_tests": true,
+            "combine_prior_confidence": true,
+            "group_feature_nodes": true,
+            "use_shap_contribution": true,
+            "combine_components_depth": true
         }
     }
 ]

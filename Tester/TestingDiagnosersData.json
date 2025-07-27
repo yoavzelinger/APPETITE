@@ -13,30 +13,30 @@
         }
     },
     {
-        "output_name": "Aggregated_Tests-Feature_Components-SFLDT",
+        "output_name": "SHAP_Participation-Feature_Components-SFLDT",
         "class_name": "SFLDT",
         "parameters": {
             "group_feature_nodes": true,
+            "use_shap_contribution": true
+        }
+    },
+    {
+        "output_name": "Aggregated_Tests-SHAP_Participation-Feature_Components-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "group_feature_nodes": true,
+            "use_shap_contribution": true,
             "aggregate_tests": true
         }
     },
     {
-        "output_name": "Prior_Confidence-Aggregated_Tests-Feature_Components-SFLDT",
+        "output_name": "Prior_Confidence-Aggregated_Tests-SHAP_Participation-Feature_Components-SFLDT",
         "class_name": "SFLDT",
         "parameters": {
             "group_feature_nodes": true,
+            "use_shap_contribution": true,
             "aggregate_tests": true,
             "combine_prior_confidence": true
-        }
-    },
-    {
-        "output_name": "SHAP_Participation-Feature_Components-Prior_Confidence-Aggregated_Tests-SFLDT",
-        "class_name": "SFLDT",
-        "parameters": {
-            "aggregate_tests": true,
-            "combine_prior_confidence": true,
-            "group_feature_nodes": true,
-            "use_shap_contribution": true
         }
     }
 ]

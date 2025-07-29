@@ -207,7 +207,7 @@ class SFLDT(ADiagnoser):
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
                     if self.combine_prior_confidence:
-                        self.error_vector[test_index] *= node.confidence
+                        self.error_vector[test_index] = node.confidence if self.error_vector[test_index] else (1 - node.confidence)
             test_participation_vector = self.spectra[:, test_index]
             self.path_tests_indices[tuple(test_participation_vector)].append(test_index)
         if self.group_feature_nodes:

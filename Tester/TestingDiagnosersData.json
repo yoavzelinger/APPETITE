@@ -6,6 +6,36 @@
         }
     },
     {
+        "output_name": "Depth_Participation-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_components_depth": true
+        }
+    },
+    {
+        "output_name": "Tests_Confidence-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_prior_confidence": true
+        }
+    },
+    {
+        "output_name": "Aggregated_Tests-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "aggregate_tests": true
+        }
+    },
+    {
+        "output_name": "Aggregated_Tests-Tests_Confidence-Depth_Participation-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "combine_components_depth": true,
+            "combine_prior_confidence": true,
+            "aggregate_tests": true
+        }
+    },
+    {
         "output_name": "Feature_Components-SFLDT",
         "class_name": "SFLDT",
         "parameters": {
@@ -30,9 +60,49 @@
         }
     },
     {
+        "output_name": "Tests_Confidence-Aggregated_Tests-SHAP_Participation-Feature_Components-SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "group_feature_nodes": true,
+            "use_shap_contribution": true,
+            "aggregate_tests": true,
+            "combine_prior_confidence": true
+        }
+    },
+    {
         "output_name": "BARINEL",
         "class_name": "BARINEL",
         "parameters": {
+        }
+    },
+    {
+        "output_name": "Depth_Participation-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_components_depth": true
+        }
+    },
+    {
+        "output_name": "Tests_Confidence-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_prior_confidence": true
+        }
+    },
+    {
+        "output_name": "Aggregated_Tests-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "aggregate_tests": true
+        }
+    },
+    {
+        "output_name": "Aggregated_Tests-Tests_Confidence-Depth_Participation-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "combine_components_depth": true,
+            "combine_prior_confidence": true,
+            "aggregate_tests": true
         }
     },
     {
@@ -57,6 +127,16 @@
             "group_feature_nodes": true,
             "aggregate_tests": true,
             "use_shap_contribution": true
+        }
+    },
+    {
+        "output_name": "Tests_Confidence-Aggregated_Tests-SHAP_Participation-Feature_Components-BARINEL",
+        "class_name": "BARINEL",
+        "parameters": {
+            "group_feature_nodes": true,
+            "use_shap_contribution": true,
+            "aggregate_tests": true,
+            "combine_prior_confidence": true
         }
     }
 ]

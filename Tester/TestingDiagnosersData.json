@@ -12,25 +12,18 @@
         }
     },
     {
-        "output_name": "Aggregated_Tests-BARINEL",
+        "output_name": "Feature_Components-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
             "aggregate_tests": true
         }
     },
     {
-        "output_name": "Tests_Confidence-BARINEL",
+        "output_name": "Aggregated_Tests-Feature_Components-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "combine_prior_confidence": true
-        }
-    },
-    {
-        "output_name": "Tests_Confidence-Aggregated_Tests-BARINEL",
-        "class_name": "BARINEL",
-        "parameters": {
-            "aggregate_tests": true,
-            "combine_prior_confidence": true
+            "group_feature_nodes": true,
+            "aggregate_tests": true
         }
     }
 ]

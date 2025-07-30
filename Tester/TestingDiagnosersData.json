@@ -15,7 +15,7 @@
         "output_name": "Feature_Components-BARINEL",
         "class_name": "BARINEL",
         "parameters": {
-            "aggregate_tests": true
+            "group_feature_nodes": true
         }
     },
     {

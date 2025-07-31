@@ -16,7 +16,7 @@ AFTER_WINDOW_SIZE = 1
 VALIDATION_SIZE = 0.2
 
 # one hot encode categorical features to modify decision trees creation
-one_hot_encoding = True
+one_hot_encoding = False
 
 # Drift severity levels
 NUMERIC_DRIFT_SEVERITIES = {

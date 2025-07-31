@@ -61,20 +61,21 @@ for current_file_index, current_file_name in enumerate(os.listdir(temp_output_di
 
 output_df = output_df[tester_constants.EXTENDED_METRICS_COLUMN_NAMES]
 
-output_full_path = os.path.join(tester_constants.OUTPUT_DIRECTORY_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}.xlsx")
+output_full_path_prefix = os.path.join(tester_constants.OUTPUT_DIRECTORY_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}")
+merged_output_full_path = f"{output_full_path_prefix}.xlsx"
 merged_results_sheet_name = "merged_results"
 excel_writer_arguments = {
-    "path": output_full_path,
+    "path": merged_output_full_path,
     "mode": "w",
     "engine": "openpyxl"
 }
-if os.path.exists(output_full_path):
+if os.path.exists(merged_output_full_path):
     excel_writer_arguments["mode"] = "a"
     excel_writer_arguments["if_sheet_exists"] = "replace"
 with pd.ExcelWriter(**excel_writer_arguments) as excel_writer:
     output_df.to_excel(excel_writer, sheet_name=merged_results_sheet_name, merge_cells=False)
-output_workbook = load_workbook(output_full_path)
+output_workbook = load_workbook(merged_output_full_path)
 output_workbook[merged_results_sheet_name].sheet_view.rightToLeft = True
-output_workbook.save(output_full_path)
+output_workbook.save(merged_output_full_path)
 
-print(f"Results saved to {output_full_path}")
+print(f"Results saved to {output_full_path_prefix}")

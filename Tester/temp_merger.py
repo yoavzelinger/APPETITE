@@ -10,6 +10,7 @@ import Tester.TesterConstants as tester_constants
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-i", "--input", type=str, help=f"Input folder prefix (after the temp), default is None ({tester_constants.TEMP_OUTPUT_DIRECTORY_NAME})", default="")
 parser.add_argument("-o", "--output", type=str, help=f"Output file name prefix, default is the result_{tester_constants.DEFAULT_RESULTS_FILENAME_PREFIX}_<TIMESTAMP>", default=tester_constants.DEFAULT_RESULTS_FILENAME_EXTENDED_PREFIX)
+parser.add_argument("-r", "--raw", action="store_true", help="Whether to create a file with the raw results. Note that the raw results file can be very big and infeasible to store.")
 args = parser.parse_args()
 
 aggregating_functions_dict = {tester_constants.AGGREGATED_TESTS_COUNT_COLUMN: "count"}
@@ -32,7 +33,8 @@ for current_file_index, current_file_name in enumerate(os.listdir(temp_output_di
     current_results_df = None
     with open(os.path.join(temp_output_directory_full_path, current_file_name), "r") as current_file:
         current_results_df = pd.read_csv(current_file, dtype=tester_constants.RAW_RESULTS_COLUMNS)
-    raw_df = pd.concat([raw_df, current_results_df], ignore_index=True)        
+    if args.raw:
+        raw_df = pd.concat([raw_df, current_results_df], ignore_index=True)        
     current_group_by_df = current_results_df.groupby(tester_constants.GROUP_BY_COLUMN_NAMES).agg(aggregating_functions_dict)
     # check that no column contains empty values
     if current_group_by_df.isnull().values.any():
@@ -65,8 +67,9 @@ output_df = output_df[tester_constants.EXTENDED_METRICS_COLUMN_NAMES]
 
 output_full_path_prefix = os.path.join(tester_constants.OUTPUT_DIRECTORY_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}")
 
-raw_output_full_path = f"{output_full_path_prefix}_raw.csv"
-raw_df.to_csv(raw_output_full_path, index=False)
+if args.raw:
+    raw_output_full_path = f"{output_full_path_prefix}_raw.csv"
+    raw_df.to_csv(raw_output_full_path, index=False)
 
 merged_output_full_path = f"{output_full_path_prefix}.xlsx"
 merged_results_sheet_name = "merged_results"

@@ -173,7 +173,7 @@ def multiple_features_concept_drift_generator(
         drifting_features: dict[str, str],
         severity_levels: tuple = tester_constants.DEFAULT_GENERATED_SEVERITY_LEVELS
  ) -> Generator[tuple[pd.DataFrame, int, str], None, None]:
-    """`
+    """
     Generate all possible concept drifts in a given list of features.
     Parameters:
         original_df (DataFrame): The original DataFrame.

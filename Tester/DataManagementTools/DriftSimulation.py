@@ -151,23 +151,21 @@ def _categorical_drift_generator(
 
 def _get_feature_generator_function(
         column: pd.Series,
-        type: str = None
+        feature_type: str = None
  ) -> Callable[[pd.Series], Generator[tuple[pd.Series, str], None, None]]:
     """
     Get the relevant drift generator function for a given feature.
     
     Parameters:
         column (Series): The input column.
-        type (str): The type of the feature.
+        feature_type (str): The type of the feature.
         
     Returns:
         Callable[[Series], Generator[tuple[Series, str], None, None]]: The relevant drift generator function for the feature.
     """
-    if type:
-        return _numeric_drift_generator if type == "numeric" else _categorical_drift_generator
-    if is_numeric_dtype(column):
-        return _numeric_drift_generator
-    return _categorical_drift_generator
+    if not feature_type:
+        feature_type = "numeric" if is_numeric_dtype(column) else "categorical"
+    return _numeric_drift_generator if feature_type == "numeric" else _categorical_drift_generator
 
 # The magic starts here
 def multiple_features_concept_drift_generator(
@@ -175,7 +173,7 @@ def multiple_features_concept_drift_generator(
         drifting_features: dict[str, str],
         severity_levels: tuple = tester_constants.DEFAULT_GENERATED_SEVERITY_LEVELS
  ) -> Generator[tuple[pd.DataFrame, int, str], None, None]:
-    """
+    """`
     Generate all possible concept drifts in a given list of features.
     Parameters:
         original_df (DataFrame): The original DataFrame.

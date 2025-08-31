@@ -98,12 +98,6 @@ class Dataset:
         self.after_window_size = after_window_size
         self.update_total_after_size()
 
-    def update_after_size(self, 
-                          new_after_size: int | float
-     ) -> None:
-        self.after_size = new_after_size
-        self.update_total_after_size()
-
     def update_after_window_size(self, 
                           new_after_window_size: int | float
      ) -> None:

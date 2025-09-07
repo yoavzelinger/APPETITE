@@ -21,7 +21,7 @@ parser.add_argument("-o", "--output", type=str, help=f"Output file name prefix, 
 parser.add_argument("-s", "--skip", action="store_true", help=f"skip exceptions, default is {tester_constants.SKIP_EXCEPTIONS}. If true will write the errors to errors file", default=tester_constants.SKIP_EXCEPTIONS)
 parser.add_argument("-n", "--names", type=str, nargs="+", help="Specific datasets to run, default is all", default=())
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all. Relevant only if names argument is not provided", default=())
-parser.add_argument("-a", "--after_window", type=float, nargs="+", help="After window sizes, default is all", default=tester_constants.AFTER_WINDOW_TEST_SIZES)
+parser.add_argument("-w", "--repair_window", type=float, nargs="+", help="Repair window sizes, default is all", default=tester_constants.REPAIR_WINDOW_TEST_SIZES)
 parser.add_argument("-d", "--drift_size", type=int, help=f"size of the drift, default is between {tester_constants.MIN_DRIFT_SIZE} and {tester_constants.MAX_DRIFT_SIZE}", default=-1)
 parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
 parser.add_argument("-t", "--test", type=str, help="Test dataset to run if you want to run a specific test")
@@ -57,11 +57,11 @@ if skip_exceptions:
 else:
     print("Skip exceptions is set to False. Exceptions will be raised.")
 
-after_window_test_sizes, after_windows_string = tester_constants.AFTER_WINDOW_TEST_SIZES, ""
-if args.after_window != tester_constants.AFTER_WINDOW_TEST_SIZES:
-    after_window_test_sizes = args.after_window
-    after_windows_string = "-".join(map(str, after_window_test_sizes))
-print(f"Running tests with after window sizes: {after_windows_string}")
+repair_window_test_sizes, repair_windows_string = tester_constants.REPAIR_WINDOW_TEST_SIZES, ""
+if args.repair_window != tester_constants.REPAIR_WINDOW_TEST_SIZES:
+    repair_window_test_sizes = args.repair_window
+    repair_windows_string = "-".join(map(str, repair_window_test_sizes))
+print(f"Running tests with repair window sizes: {repair_windows_string}")
 
 min_drift_size, max_drift_size, drift_size_string = tester_constants.MIN_DRIFT_SIZE, tester_constants.MAX_DRIFT_SIZE, ""
 if args.drift_size > 0:
@@ -92,7 +92,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         datasets_count -= 1
 
         print(f"Running tests for {dataset_name}")
-        for test_result in run_single_test(tester_constants.DATASETS_DIRECTORY_FULL_PATH, dataset_name, after_window_test_sizes=after_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=tester_constants.diagnosers_data):
+        for test_result in run_single_test(tester_constants.DATASETS_DIRECTORY_FULL_PATH, dataset_name, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=tester_constants.diagnosers_data):
             if isinstance(test_result, Exception):
                 if not skip_exceptions:
                     raise test_result
@@ -105,8 +105,8 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
 temp_files_suffix = ""
 if drift_size_string:
     temp_files_suffix += f"_drift_size_{drift_size_string}"
-if after_windows_string:
-    temp_files_suffix += f"_after_window_{after_windows_string}"
+if repair_windows_string:
+    temp_files_suffix += f"_repair_window_{repair_windows_string}"
 if specific_datasets_string:
     temp_files_suffix += f"_{specific_datasets_string}"
 

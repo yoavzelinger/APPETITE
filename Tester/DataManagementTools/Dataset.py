@@ -11,7 +11,7 @@ import Tester.TesterConstants as tester_constants
 from .DriftSimulation import single_feature_concept_drift_generator, multiple_features_concept_drift_generator
 
 class Dataset:
-    partitions = ["before", "after", "test"]
+    partitions = ["before", "after", "repair", "test"]
 
     def __init__(self, 
                  source: str | pd.DataFrame
@@ -63,24 +63,24 @@ class Dataset:
         self.data.attrs["name"] = self.name
 
         n_samples = len(self.data)
-        self.before_proportion, self.after_proportion, self.test_proportion = tester_constants.PROPORTIONS_TUPLE
-        self.before_size = math.floor(self.before_proportion*n_samples)
-        self.after_size = math.floor(self.after_proportion*n_samples)
+        self.before_proportion, self.repair_proportion, self.test_proportion = tester_constants.PROPORTIONS_TUPLE
+        self.before_concept_size = math.floor(self.before_proportion*n_samples)
+        self.repair_size = math.floor(self.repair_proportion*n_samples)
         self.test_size = math.floor(self.test_proportion*n_samples)
-        self.total_after_size = self.after_size + self.test_size
+        self.after_concept_size = self.repair_size + self.test_size
 
-        assert all([0 < current_size for current_size in (self.before_size, self.after_size, self.test_size)])
-        assert (self.before_size + self.after_size + self.test_size) <= n_samples
+        assert all([0 < current_size for current_size in (self.before_concept_size, self.repair_size, self.test_size)])
+        assert (self.before_concept_size + self.repair_size + self.test_size) <= n_samples
 
-        self.update_after_window_size(tester_constants.DEFAULT_AFTER_WINDOW_PROPORTION)
+        self.update_repair_window_size(tester_constants.DEFAULT_REPAIR_WINDOW_PROPORTION)
 
-    def update_after_window_size(self, 
-                          new_after_window_size: int | float
+    def update_repair_window_size(self, 
+                          new_repair_window_size: int | float
      ) -> None:
-        assert 0 < new_after_window_size and new_after_window_size <= 1
+        assert 0 < new_repair_window_size <= 1
 
-        self.after_window_proportion = new_after_window_size
-        self.after_window_size = math.floor(self.after_size * self.after_window_proportion)
+        self.repair_window_proportion = new_repair_window_size
+        self.repair_window_size = math.floor(self.repair_size * self.repair_window_proportion)
 
     def split_features_targets(self, 
                                data: pd.DataFrame
@@ -98,27 +98,21 @@ class Dataset:
         y = data[self.target_name].reset_index(drop=True)
         return X, y
 
-    def get_before_concept(self) -> tuple[pd.DataFrame, pd.Series]:
-        before_concept_data = self.data.iloc[:self.before_size]
+    def get_before_concept_data(self) -> tuple[pd.DataFrame, pd.Series]:
+        before_concept_data = self.data.iloc[:self.before_concept_size]
         return self.split_features_targets(before_concept_data)
     
-    def get_after_concept(self) -> tuple[pd.DataFrame, pd.Series]:
-        after_concept_data = self.data.iloc[self.before_size: self.before_size + self.total_after_size]
+    def get_after_concept_data(self) -> tuple[pd.DataFrame, pd.Series]:
+        after_concept_data = self.data.iloc[self.before_concept_size:]
         return self.split_features_targets(after_concept_data)
     
-    def get_test_concept(self) -> tuple[pd.DataFrame, pd.Series]:
-        test_concept_data = self.data.iloc[-self.test_size:]
-        return self.split_features_targets(test_concept_data)
+    def get_repair_data(self) -> tuple[pd.DataFrame, pd.Series]:
+        X_after, y_after = self.get_after_concept_data()
+        return X_after.iloc[:self.repair_size], y_after.iloc[:self.repair_size]
     
-    def get_total_after_concept(self) -> tuple[pd.DataFrame, pd.Series]:
-        """
-        Get the total after concept data, including the after and test concepts
-        
-        Returns:
-            tuple[DataFrame, Series]: The total after concept data
-        """
-        after_concept_data = self.data.iloc[self.before_size:]
-        return self.split_features_targets(after_concept_data)
+    def get_test_data(self) -> tuple[pd.DataFrame, pd.Series]:
+        X_after, y_after = self.get_after_concept_data()
+        return X_after.iloc[-self.test_size:], y_after.iloc[-self.test_size:]
 
     def _drift_data_generator(self,
                    data: pd.DataFrame,
@@ -165,16 +159,17 @@ class Dataset:
         """
         assert partition in Dataset.partitions, "Invalid partition name"
         partition_function_mapping = {
-            "before": self.get_before_concept,
-            "after": self.get_total_after_concept
+            "before": self.get_before_concept_data,
+            "after": self.get_after_concept_data,
+            "repair": self.get_repair_data,
+            "test": self.get_test_data
         }
         original_X, y = partition_function_mapping[partition]()
         for drifted_X, drift_severity_level, drift_description in self._drift_data_generator(original_X, drift_features, severity_levels):
             if partition == "before":
                 yield (drifted_X, y), drift_severity_level, f"BEFORE_{drift_description}"
                 continue
-            # split to after and test
-            X_after_drifted, y_after_drifted = drifted_X.iloc[:self.after_window_size], y.iloc[:self.after_window_size]
-            X_test_drifted, y_test_drifted = drifted_X.iloc[self.after_size:], y.iloc[self.after_size:]
-            yield (X_after_drifted, y_after_drifted), (X_test_drifted, y_test_drifted), drift_severity_level, drift_description
-
+            # split to repair and test
+            X_repair, y_repair = drifted_X.iloc[:self.repair_window_size], y.iloc[:self.repair_window_size]
+            X_test, y_test = drifted_X.iloc[self.repair_size:], y.iloc[self.repair_size:]
+            yield (X_repair, y_repair), (X_test, y_test), drift_severity_level, drift_description

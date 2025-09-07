@@ -30,7 +30,7 @@ def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
 
 def drift_tree(mapped_tree: MappedDecisionTree,
                dataset: Dataset,
-               after_window_test_sizes: list[float] = tester_constants.AFTER_WINDOW_TEST_SIZES,
+               repair_window_test_sizes: list[float] = tester_constants.REPAIR_WINDOW_TEST_SIZES,
                min_drift_size: int = tester_constants.MIN_DRIFT_SIZE,
                max_drift_size: int = tester_constants.MAX_DRIFT_SIZE
                ):
@@ -41,16 +41,16 @@ def drift_tree(mapped_tree: MappedDecisionTree,
     current_max_drift_size = len(mapped_tree.tree_features_set)
     if max_drift_size > 0:
         current_max_drift_size = min(current_max_drift_size, max_drift_size)
-    for after_window_test_size in after_window_test_sizes:
-        print(f"\tAfter size: {after_window_test_size}%")
-        dataset.update_after_window_size(after_window_test_size)
+    for repair_window_test_size in repair_window_test_sizes:
+        print(f"\tRepair window size: {repair_window_test_size}%")
+        dataset.update_repair_window_size(repair_window_test_size)
         for drift_size in range(current_min_drift_size, current_max_drift_size + 1):
             print(f"\t\tDrift size: {drift_size} / {current_max_drift_size} features")
             for drifting_features in combinations(mapped_tree.tree_features_set, drift_size):
                 print(f"\t\t\tDrifting {', '.join(drifting_features)}")
                 drifted_features_types = sorted([dataset.feature_types[drifting_feature] for drifting_feature in drifting_features])
-                for (X_after_drifted, y_after), (X_test_drifted, y_test), drift_severity_level, drift_description in dataset.drift_generator(drifting_features, partition="after"):
-                    yield (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), set(drifting_features), drifted_features_types, drift_size
+                for (X_repair, y_repair), (X_test, y_test), drift_severity_level, drift_description in dataset.drift_generator(drifting_features, partition="after"):
+                    yield (X_repair, y_repair), (X_test, y_test), (drift_severity_level, drift_description), set(drifting_features), drifted_features_types, drift_size
 
 def get_drifted_nodes(mapped_tree: MappedDecisionTree,
                       drifted_features: set[str]
@@ -76,30 +76,26 @@ def get_total_drift_types(drifted_features_types):
         return "numeric"
     return "binary"
 
-def run_single_test(directory, file_name, file_extension: str = ".csv", after_window_test_sizes=tester_constants.AFTER_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
+def run_single_test(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
     dataset = get_dataset(directory, file_name, file_extension=file_extension)
 
-    X_train, y_train = dataset.get_before_concept()
+    X_train, y_train = dataset.get_before_concept_data()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
 
-    X_after, y_after = dataset.get_after_concept()
-    X_test, y_test = dataset.get_test_concept()
-    original_accuracy = get_accuracy(sklearn_tree_model, pd.concat([X_after, X_test]), pd.concat([y_after, y_test]))
-    if original_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
+    pre_drift_X_test, y_test = dataset.get_test_data()
+    pre_drift_test_accuracy = get_accuracy(sklearn_tree_model, pre_drift_X_test, y_test)
+    if pre_drift_test_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
         # print(f"Original model is not good enough, accuracy: {original_accuracy}")
         return
     
-    original_after_accuracy, original_test_accuracy = get_accuracy(sklearn_tree_model, X_after, y_after), get_accuracy(sklearn_tree_model, X_test, y_test)
-
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
-    for (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset, after_window_test_sizes=after_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
+    for (X_repair, y_repair), (X_test, y_test), (drift_severity_level, drift_description), drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
         try:
-            if X_after_drifted.empty or X_test_drifted.empty: # TODO: Think about expanding this and not allowing small datasets as well
+            if X_repair.empty or X_test.empty:
                 continue
-            drifted_after_accuracy, drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after), get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
-            drifted_after_accuracy_drop, drifted_test_accuracy_drop = original_after_accuracy - drifted_after_accuracy, original_test_accuracy - drifted_test_accuracy
-            if drifted_after_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or drifted_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
-                # print(f"Drift is insignificant, accuracy drop: after: {drifted_after_accuracy_drop}, test: {drifted_test_accuracy_drop}")
+            post_drift_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test, y_test)
+            post_drift_test_accuracy_drop = pre_drift_test_accuracy - post_drift_test_accuracy
+            if post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
 
             print(f"\t\t\t\tDiagnosing")
@@ -107,14 +103,13 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", after_wi
             drifted_features_types = [drifted_features_types] if isinstance(drifted_features_types, str) else drifted_features_types
 
 
-            X_before_after_concat, y_before_after_concat = pd.concat([X_train, X_after_drifted]), pd.concat([y_train, y_after])
-            before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat, previous_model=mapped_tree.sklearn_tree_model)
-            before_after_retrained_accuracy = get_accuracy(before_after_retrained_tree, X_test_drifted, y_test)
-            before_after_retrained_accuracy_bump = before_after_retrained_accuracy - drifted_test_accuracy
+            new_all_retrained_tree = get_sklearn_tree(pd.concat([X_train, X_repair]), pd.concat([y_train, y_repair]), previous_model=mapped_tree.sklearn_tree_model)
+            new_all_retrained_accuracy = get_accuracy(new_all_retrained_tree, X_test, y_test)
+            new_all_retrained_accuracy_bump = new_all_retrained_accuracy - post_drift_test_accuracy
 
-            after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after, previous_model=mapped_tree.sklearn_tree_model)
-            after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
-            after_retrained_accuracy_bump = after_retrained_accuracy - drifted_test_accuracy
+            new_drift_retrained_tree = get_sklearn_tree(X_repair, y_repair, previous_model=mapped_tree.sklearn_tree_model)
+            new_drift_retrained_accuracy = get_accuracy(new_drift_retrained_tree, X_test, y_test)
+            new_drift_retrained_accuracy_bump = new_drift_retrained_accuracy - post_drift_test_accuracy
 
             drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
             faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)
@@ -123,26 +118,26 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", after_wi
                 tester_constants.DATASET_COLUMN_NAME: file_name,
                 tester_constants.TREE_SIZE_COLUMN_NAME: mapped_tree.node_count,
                 tester_constants.TREE_FEATURES_COUNT_COLUMN_NAME: len(mapped_tree.tree_features_set),
-                tester_constants.AFTER_SIZE_COLUMN_NAME: dataset.after_proportion * dataset.after_window_proportion * 100,
+                tester_constants.REPAIR_SIZE_COLUMN_NAME: dataset.repair_proportion * dataset.repair_window_proportion * 100,
                 tester_constants.DRIFT_SIZE_COLUMN_NAME: drift_size,
                 tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),
                 tester_constants.DRIFT_SEVERITY_LEVEL_COLUMN_NAME: drift_severity_level,
                 tester_constants.DRIFTED_FEATURES_COLUMN_NAME: ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
                 tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: ", ".join(drifted_features_types),
                 tester_constants.DRIFT_DESCRIPTION_COLUMN_NAME: drift_description,
-                tester_constants.AFTER_ACCURACY_DECREASE_COLUMN_NAME: drifted_test_accuracy * 100,
-                f"{tester_constants.AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": after_retrained_accuracy_bump * 100,
-                f"{tester_constants.BEFORE_AFTER_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": before_after_retrained_accuracy_bump * 100
+                tester_constants.AFTER_ACCURACY_DECREASE_COLUMN_NAME: post_drift_test_accuracy_drop * 100,
+                f"{tester_constants.NEW_DRIFT_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_drift_retrained_accuracy_bump * 100,
+                f"{tester_constants.NEW_ALL_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_all_retrained_accuracy_bump * 100
             }
 
             for diagnoser_data in diagnosers_data:
                 diagnoser_output_name, diagnoser_class_name, diagnoser_parameters = diagnoser_data["output_name"], diagnoser_data["class_name"], diagnoser_data["parameters"]
-                fixer = Fixer(mapped_tree, X_after_drifted, y_after, diagnoser__class_name=diagnoser_class_name, diagnoser_parameters=diagnoser_parameters, diagnoser_output_name=diagnoser_output_name)
+                fixer = Fixer(mapped_tree, X_repair, y_repair, diagnoser__class_name=diagnoser_class_name, diagnoser_parameters=diagnoser_parameters, diagnoser_output_name=diagnoser_output_name)
                 fixed_mapped_tree, faulty_nodes_indices = fixer.fix_tree()
                 faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
                 detected_faulty_features = set([faulty_node.feature if not faulty_node.is_terminal() else "target" for faulty_node in faulty_nodes])
-                fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
-                test_accuracy_bump = fixed_test_accuracy - drifted_test_accuracy
+                fixed_test_accuracy = get_accuracy(fixed_mapped_tree.sklearn_tree_model, X_test, y_test)
+                test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
                 diagnoses = fixer.diagnoses
                 wasted_effort = get_wasted_effort(mapped_tree, diagnoses, faulty_features_nodes)
                 correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
@@ -157,7 +152,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", after_wi
         except Exception as e:
             exception_class = e.__class__.__name__
             diagnoser_info = f"(diagnoser: {diagnoser_class_name} - {diagnoser_output_name})" if 'diagnoser_output_name' in locals() else ""
-            scenario_description = f"{drift_description}, after window size: {dataset.after_window_proportion} {diagnoser_info}"
+            scenario_description = f"{drift_description}, repair window size: {dataset.repair_window_proportion} {diagnoser_info}"
             yield Exception(f"{exception_class} in {scenario_description}:\n "
                             f"{e}:\n "
                             f"{''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
@@ -166,7 +161,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", after_wi
         
 def get_example_mapped_tree(directory=tester_constants.DATASETS_DIRECTORY_FULL_PATH, file_name=tester_constants.EXAMPLE_FILE_NAME):
     dataset = get_dataset(directory, file_name)
-    X_train, y_train = dataset.get_before_concept()
+    X_train, y_train = dataset.get_before_concept_data()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
     return get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
 

@@ -14,26 +14,10 @@ class Dataset:
     partitions = ["before", "after", "test"]
 
     def __init__(self, 
-                 source: str | pd.DataFrame,
-                 size: int | tuple[float] = tester_constants.PROPORTIONS_TUPLE,
-                 after_window_size: float = tester_constants.AFTER_WINDOW_SIZE,
-                 to_shuffle: bool = True,
-                 one_hot_encoding: bool = tester_constants.one_hot_encoding
+                 source: str | pd.DataFrame
     ):
         """
-        source: str or DataFrame
-            If str, the path to the dataset file
-            If DataFrame, the dataset itself
-        size: int or tuple[float]
-            The size of the dataset
-            If int, the size of the before concept
-            If tuple, the proportion sizes of the before concept, after concept and the test concept
-        after_window_size: float
-            the amount of after data to use, default is 1.0 (all).
-        to_shuffle: bool
-            Whether to shuffle the data
-        one_hot_encoding: bool
-            Whether to use one hot encoding for the categorical
+        source (str | DataFrame): If str, the path to the dataset file; If DataFrame, the dataset itself.
         """
         # Get data
         if type(source) == str:    # Path to the file
@@ -60,7 +44,7 @@ class Dataset:
             self.data[column_name] = self.data[column_name].fillna(self.data[column_name].mode().iloc[0])    # Fill NaN values
             if len(self.data[column_name].unique()) <= 2: # Consider as binary
                 column_type = bool
-            if column_type == bool or not one_hot_encoding:
+            if column_type == bool or not tester_constants.ONE_HOT_ENCODING_CATEGORICAL:
                 self.data[column_name] = pd.Categorical(self.data[column_name])
                 self.data[column_name] = self.data[column_name].cat.codes
                 self.feature_types[column_name] = "binary" if column_type == bool else "categorical" 
@@ -73,39 +57,29 @@ class Dataset:
         self.data[self.target_name] = pd.Categorical(y.fillna(y.mode().iloc[0]))
         self.data[self.target_name] = self.data[self.target_name].cat.codes
 
-        if to_shuffle:  # shuffle data - same shuffle always
             self.data = self.data.sample(frac=1, random_state=tester_constants.RANDOM_STATE).reset_index(drop=True)
 
         self.data.attrs["name"] = self.name
 
         n_samples = len(self.data)
-        before_proportion, after_proportion, test_proportion = tester_constants.BEFORE_PROPORTION, tester_constants.AFTER_PROPORTION, tester_constants.TEST_PROPORTION
-        if isinstance(size, int):   # Concept size
-            self.before_size = size
-            before_proportion = 1.0 * self.before_size / n_samples
-            total_post_proportion = (1 - before_proportion) / (after_proportion + test_proportion)
-            after_proportion, test_proportion = after_proportion * total_post_proportion, test_proportion * total_post_proportion
-        elif isinstance(size, tuple) and len(size) == 3: # (concept, after, test)
-            before_proportion, after_proportion, test_proportion = size
-        self.before_proportion, self.after_proportion, self.test_proportion = before_proportion, after_proportion, test_proportion
-        self.before_size = int(before_proportion*n_samples)
-        self.after_size = int(after_proportion*n_samples)
-        self.test_size = int(test_proportion*n_samples)
+        self.before_proportion, self.after_proportion, self.test_proportion = tester_constants.PROPORTIONS_TUPLE
+        self.before_size = math.floor(self.before_proportion*n_samples)
+        self.after_size = math.floor(self.after_proportion*n_samples)
+        self.test_size = math.floor(self.test_proportion*n_samples)
+        self.total_after_size = self.after_size + self.test_size
 
+        assert all([0 < current_size for current_size in (self.before_size, self.after_size, self.test_size)])
         assert (self.before_size + self.after_size + self.test_size) <= n_samples
 
-        assert 0 < after_window_size and after_window_size <= 1
-        self.after_window_size = after_window_size
-        self.update_total_after_size()
+        self.update_after_window_size(tester_constants.DEFAULT_AFTER_WINDOW_PROPORTION)
 
     def update_after_window_size(self, 
                           new_after_window_size: int | float
      ) -> None:
-        self.after_window_size = new_after_window_size
-        self.update_total_after_size()
+        assert 0 < new_after_window_size and new_after_window_size <= 1
 
-    def update_total_after_size(self) -> None:
-        self.total_after_size = math.ceil(max(self.after_size * self.after_window_size, 1 / tester_constants.VALIDATION_SIZE))
+        self.after_window_proportion = new_after_window_size
+        self.after_window_size = math.floor(self.after_size * self.after_window_proportion)
 
     def split_features_targets(self, 
                                data: pd.DataFrame

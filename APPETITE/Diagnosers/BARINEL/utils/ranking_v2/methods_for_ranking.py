@@ -63,7 +63,7 @@ def rank_diagnosis(diagnosis: np.ndarray,
     healthiness_probabilities = np.full(components_count, 0.5)
     healthiness_bounds = [(0, 1) for _ in range(components_count)]
     likelihood_objective_function = lambda healthiness_probabilities: -get_total_likelihood(diagnosis, healthiness_probabilities, spectrum, fuzzy_error_vector)  # Maximize the likelihood
-    mle_model = minimize(likelihood_objective_function, healthiness_probabilities, bounds=healthiness_bounds, options={"maxiter": 1000})
+    mle_model = minimize(likelihood_objective_function, healthiness_probabilities, bounds=healthiness_bounds, options={"maxiter": 1000})    # FIXME: Error in cluster
     optimized_healthiness_probabilities = mle_model.x
     assert ((0 <= optimized_healthiness_probabilities) & (optimized_healthiness_probabilities <= 1)).all(), f"Not all optimized healthiness probabilities are within [0, 1] (min: {optimized_healthiness_probabilities.min()}, max: {optimized_healthiness_probabilities.max()})"
     return prior_probability * get_total_likelihood(diagnosis, optimized_healthiness_probabilities, spectrum, fuzzy_error_vector, use_components_participation=True)

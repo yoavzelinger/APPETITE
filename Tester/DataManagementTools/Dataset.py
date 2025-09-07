@@ -163,11 +163,11 @@ class Dataset:
                 Each drift represented by the (drifted dataset, original y) and the description of the drift and the drifted features.
         """
         assert partition in Dataset.partitions, "Invalid partition name"
-        get_portion_dict = {
+        partition_function_mapping = {
             "before": self.get_before_concept,
             "after": self.get_total_after_concept
         }
-        original_X, y = get_portion_dict[partition]()
+        original_X, y = partition_function_mapping[partition]()
         for drifted_X, drift_severity_level, drift_description in self._drift_data_generator(original_X, drift_features, severity_levels):
             if partition == "before":
                 yield (drifted_X, y), (drift_severity_level, f"BEFORE_{drift_description}")

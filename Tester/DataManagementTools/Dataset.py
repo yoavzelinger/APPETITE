@@ -148,7 +148,7 @@ class Dataset:
                         drift_features: str | set[str],
                         partition: str = "after",
                         severity_levels: tuple = tester_constants.DEFAULT_GENERATED_SEVERITY_LEVELS
-     ) -> Generator[tuple[tuple[pd.DataFrame, pd.Series], str, list[str]], None, None]:
+     ) -> Generator[tuple[tuple[pd.DataFrame, pd.Series], tuple[pd.DataFrame, pd.Series], str, list[str]], None, None]:
         """
         Drift generator for a specific partition
         
@@ -159,7 +159,7 @@ class Dataset:
 
         Returns:
             Generator[tuple[tuple[DataFrame, Series], str], None, None]: 
-                A generator of all possible drifts in the feature and the description of the drift in the given portion name.
+                A generator of all possible drifts in the feature and the description of the drift in the given partition name.
                 Each drift represented by the (drifted dataset, original y) and the description of the drift and the drifted features.
         """
         assert partition in Dataset.partitions, "Invalid partition name"
@@ -170,7 +170,7 @@ class Dataset:
         original_X, y = partition_function_mapping[partition]()
         for drifted_X, drift_severity_level, drift_description in self._drift_data_generator(original_X, drift_features, severity_levels):
             if partition == "before":
-                yield (drifted_X, y), (drift_severity_level, f"BEFORE_{drift_description}")
+                yield (drifted_X, y), drift_severity_level, f"BEFORE_{drift_description}"
                 continue
             # split to after and test
             X_after_drifted, y_after_drifted = drifted_X.iloc[:self.total_after_size], y.iloc[:self.total_after_size]

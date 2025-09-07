@@ -88,6 +88,8 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
         # print(f"Original model is not good enough, accuracy: {original_accuracy}")
         return
     
+    pre_drift_repair_accuracy = get_accuracy(sklearn_tree_model, *dataset.get_repair_data())
+    
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
     for (X_repair, y_repair), (X_test, y_test), (drift_severity_level, drift_description), drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
         try:
@@ -95,7 +97,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 continue
             post_drift_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test, y_test)
             post_drift_test_accuracy_drop = pre_drift_test_accuracy - post_drift_test_accuracy
-            if post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
+            if pre_drift_repair_accuracy - get_accuracy(sklearn_tree_model, X_repair, y_repair) < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
 
             print(f"\t\t\t\tDiagnosing")

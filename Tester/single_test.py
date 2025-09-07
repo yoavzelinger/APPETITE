@@ -123,7 +123,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", after_wi
                 tester_constants.DATASET_COLUMN_NAME: file_name,
                 tester_constants.TREE_SIZE_COLUMN_NAME: mapped_tree.node_count,
                 tester_constants.TREE_FEATURES_COUNT_COLUMN_NAME: len(mapped_tree.tree_features_set),
-                tester_constants.AFTER_SIZE_COLUMN_NAME: dataset.after_proportion * dataset.after_window_size * 100,
+                tester_constants.AFTER_SIZE_COLUMN_NAME: dataset.after_proportion * dataset.after_window_proportion * 100,
                 tester_constants.DRIFT_SIZE_COLUMN_NAME: drift_size,
                 tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),
                 tester_constants.DRIFT_SEVERITY_LEVEL_COLUMN_NAME: drift_severity_level,
@@ -157,7 +157,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", after_wi
         except Exception as e:
             exception_class = e.__class__.__name__
             diagnoser_info = f"(diagnoser: {diagnoser_class_name} - {diagnoser_output_name})" if 'diagnoser_output_name' in locals() else ""
-            scenario_description = f"{drift_description}, after window size: {dataset.after_window_size} {diagnoser_info}"
+            scenario_description = f"{drift_description}, after window size: {dataset.after_window_proportion} {diagnoser_info}"
             yield Exception(f"{exception_class} in {scenario_description}:\n "
                             f"{e}:\n "
                             f"{''.join(traceback.format_exception(type(e), e, e.__traceback__))}"

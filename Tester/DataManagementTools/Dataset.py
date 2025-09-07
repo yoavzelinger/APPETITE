@@ -173,6 +173,7 @@ class Dataset:
                 yield (drifted_X, y), drift_severity_level, f"BEFORE_{drift_description}"
                 continue
             # split to after and test
-            X_after_drifted, y_after_drifted = drifted_X.iloc[:self.total_after_size], y.iloc[:self.total_after_size]
-            X_test_drifted, y_test_drifted = drifted_X.iloc[self.total_after_size:], y.iloc[self.total_after_size:]
+            X_after_drifted, y_after_drifted = drifted_X.iloc[:self.after_window_size], y.iloc[:self.after_window_size]
+            X_test_drifted, y_test_drifted = drifted_X.iloc[self.after_size:], y.iloc[self.after_size:]
             yield (X_after_drifted, y_after_drifted), (X_test_drifted, y_test_drifted), drift_severity_level, drift_description
+

@@ -10,7 +10,7 @@ import Tester.TesterConstants as tester_constants
 def build_tree(
         X_train: pd.DataFrame,
         y_train: pd.Series,
-        is_retraining_model: bool = False
+        model: DecisionTreeClassifier = None
         ) -> DecisionTreeClassifier:
     """
     Build a decision tree classifier based on the given data and features.
@@ -18,6 +18,7 @@ def build_tree(
     Parameters:
         X_train (DataFrame): The training features set.
         y_train (Series): The training labels.
+        model (DecisionTreeClassifier, optional): An initialized model to train on (with previous best-chosen hyperparameters).
 
         If validation data not provided then it is taken from as 0.2 from the training data.
 
@@ -25,6 +26,10 @@ def build_tree(
         DecisionTreeClassifier: The decision tree classifier.
     """
     np.random.seed(tester_constants.RANDOM_STATE)
+    
+    if model is not None:
+        model.fit(X_train, y_train)
+        return model
     
     X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=tester_constants.VALIDATION_SIZE, random_state=tester_constants.RANDOM_STATE)
 
@@ -40,10 +45,6 @@ def build_tree(
             modified_y_train = pd.concat([modified_y_train, pd.Series([class_name])], ignore_index=True)
     cross_validation_split_count = min(tester_constants.CROSS_VALIDATION_SPLIT_COUNT , modified_y_train.value_counts().min())
 
-    if is_retraining_model:
-        retraining_decision_tree_classifier = DecisionTreeClassifier(random_state=tester_constants.RANDOM_STATE, criterion=tester_constants._CRITERIONS[0])
-        retraining_decision_tree_classifier.fit(X_train, y_train)
-        return retraining_decision_tree_classifier
     decision_tree_classifier = DecisionTreeClassifier(random_state=tester_constants.RANDOM_STATE)
     # Find best parameters using grid search cross validation (on training data)
     grid_search_classifier = GridSearchCV(estimator=decision_tree_classifier, 

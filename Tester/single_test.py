@@ -23,8 +23,8 @@ def get_dataset(directory: str,
 
 def get_sklearn_tree(X_train,
                      y_train,
-                     is_retraining_model: bool = False):
-    return build_tree(X_train, y_train, is_retraining_model=is_retraining_model)
+                     previous_model = None):
+    return build_tree(X_train, y_train, model=deepcopy(previous_model))
 
 def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
     return MappedDecisionTree(sklearn_tree_model, feature_types=feature_types, X=X_train, y=y_train)
@@ -107,11 +107,11 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", proporti
 
 
             X_before_after_concat, y_before_after_concat = pd.concat([X_train, X_after_drifted]), pd.concat([y_train, y_after])
-            before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat, is_retraining_model=True)
+            before_after_retrained_tree = get_sklearn_tree(X_before_after_concat, y_before_after_concat, previous_model=mapped_tree.sklearn_tree_model)
             before_after_retrained_accuracy = get_accuracy(before_after_retrained_tree, X_test_drifted, y_test)
             before_after_retrained_accuracy_bump = before_after_retrained_accuracy - drifted_test_accuracy
 
-            after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after, is_retraining_model=True)
+            after_retrained_tree = get_sklearn_tree(X_after_drifted, y_after, previous_model=mapped_tree.sklearn_tree_model)
             after_retrained_accuracy = get_accuracy(after_retrained_tree, X_test_drifted, y_test)
             after_retrained_accuracy_bump = after_retrained_accuracy - drifted_test_accuracy
 

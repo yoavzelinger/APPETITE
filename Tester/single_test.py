@@ -15,12 +15,10 @@ from Tester.metrics import get_accuracy, get_wasted_effort, get_correctly_identi
 
 def get_dataset(directory: str,
                 file_name: str,
-                file_extension: str = ".csv",
-                proportions_tuple: int | tuple[float] = tester_constants.PROPORTIONS_TUPLE,
-                after_window_size: float = tester_constants.AFTER_WINDOW_SIZE
+                file_extension: str = ".csv"
                 )-> Dataset:
     source = os.path.join(directory, f"{file_name}{file_extension}")
-    return Dataset(source, proportions_tuple, after_window_size)
+    return Dataset(source)
 
 def get_sklearn_tree(X_train,
                      y_train,
@@ -78,8 +76,8 @@ def get_total_drift_types(drifted_features_types):
         return "numeric"
     return "binary"
 
-def run_single_test(directory, file_name, file_extension: str = ".csv", proportions_tuple=tester_constants.PROPORTIONS_TUPLE, after_window_test_sizes=tester_constants.AFTER_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
-    dataset = get_dataset(directory, file_name, file_extension=file_extension, proportions_tuple=proportions_tuple)
+def run_single_test(directory, file_name, file_extension: str = ".csv", after_window_test_sizes=tester_constants.AFTER_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
+    dataset = get_dataset(directory, file_name, file_extension=file_extension)
 
     X_train, y_train = dataset.get_before_concept()
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)

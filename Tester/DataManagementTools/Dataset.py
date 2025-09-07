@@ -57,6 +57,7 @@ class Dataset:
         self.data[self.target_name] = pd.Categorical(y.fillna(y.mode().iloc[0]))
         self.data[self.target_name] = self.data[self.target_name].cat.codes
 
+        if tester_constants.DRIFT_SYNTHESIZING_VERSION == 1:  # shuffle data - same shuffle always
             self.data = self.data.sample(frac=1, random_state=tester_constants.RANDOM_STATE).reset_index(drop=True)
 
         self.data.attrs["name"] = self.name

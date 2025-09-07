@@ -143,7 +143,7 @@ class Dataset:
                         drift_features: str | set[str],
                         partition: str = "after",
                         severity_levels: tuple = tester_constants.DEFAULT_GENERATED_SEVERITY_LEVELS
-     ) -> Generator[tuple[tuple[pd.DataFrame, pd.Series], tuple[pd.DataFrame, pd.Series], str, list[str]], None, None]:
+     ) -> Generator[tuple[tuple[pd.DataFrame, pd.Series], tuple[pd.DataFrame, pd.Series], int, str], None, None]:
         """
         Drift generator for a specific partition
         

@@ -94,6 +94,8 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", after_wi
     mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
     for (X_after_drifted, y_after), (X_test_drifted, y_test), (drift_severity_level, drift_description), drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset, after_window_test_sizes=after_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
         try:
+            if X_after_drifted.empty or X_test_drifted.empty: # TODO: Think about expanding this and not allowing small datasets as well
+                continue
             drifted_after_accuracy, drifted_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_after_drifted, y_after), get_accuracy(mapped_tree.sklearn_tree_model, X_test_drifted, y_test)
             drifted_after_accuracy_drop, drifted_test_accuracy_drop = original_after_accuracy - drifted_after_accuracy, original_test_accuracy - drifted_test_accuracy
             if drifted_after_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or drifted_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift

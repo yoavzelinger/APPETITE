@@ -10,8 +10,6 @@ import Tester.TesterConstants as tester_constants
 def build_tree(
         X_train: pd.DataFrame,
         y_train: pd.Series,
-        X_validation: pd.DataFrame = None,
-        y_validation: pd.Series = None,
         is_retraining_model: bool = False
         ) -> DecisionTreeClassifier:
     """
@@ -20,8 +18,6 @@ def build_tree(
     Parameters:
         X_train (DataFrame): The training features set.
         y_train (Series): The training labels.
-        X_validation (DataFrame): Validation features set.
-        y_validation (Series): The validation labels.
 
         If validation data not provided then it is taken from as 0.2 from the training data.
 
@@ -29,9 +25,8 @@ def build_tree(
         DecisionTreeClassifier: The decision tree classifier.
     """
     np.random.seed(tester_constants.RANDOM_STATE)
-    if X_validation is None:
-        X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=tester_constants.VALIDATION_SIZE, random_state=tester_constants.RANDOM_STATE)
-    assert set(X_train.columns) == set(X_validation.columns), "Validation data must have the same columns as the training data"
+    
+    X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=tester_constants.VALIDATION_SIZE, random_state=tester_constants.RANDOM_STATE)
 
     # Grid search modification
     modified_X_train, modified_y_train = X_train, y_train

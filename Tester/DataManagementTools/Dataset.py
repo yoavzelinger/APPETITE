@@ -4,7 +4,7 @@ from scipy.io.arff import loadarff
 import pandas as pd
 import math
 
-from typing import Generator
+from typing import Generator, Callable
 
 import Tester.TesterConstants as tester_constants
 
@@ -174,3 +174,61 @@ class Dataset:
             X_test, y_test = drifted_X.iloc[self.test_size:], y.iloc[self.test_size:]
             yield (X_repair, y_repair), (X_test, y_test), drift_severity_level, drift_description
 
+    def get_sorted_data_by_features(self,
+                              features: set[str]
+     ) -> None:
+        """
+        Sort the data by the given features.
+        
+        Parameters:
+            features (list[str]): The features to sort by.
+        """
+        if len(features) == 2:
+            raise NotImplementedError("Sorting by more than one feature is not implemented yet")
+        
+        feature = next(iter(features))
+        
+        assert self.feature_types[feature] == "numeric", "Sorting by non-numeric feature is not supported"
+        
+        # sort by the feature
+        return self.data.sort_values(by=feature, ascending=True).reset_index(drop=True)
+
+    def drift_generator_v2(self,
+                           drift_features: set[str]
+        ) -> Generator[tuple[tuple[pd.DataFrame, pd.Series], tuple[pd.DataFrame, pd.Series], tuple[pd.DataFrame, pd.Series], str], None, None]:
+        """
+        Drift generator for a specific partition - version 2
+        
+        The drift is done by sorting the data by the given features and splitting the data to before and after concept.
+        The post-drift will be on the top or bottom of the sorted data.
+        The before concept and after concept will be shuffled before re-partitioning to repair and test.
+
+        Parameters:
+            drift_features (list[str]): The features to drift.
+        Returns:
+            A generator with the following data:
+                tuple[DataFrame, Series]: The before concept data (X, y).
+                tuple[DataFrame, Series]: The repair data (X, y).
+                tuple[DataFrame, Series]: The test data (X, y).
+                str: The description of the drift.
+        """
+        sorted_data = self.get_sorted_data_by_features(drift_features)
+
+        drift_type_mapping: dict[str, Callable[[pd.DataFrame], tuple[pd.DataFrame, pd.DataFrame]]] = {
+            "top": lambda data: (data.iloc[: self.before_concept_size], data.iloc[-self.after_concept_size: ]), # after is the highest values
+            "bottom": lambda data: (data.iloc[-self.before_concept_size: ], data.iloc[: self.after_concept_size]) # after is the lowest values
+        }
+
+        for drift_type, drift_function in drift_type_mapping.items():
+            drift_description = f"{drift_type} {'-'.join(sorted(drift_features))}"
+            before_concept_data, after_concept_data = drift_function(sorted_data)
+            assert len(before_concept_data) == self.before_concept_size and len(after_concept_data) == self.after_concept_size, "Drifted data size is not correct"
+            
+            before_concept_data = before_concept_data.sample(frac=1, random_state=tester_constants.RANDOM_STATE).reset_index(drop=True)
+            after_concept_data = after_concept_data.sample(frac=1, random_state=tester_constants.RANDOM_STATE).reset_index(drop=True)
+
+            X_before, y_before = self.split_features_targets(before_concept_data)
+            X_repair, y_repair = self.split_features_targets(after_concept_data.iloc[ :self.repair_window_size])
+            X_test, y_test = self.split_features_targets(after_concept_data.iloc[-self.test_size: ])
+
+            yield (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description

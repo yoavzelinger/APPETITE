@@ -76,6 +76,8 @@ errors = pd.DataFrame(columns=["name", "error"])
 
 
 ###### Run Tests #####
+single_test_function = run_single_test if tester_constants.DRIFT_SYNTHESIZING_VERSION == 1 else run_single_test_v2
+
 with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_file:
     descriptions_reader = DictReader(descriptions_file)
     for dataset_description in descriptions_reader:
@@ -92,7 +94,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         datasets_count -= 1
 
         print(f"Running tests for {dataset_name}")
-        for test_result in run_single_test(tester_constants.DATASETS_DIRECTORY_FULL_PATH, dataset_name, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=tester_constants.diagnosers_data):
+        for test_result in single_test_function(tester_constants.DATASETS_DIRECTORY_FULL_PATH, dataset_name, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=tester_constants.diagnosers_data):
             if isinstance(test_result, Exception):
                 if not skip_exceptions:
                     raise test_result

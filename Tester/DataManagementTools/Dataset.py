@@ -171,5 +171,6 @@ class Dataset:
                 continue
             # split to repair and test
             X_repair, y_repair = drifted_X.iloc[:self.repair_window_size], y.iloc[:self.repair_window_size]
-            X_test, y_test = drifted_X.iloc[self.repair_size:], y.iloc[self.repair_size:]
+            X_test, y_test = drifted_X.iloc[self.test_size:], y.iloc[self.test_size:]
             yield (X_repair, y_repair), (X_test, y_test), drift_severity_level, drift_description
+

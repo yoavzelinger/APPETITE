@@ -232,6 +232,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 tester_constants.REPAIR_SIZE_COLUMN_NAME: dataset.repair_proportion * dataset.repair_window_proportion * 100,
                 tester_constants.DRIFT_SIZE_COLUMN_NAME: drift_size,
                 tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),
+                tester_constants.DRIFT_SEVERITY_LEVEL_COLUMN_NAME: 1, # v2 does not support severity levels
                 tester_constants.DRIFTED_FEATURES_COLUMN_NAME: ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
                 tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: ", ".join(drifted_features_types),
                 tester_constants.DRIFT_DESCRIPTION_COLUMN_NAME: drift_description,

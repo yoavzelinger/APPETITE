@@ -94,6 +94,8 @@ class BARINEL(SFLDT):
     def add_target_to_feature_components(self,
                                          target_name: str = "target"
     ) -> None:
+        if constants.BARINEL_ADD_TARGET_TO_FEATURE_COMPONENTS:
+            super().add_target_to_feature_components(target_name)
         pass
 
     def combine_stat_diagnoses(self

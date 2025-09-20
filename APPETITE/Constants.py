@@ -26,3 +26,5 @@ DEFAULT_COMBINE_PRIOR_CONFIDENCE = False # Use the prior confidence in Error vec
 DEFAULT_COMBINE_COMPONENTS_DEPTH = False # Include the components depth in the components' participations
 
 BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5 # setting the error threshold (from which tests considered as failed) for mean + std * BARINEL_THRESHOLD_ABOVE_STD_RATE
+
+BARINEL_ADD_TARGET_TO_FEATURE_COMPONENTS = True # Whether to add the target as component if we're merging nodes based on the feature

@@ -109,6 +109,7 @@ TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME = "TestingDiagnosersData"
 diagnosers_data = {}
 with open(os_path.join(__package__, f"{TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME}.json"), "r") as testing_diagnosers_configuration_file:
     diagnosers_data = load_json(testing_diagnosers_configuration_file)
+diagnosers_data = [diagnoser_data for diagnoser_data in diagnosers_data if not diagnoser_data.get("disabled", False)]
 diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output_name"], diagnosers_data))
 
 

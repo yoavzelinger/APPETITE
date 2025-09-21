@@ -113,10 +113,12 @@ diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output
 
 
 #   TESTING INFO COLUMNS
-DATASET_COLUMN_NAME = "dataset name"
+DATASET_NAME_COLUMN_NAME = "dataset name"
+DATASET_SIZE_COLUMN_NAME = "dataset size"
 TREE_SIZE_COLUMN_NAME = "tree size"
 TREE_FEATURES_COUNT_COLUMN_NAME = "tree features count"
-REPAIR_SIZE_COLUMN_NAME = "repair size"
+REPAIR_WINDOW_PERCENTAGE_COLUMN_NAME = "repair window percentage"
+REPAIR_WINDOW_SIZE_COLUMN_NAME = "repair window size"
 DRIFT_SIZE_COLUMN_NAME = "drift size"
 TOTAL_DRIFT_TYPE_COLUMN_NAME = "total drift type"
 DRIFT_SEVERITY_LEVEL_COLUMN_NAME = "drift severity level"
@@ -125,10 +127,12 @@ DRIFTED_FEATURES_TYPES_COLUMN_NAME = "drifted features types"
 DRIFT_DESCRIPTION_COLUMN_NAME = "drift description"
 
 GROUP_BY_COLUMNS = {
-    DATASET_COLUMN_NAME: "string",
+    DATASET_NAME_COLUMN_NAME: "string",
+    DATASET_SIZE_COLUMN_NAME: "int64",
     TREE_SIZE_COLUMN_NAME: "int64",
     TREE_FEATURES_COUNT_COLUMN_NAME: "int64",
-    REPAIR_SIZE_COLUMN_NAME: "float64",
+    REPAIR_WINDOW_PERCENTAGE_COLUMN_NAME: "float64",
+    REPAIR_WINDOW_SIZE_COLUMN_NAME: "int64",
     DRIFT_SIZE_COLUMN_NAME: "int64",
     TOTAL_DRIFT_TYPE_COLUMN_NAME: "string",
     DRIFT_SEVERITY_LEVEL_COLUMN_NAME: "int64",

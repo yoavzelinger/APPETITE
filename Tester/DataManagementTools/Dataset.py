@@ -65,14 +65,17 @@ class Dataset:
         n_samples = len(self.data)
         self.before_proportion, self.repair_proportion, self.test_proportion = tester_constants.PROPORTIONS_TUPLE
         self.before_concept_size = math.floor(self.before_proportion*n_samples)
-        self.repair_size = math.floor(self.repair_proportion*n_samples)
+        self.total_repair_size = math.floor(self.repair_proportion*n_samples)
         self.test_size = math.floor(self.test_proportion*n_samples)
-        self.after_concept_size = self.repair_size + self.test_size
+        self.after_concept_size = self.total_repair_size + self.test_size
 
-        assert all([0 < current_size for current_size in (self.before_concept_size, self.repair_size, self.test_size)])
-        assert (self.before_concept_size + self.repair_size + self.test_size) <= n_samples
+        assert all([0 < current_size for current_size in (self.before_concept_size, self.total_repair_size, self.test_size)])
+        assert (self.before_concept_size + self.total_repair_size + self.test_size) <= n_samples
 
         self.update_repair_window_size(tester_constants.DEFAULT_REPAIR_WINDOW_PROPORTION)
+
+    def __len__(self) -> int:
+        return len(self.data)
 
     def update_repair_window_size(self, 
                           new_repair_window_size: int | float
@@ -80,7 +83,7 @@ class Dataset:
         assert 0 < new_repair_window_size <= 1
 
         self.repair_window_proportion = new_repair_window_size
-        self.repair_window_size = math.floor(self.repair_size * self.repair_window_proportion)
+        self.repair_window_size = math.floor(self.total_repair_size * self.repair_window_proportion)
 
     def split_features_targets(self, 
                                data: pd.DataFrame
@@ -108,7 +111,7 @@ class Dataset:
     
     def get_repair_data(self) -> tuple[pd.DataFrame, pd.Series]:
         X_after, y_after = self.get_after_concept_data()
-        return X_after.iloc[:self.repair_size], y_after.iloc[:self.repair_size]
+        return X_after.iloc[:self.total_repair_size], y_after.iloc[:self.total_repair_size]
     
     def get_test_data(self) -> tuple[pd.DataFrame, pd.Series]:
         X_after, y_after = self.get_after_concept_data()

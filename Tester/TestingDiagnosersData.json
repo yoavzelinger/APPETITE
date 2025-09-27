@@ -99,6 +99,7 @@
         }
     },
     {
+        "disabled": true,
         "output_name": "SHAP_Contributions-Feature_Components-BARINEL",
         "class_name": "BARINEL",
         "parameters": {

@@ -122,7 +122,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 tester_constants.TREE_SIZE_COLUMN_NAME: mapped_tree.node_count,
                 tester_constants.TREE_FEATURES_COUNT_COLUMN_NAME: len(mapped_tree.tree_features_set),
                 tester_constants.REPAIR_WINDOW_PERCENTAGE_COLUMN_NAME: dataset.repair_proportion * dataset.repair_window_proportion * 100,
-                tester_constants.REPAIR_WINDOW_SIZE_COLUMN_NAME: dataset.total_repair_size * dataset.repair_window_proportion,
+                tester_constants.REPAIR_WINDOW_SIZE_COLUMN_NAME: dataset.repair_window_size,
                 tester_constants.DRIFT_SIZE_COLUMN_NAME: drift_size,
                 tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),
                 tester_constants.DRIFT_SEVERITY_LEVEL_COLUMN_NAME: drift_severity_level,
@@ -233,7 +233,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 tester_constants.TREE_SIZE_COLUMN_NAME: mapped_tree.node_count,
                 tester_constants.TREE_FEATURES_COUNT_COLUMN_NAME: len(mapped_tree.tree_features_set),
                 tester_constants.REPAIR_WINDOW_PERCENTAGE_COLUMN_NAME: dataset.repair_proportion * dataset.repair_window_proportion * 100,
-                tester_constants.REPAIR_WINDOW_SIZE_COLUMN_NAME: dataset.total_repair_size * dataset.repair_window_proportion,
+                tester_constants.REPAIR_WINDOW_SIZE_COLUMN_NAME: dataset.repair_window_size,
                 tester_constants.DRIFT_SIZE_COLUMN_NAME: drift_size,
                 tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),
                 tester_constants.DRIFT_SEVERITY_LEVEL_COLUMN_NAME: 1, # v2 does not support severity levels

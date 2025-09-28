@@ -129,6 +129,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 tester_constants.DRIFTED_FEATURES_COLUMN_NAME: ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
                 tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: ", ".join(drifted_features_types),
                 tester_constants.DRIFT_DESCRIPTION_COLUMN_NAME: drift_description,
+                tester_constants.AFTER_ACCURACY_COLUMN_NAME: post_drift_test_accuracy * 100,
                 tester_constants.AFTER_ACCURACY_DECREASE_COLUMN_NAME: post_drift_test_accuracy_drop * 100,
                 f"{tester_constants.NEW_DRIFT_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_drift_retrained_accuracy_bump * 100,
                 f"{tester_constants.NEW_ALL_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_all_retrained_accuracy_bump * 100
@@ -240,6 +241,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 tester_constants.DRIFTED_FEATURES_COLUMN_NAME: ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
                 tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: ", ".join(drifted_features_types),
                 tester_constants.DRIFT_DESCRIPTION_COLUMN_NAME: drift_description,
+                tester_constants.AFTER_ACCURACY_COLUMN_NAME: post_drift_test_accuracy * 100,
                 tester_constants.AFTER_ACCURACY_DECREASE_COLUMN_NAME: post_drift_test_accuracy_drop * 100,
                 f"{tester_constants.NEW_DRIFT_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_drift_retrained_accuracy_bump * 100,
                 f"{tester_constants.NEW_ALL_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_all_retrained_accuracy_bump * 100

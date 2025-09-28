@@ -169,6 +169,7 @@ METRICS_COLUMNS = {
     AFTER_ACCURACY_DECREASE_COLUMN_NAME: "float64"
 }
 for baseline_retrainer_output_name in BASELINE_RETRAINERS_OUTPUT_NAMES:
+    METRICS_COLUMNS[f"{baseline_retrainer_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
     METRICS_COLUMNS[f"{baseline_retrainer_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
 
 for diagnoser_output_name in diagnosers_output_names:
@@ -176,6 +177,7 @@ for diagnoser_output_name in diagnosers_output_names:
     METRICS_COLUMNS[f"{diagnoser_output_name} {WASTED_EFFORT_NAME_SUFFIX}"] = "float64"
     METRICS_COLUMNS[f"{diagnoser_output_name} {FAULTY_FEATURES_NAME_SUFFIX}"] = "string"
     METRICS_COLUMNS[f"{diagnoser_output_name} {CORRECTLY_IDENTIFIED_NAME_SUFFIX}"] = "float64"
+    METRICS_COLUMNS[f"{diagnoser_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
     METRICS_COLUMNS[f"{diagnoser_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
 
 

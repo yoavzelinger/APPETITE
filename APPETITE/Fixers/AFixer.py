@@ -32,9 +32,10 @@ class AFixer(ABC):
         self.y = y
         diagnoser_class = get_diagnoser(diagnoser__class_name)
         self.diagnoser: ADiagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, **diagnoser_parameters)
-        self.faulty_nodes = None    # List of sk_indices of the faulty nodes; Lazy evaluation
         self.tree_already_fixed = False
         self.diagnoser_output_name = diagnoser_output_name if diagnoser_output_name else diagnoser__class_name
+        self.diagnoses = self.diagnoser.get_diagnoses()
+        self.faulty_nodes = self.diagnoses[0]
 
     def _create_fixed_mapped_tree(self) -> MappedDecisionTree:
         """
@@ -60,7 +61,6 @@ class AFixer(ABC):
             MappedDecisionTree: The fixed decision tree.
             list[int]: The indices of the faulty nodes.
         """
-        assert self.faulty_nodes is not None, "The faulty nodes weren't identified yet"
         assert self.tree_already_fixed, "The tree wasn't fixed yet"
 
         return self._create_fixed_mapped_tree(), self.faulty_nodes

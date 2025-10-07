@@ -143,8 +143,6 @@ class Fixer(AFixer):
             MappedDecisionTree: The fixed decision tree.
             list[int]: The indices of the faulty nodes.
         """
-        self.diagnoses = self.diagnoser.get_diagnoses()
-        self.faulty_nodes = self.diagnoses[0]
         # print(f"Fixing faulty nodes: {self.faulty_nodes}")
         for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):
             self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)

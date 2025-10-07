@@ -83,8 +83,8 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
     sklearn_tree_model = get_sklearn_tree(X_train, y_train)
 
     pre_drift_X_test, y_test = dataset.get_test_data()
-    pre_drift_test_accuracy = get_accuracy(sklearn_tree_model, pre_drift_X_test, y_test)
-    if pre_drift_test_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
+    pre_drift_accuracy = get_accuracy(sklearn_tree_model, pre_drift_X_test, y_test)
+    if pre_drift_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
         # print(f"Original model is not good enough, accuracy: {original_accuracy}")
         return
     
@@ -96,7 +96,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
             if X_repair.empty or X_test.empty:
                 continue
             post_drift_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test, y_test)
-            post_drift_test_accuracy_drop = pre_drift_test_accuracy - post_drift_test_accuracy
+            post_drift_test_accuracy_drop = pre_drift_accuracy - post_drift_test_accuracy
             if pre_drift_repair_accuracy - get_accuracy(sklearn_tree_model, X_repair, y_repair) < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
 

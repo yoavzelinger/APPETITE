@@ -31,11 +31,11 @@ class AFixer(ABC):
         self.X = X
         self.y = y
         diagnoser_class = get_diagnoser(diagnoser__class_name)
-        self.diagnoser: ADiagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, **diagnoser_parameters)
-        self.tree_already_fixed = False
         self.diagnoser_output_name = diagnoser_output_name if diagnoser_output_name else diagnoser__class_name
+        self.diagnoser: ADiagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, **diagnoser_parameters)
         self.diagnoses = self.diagnoser.get_diagnoses()
-        self.faulty_nodes = self.diagnoses[0]
+        self.faulty_nodes: list[int] = self.diagnoses[0]
+        self.tree_already_fixed = False
 
     def _create_fixed_mapped_tree(self) -> MappedDecisionTree:
         """

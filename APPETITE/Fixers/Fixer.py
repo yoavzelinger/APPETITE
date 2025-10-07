@@ -7,36 +7,9 @@ from APPETITE.MappedDecisionTree import MappedDecisionTree
 
 from APPETITE.Diagnosers import *
 
-class Fixer:
-    def __init__(self, 
-                 mapped_tree: MappedDecisionTree,
-                 X: pd.DataFrame,
-                 y: pd.Series,
-                 diagnoser__class_name: str,
-                 diagnoser_parameters: dict[str, object],
-                 diagnoser_output_name: str=None
-    ):
-        """
-        Initialize the Fixer.
-        
-        Parameters:
-        mapped_tree (MappedDecisionTree): The mapped decision tree.
-        X (DataFrame): The data.
-        y (Series): The target column.
-        diagnoser_name (str): The diagnoser name.
-        diagnoser_parameters ( dict[str, object]): The diagnoser parameters.
-        diagnoser_output_name (str): The diagnoser output name.
-        """
-        self.mapped_tree = deepcopy(mapped_tree)
-        self.feature_types = mapped_tree.data_feature_types
-        self.X = X
-        self.y = y
-        diagnoser_class = get_diagnoser(diagnoser__class_name)
-        self.diagnoser: ADiagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, **diagnoser_parameters)
-        self.faulty_nodes = None    # List of sk_indices of the faulty nodes; Lazy evaluation
-        self.tree_already_fixed = False
-        self.diagnoser_output_name = diagnoser_output_name if diagnoser_output_name else diagnoser__class_name
+from .AFixer import AFixer
 
+class Fixer(AFixer):
     def _filter_data_reached_faults_generator(self,
                                   faults_count: int                           
         ) -> Generator[pd.DataFrame, None, None]:
@@ -161,21 +134,6 @@ class Fixer:
         else:
             self._fix_categorical_faulty_node(faulty_node_index)
     
-    def _create_fixed_mapped_tree(self) -> MappedDecisionTree:
-        """
-        Create new mapped decision tree after the fix.
-
-        Returns:
-            MappedDecisionTree: The fixed decision tree.
-        """
-        sklearn_tree_model = self.mapped_tree.sklearn_tree_model
-        feature_types = self.mapped_tree.data_feature_types
-        # Create a new MappedDecisionTree object with the fixed sklearn tree model
-        fixed_mapped_decision_tree = MappedDecisionTree(sklearn_tree_model, feature_types=feature_types)
-        self.mapped_tree = fixed_mapped_decision_tree
-        self.tree_already_fixed = True
-        return fixed_mapped_decision_tree
-    
     def fix_tree(self
      ) -> tuple[MappedDecisionTree, list[int]]:
         """
@@ -190,4 +148,5 @@ class Fixer:
         # print(f"Fixing faulty nodes: {self.faulty_nodes}")
         for faulty_node_index, data_reached_faulty_node in zip(self.faulty_nodes, list(self._filter_data_reached_faults_generator(len(self.faulty_nodes)))):
             self.fix_faulty_node(faulty_node_index, data_reached_faulty_node)
-        return self._create_fixed_mapped_tree(), self.faulty_nodes
+        self.tree_already_fixed = True
+        return super().fix_tree()

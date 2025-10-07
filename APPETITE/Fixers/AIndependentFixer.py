@@ -1,13 +1,12 @@
 import pandas as pd
 import numpy as np
-from typing import Generator
 
 from .AFixer import AFixer
 
 class AIndependentFixer(AFixer):
-    def _filter_data_reached_faults_generator(self,
-                                  faults_count: int                           
-        ) -> Generator[pd.DataFrame, None, None]:
+    def _filter_data_reached_fault(self,
+                                  faulty_node_index: int                           
+        ) -> pd.DataFrame:
         """
         Filter the data that reached the faulty nodes.
 
@@ -15,17 +14,15 @@ class AIndependentFixer(AFixer):
             faulty_nodes_count (int): The number of faulty nodes.
 
         Returns:
-            DataFrame: The data that reached the faulty node if there is only one faulty node.
-            Generator[DataFrame, None, None]: The data that reached each faulty node if there are more than one faulty node.
+            DataFrame: The data that reached the faulty nodes.
         """
-        for faulty_node_index in self.faulty_nodes[: faults_count]:
-            faulty_node = self.mapped_tree.get_node(faulty_node_index)
+        faulty_node = self.mapped_tree.get_node(faulty_node_index)
+        filtered_data = faulty_node.get_data_reached_node(self.X)
+        while filtered_data.empty and faulty_node.parent is not None:
+            # Get the data that reached the parent node
+            faulty_node = faulty_node.parent
             filtered_data = faulty_node.get_data_reached_node(self.X)
-            while filtered_data.empty and faulty_node.parent is not None:
-                # Get the data that reached the parent node
-                faulty_node = faulty_node.parent
-                filtered_data = faulty_node.get_data_reached_node(self.X)
-            yield filtered_data
+        return filtered_data
 
     def _fix_terminal_faulty_node(self,
                                  faulty_node_index: int,

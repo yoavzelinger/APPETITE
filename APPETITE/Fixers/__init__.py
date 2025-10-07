@@ -1,1 +1,1 @@
-from .Fixer import Fixer
+from .AllNodesFixer import AllNodesFixer

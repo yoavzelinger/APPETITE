@@ -200,6 +200,36 @@ class MappedDecisionTree:
         
         def __hash__(self):
             return hash(self.sk_index)
+        
+        def is_successor_of(self,
+                             other: 'MappedDecisionTree.DecisionTreeNode'
+        ) -> bool:
+            """
+            Check if the node is a successor of another node.
+
+            Parameters:
+                other (DecisionTreeNode): The other node.
+            Returns:
+                bool: True if the node is a successor of the other node, False otherwise.
+            """
+            if self == other:
+                return True
+            if self.is_terminal():
+                return False
+            return self.left_child.is_successor_of(other) or self.right_child.is_successor_of(other)
+        
+        def is_ancestor_of(self,
+                               other: 'MappedDecisionTree.DecisionTreeNode'
+        ) -> bool:
+            """
+            Check if the node is a ancestor of another node.
+
+            Parameters:
+                other (DecisionTreeNode): The other node.
+            Returns:
+                bool: True if the node is a ancestor of the other node, False otherwise.
+            """
+            return other.is_successor_of(self)
 
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,

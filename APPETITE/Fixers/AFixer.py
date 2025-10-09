@@ -72,8 +72,7 @@ class AFixer(ABC):
         return fixed_mapped_decision_tree
     
     @abstractmethod
-    def fix_tree(self
-     ) -> tuple[MappedDecisionTree, list[int]]:
+    def fix_tree(self) -> tuple[MappedDecisionTree, list[int]]:
         """
         Fix the decision tree.
 

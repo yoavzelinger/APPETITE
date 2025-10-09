@@ -3,8 +3,7 @@ from APPETITE.MappedDecisionTree import MappedDecisionTree
 from .AIndependentFixer import AIndependentFixer
 
 class TopFeaturesNodesFixer(AIndependentFixer):
-    def fix_tree(self
-     ) -> tuple[MappedDecisionTree, list[int]]:
+    def fix_tree(self) -> tuple[MappedDecisionTree, list[int]]:
         """
         Fix the decision tree.
 

@@ -15,7 +15,7 @@ class AFixer(ABC):
                  y: pd.Series,
                  diagnoser__class_name: str,
                  diagnoser_parameters: dict[str, object],
-                 diagnoser_output_name: str=None
+                 diagnoser_output_name: str = None
     ):
         """
         Initialize the Fixer.

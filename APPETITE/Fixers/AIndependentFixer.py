@@ -4,26 +4,6 @@ import numpy as np
 from .AFixer import AFixer
 
 class AIndependentFixer(AFixer):
-    def _filter_data_reached_fault(self,
-                                  faulty_node_index: int                           
-        ) -> pd.DataFrame:
-        """
-        Filter the data that reached the faulty nodes.
-
-        Parameters:
-            faulty_nodes_count (int): The number of faulty nodes.
-
-        Returns:
-            DataFrame: The data that reached the faulty nodes.
-        """
-        faulty_node = self.mapped_tree.get_node(faulty_node_index)
-        filtered_data = faulty_node.get_data_reached_node(self.X)
-        while filtered_data.empty and faulty_node.parent is not None:
-            # Get the data that reached the parent node
-            faulty_node = faulty_node.parent
-            filtered_data = faulty_node.get_data_reached_node(self.X)
-        return filtered_data
-
     def _fix_terminal_faulty_node(self,
                                  faulty_node_index: int,
                                  data_reached_faulty_node: pd.DataFrame

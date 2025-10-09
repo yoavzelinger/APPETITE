@@ -37,6 +37,26 @@ class AFixer(ABC):
         self.faulty_nodes: list[int] = self.diagnoses[0]
         self.tree_already_fixed = False
 
+    def _filter_data_reached_fault(self,
+                                  faulty_node_index: int                           
+        ) -> pd.DataFrame:
+        """
+        Filter the data that reached the faulty nodes.
+
+        Parameters:
+            faulty_nodes_count (int): The number of faulty nodes.
+
+        Returns:
+            DataFrame: The data that reached the faulty nodes.
+        """
+        faulty_node = self.mapped_tree.get_node(faulty_node_index)
+        filtered_data = faulty_node.get_data_reached_node(self.X)
+        while filtered_data.empty and faulty_node.parent is not None:
+            # Get the data that reached the parent node
+            faulty_node = faulty_node.parent
+            filtered_data = faulty_node.get_data_reached_node(self.X)
+        return filtered_data
+
     def _create_fixed_mapped_tree(self) -> MappedDecisionTree:
         """
         Create new mapped decision tree after the fix.

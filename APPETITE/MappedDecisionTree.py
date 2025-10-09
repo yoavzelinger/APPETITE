@@ -230,6 +230,19 @@ class MappedDecisionTree:
                 bool: True if the node is a ancestor of the other node, False otherwise.
             """
             return other.is_successor_of(self)
+        
+        def are_connected(self,
+                          other: 'MappedDecisionTree.DecisionTreeNode'
+        ) -> bool:
+            """
+            Check if the node is connected to another node.
+
+            Parameters:
+                other (DecisionTreeNode): The other node.
+            Returns:
+                bool: True if the node is connected to the other node, False otherwise.
+            """
+            return self.is_successor_of(other) or self.is_ancestor_of(other)
 
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,

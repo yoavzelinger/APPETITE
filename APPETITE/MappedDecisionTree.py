@@ -203,7 +203,7 @@ class MappedDecisionTree:
 
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,
-                 feature_types: dict[str, str] = None,
+                 feature_types: dict[str, str],
                  prune: bool = True,
                  X: pd.DataFrame = None,
                  y: pd.Series = None

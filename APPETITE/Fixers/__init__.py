@@ -1,1 +1,4 @@
 from .AllNodesFixer import AllNodesFixer
+from .TopNodeFixer import TopNodeFixer
+from .TopFeaturesNodesFixer import TopFeaturesNodesFixer
+from .SubTreeRetrainingFixer import SubTreeRetrainingFixer

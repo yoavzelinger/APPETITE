@@ -3,6 +3,7 @@ import importlib
 import inspect
 
 from .ADiagnoser import ADiagnoser
+from .Oracle import Oracle
 
 DIAGNOSER_CLASSES_DICT = {}
 
@@ -49,4 +50,4 @@ def get_diagnoser(diagnoser_name: str
     
     return DIAGNOSER_CLASSES_DICT[diagnoser_name]
 
-__all__ = ["ADiagnoser", "get_diagnoser"]
+__all__ = ["ADiagnoser", "get_diagnoser", "Oracle"]

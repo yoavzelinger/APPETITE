@@ -122,9 +122,6 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 "y": y_repair,
                 "diagnoser__class_name": Oracle.__name__,
                 "diagnoser_parameters": {
-                    "mapped_tree": mapped_tree,
-                    "X": X_repair,
-                    "y": y_repair,
                     "actual_faulty_features": drifted_features
                 }
             }
@@ -270,9 +267,6 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 "y": y_repair,
                 "diagnoser__class_name": Oracle.__name__,
                 "diagnoser_parameters": {
-                    "mapped_tree": mapped_tree,
-                    "X": X_repair,
-                    "y": y_repair,
                     "actual_faulty_features": drifted_features
                 }
             }

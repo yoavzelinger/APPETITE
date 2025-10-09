@@ -144,7 +144,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
             oracle_SubTreeRetrainingFixer_fixed_tree: DecisionTreeClassifier
             oracle_SubTreeRetrainingFixer = SubTreeRetrainingFixer(**oracle_fixes_arguments)
             oracle_SubTreeRetrainingFixer_fixed_tree, _ = oracle_SubTreeRetrainingFixer.fix_tree()
-            oracle_SubTreeRetrainingFixer_accuracy = get_accuracy(oracle_SubTreeRetrainingFixer_fixed_tree.sklearn_tree_model, X_test, y_test)
+            oracle_SubTreeRetrainingFixer_accuracy = get_accuracy(oracle_SubTreeRetrainingFixer_fixed_tree, X_test, y_test)
             oracle_SubTreeRetrainingFixer_accuracy_bump = oracle_SubTreeRetrainingFixer_accuracy - post_drift_test_accuracy
 
             current_results_dict = {
@@ -292,7 +292,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             oracle_SubTreeRetrainingFixer_fixed_tree: DecisionTreeClassifier
             oracle_SubTreeRetrainingFixer = SubTreeRetrainingFixer(**oracle_fixes_arguments)
             oracle_SubTreeRetrainingFixer_fixed_tree, _ = oracle_SubTreeRetrainingFixer.fix_tree()
-            oracle_SubTreeRetrainingFixer_accuracy = get_accuracy(oracle_SubTreeRetrainingFixer_fixed_tree.sklearn_tree_model, X_test, y_test)
+            oracle_SubTreeRetrainingFixer_accuracy = get_accuracy(oracle_SubTreeRetrainingFixer_fixed_tree, X_test, y_test)
             oracle_SubTreeRetrainingFixer_accuracy_bump = oracle_SubTreeRetrainingFixer_accuracy - post_drift_test_accuracy
 
             faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)

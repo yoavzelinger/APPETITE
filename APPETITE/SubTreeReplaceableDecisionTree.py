@@ -26,7 +26,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             new_X (pd.DataFrame): The new input features for the subtree.
             new_y (pd.Series): The new target labels for the subtree.
         """
-        assert node_to_replace in self.mapped_tree.nodes.values(), "The specified node is not part of the tree."
+        assert node_to_replace in self.mapped_tree.tree_dict.values(), "The specified node is not part of the tree."
 
         for replaced_node in self.replaced_subtrees:
             if replaced_node.is_ancestor_of(node_to_replace):

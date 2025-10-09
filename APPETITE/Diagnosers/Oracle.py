@@ -47,7 +47,7 @@ class Oracle(ADiagnoser):
             for node_index, node in self.mapped_tree.nodes.items():
                 if node.feature in self.actual_faulty_features:
                     actual_faulty_nodes.append(node_index)
-            self.diagnoses = (actual_faulty_nodes, 1)
+            self.diagnoses = [(actual_faulty_nodes, 1)]
 
         self.sort_diagnoses()
         return self.diagnoses if retrieve_ranks else self.get_diagnoses_without_ranks(self.diagnoses)

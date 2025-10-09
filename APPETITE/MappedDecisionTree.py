@@ -219,10 +219,7 @@ class MappedDecisionTree:
         """
         assert sklearn_tree_model is not None and feature_types is not None
         self.sklearn_tree_model = sklearn_tree_model
-        self.data_feature_types = feature_types
-
-        self.criterion = sklearn_tree_model.criterion # TODO - make sure that needed
-        
+        self.data_feature_types = feature_types        
 
         self.tree_dict = self.map_tree()
         self.root = self.get_node(0)

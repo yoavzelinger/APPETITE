@@ -40,7 +40,7 @@ class AFixer(ABC):
         self.tree_already_fixed = False
 
     def _filter_data_reached_fault(self,
-                                  faulty_node_index: int                           
+                                  faulty_node_index: int
         ) -> pd.DataFrame:
         """
         Filter the data that reached the faulty nodes.

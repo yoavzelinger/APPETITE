@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import pandas as pd
 from copy import deepcopy
 
+from sklearn.tree import DecisionTreeClassifier
+
 from APPETITE.MappedDecisionTree import MappedDecisionTree
 
 from APPETITE.Diagnosers import *
@@ -72,7 +74,7 @@ class AFixer(ABC):
         return fixed_mapped_decision_tree
     
     @abstractmethod
-    def fix_tree(self) -> tuple[MappedDecisionTree, list[int]]:
+    def fix_tree(self) -> tuple[DecisionTreeClassifier | MappedDecisionTree, list[int]]:
         """
         Fix the decision tree.
 

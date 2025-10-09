@@ -6,6 +6,8 @@ from copy import deepcopy
 
 import traceback
 
+from sklearn.tree import DecisionTreeClassifier
+
 from APPETITE import *
 
 import Tester.TesterConstants as tester_constants
@@ -22,7 +24,8 @@ def get_dataset(directory: str,
 
 def get_sklearn_tree(X_train,
                      y_train,
-                     previous_model = None):
+                     previous_model = None
+ ) -> DecisionTreeClassifier:
     return build_tree(X_train, y_train, model=deepcopy(previous_model))
 
 def get_mapped_tree(sklearn_tree_model, feature_types, X_train, y_train):
@@ -126,16 +129,19 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 }
             }
 
+            oracle_AllNodesFixer_fixed_tree: MappedDecisionTree
             oracle_AllNodesFixer = AllNodesFixer(**oracle_fixes_arguments)
             oracle_AllNodesFixer_fixed_tree, _ = oracle_AllNodesFixer.fix_tree()
             oracle_AllNodesFixer_accuracy = get_accuracy(oracle_AllNodesFixer_fixed_tree.sklearn_tree_model, X_test, y_test)
             oracle_AllNodesFixer_accuracy_bump = oracle_AllNodesFixer_accuracy - post_drift_test_accuracy
             
+            oracle_TopNodeFixer_fixed_tree: MappedDecisionTree
             oracle_TopNodeFixer = TopNodeFixer(**oracle_fixes_arguments)
             oracle_TopNodeFixer_fixed_tree, _ = oracle_TopNodeFixer.fix_tree()
             oracle_TopNodeFixer_accuracy = get_accuracy(oracle_TopNodeFixer_fixed_tree.sklearn_tree_model, X_test, y_test)
             oracle_TopNodeFixer_accuracy_bump = oracle_TopNodeFixer_accuracy - post_drift_test_accuracy
 
+            oracle_SubTreeRetrainingFixer_fixed_tree: DecisionTreeClassifier
             oracle_SubTreeRetrainingFixer = SubTreeRetrainingFixer(**oracle_fixes_arguments)
             oracle_SubTreeRetrainingFixer_fixed_tree, _ = oracle_SubTreeRetrainingFixer.fix_tree()
             oracle_SubTreeRetrainingFixer_accuracy = get_accuracy(oracle_SubTreeRetrainingFixer_fixed_tree.sklearn_tree_model, X_test, y_test)
@@ -271,16 +277,19 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 }
             }
 
+            oracle_AllNodesFixer_fixed_tree: MappedDecisionTree
             oracle_AllNodesFixer = AllNodesFixer(**oracle_fixes_arguments)
             oracle_AllNodesFixer_fixed_tree, _ = oracle_AllNodesFixer.fix_tree()
             oracle_AllNodesFixer_accuracy = get_accuracy(oracle_AllNodesFixer_fixed_tree.sklearn_tree_model, X_test, y_test)
             oracle_AllNodesFixer_accuracy_bump = oracle_AllNodesFixer_accuracy - post_drift_test_accuracy
             
+            oracle_TopNodeFixer_fixed_tree: MappedDecisionTree
             oracle_TopNodeFixer = TopNodeFixer(**oracle_fixes_arguments)
             oracle_TopNodeFixer_fixed_tree, _ = oracle_TopNodeFixer.fix_tree()
             oracle_TopNodeFixer_accuracy = get_accuracy(oracle_TopNodeFixer_fixed_tree.sklearn_tree_model, X_test, y_test)
             oracle_TopNodeFixer_accuracy_bump = oracle_TopNodeFixer_accuracy - post_drift_test_accuracy
 
+            oracle_SubTreeRetrainingFixer_fixed_tree: DecisionTreeClassifier
             oracle_SubTreeRetrainingFixer = SubTreeRetrainingFixer(**oracle_fixes_arguments)
             oracle_SubTreeRetrainingFixer_fixed_tree, _ = oracle_SubTreeRetrainingFixer.fix_tree()
             oracle_SubTreeRetrainingFixer_accuracy = get_accuracy(oracle_SubTreeRetrainingFixer_fixed_tree.sklearn_tree_model, X_test, y_test)

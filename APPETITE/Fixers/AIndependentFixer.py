@@ -77,9 +77,8 @@ class AIndependentFixer(AFixer):
           faulty_node = self.mapped_tree.get_node(faulty_node_index)
           left_child, right_child = faulty_node.left_child, faulty_node.right_child
           left_child_index, right_child_index = left_child.sk_index, right_child.sk_index
-          sklearn_tree_model = self.mapped_tree.sklearn_tree_model
-          sklearn_tree_model.tree_.children_left[faulty_node_index] = right_child_index
-          sklearn_tree_model.tree_.children_right[faulty_node_index] = left_child_index
+          self.mapped_tree.sklearn_tree_model.tree_.children_left[faulty_node_index] = right_child_index
+          self.mapped_tree.sklearn_tree_model.tree_.children_right[faulty_node_index] = left_child_index
         #   print(f"{self.diagnoser_output_name}: Faulty node {faulty_node_index} (Categorical) condition flipped")
           
     def fix_faulty_node(self,

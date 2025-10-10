@@ -141,7 +141,8 @@ for baseline_output_name in tester_constants.BASELINES_OUTPUT_NAMES:
     print(f"{baseline_output_name}: X; X; {raw_results[f'{baseline_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean():.2f}%")
 print()
 for diagnoser_output_name in tester_constants.diagnosers_output_names:
-    print(f"{diagnoser_output_name}: {raw_results[f'{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean():.3f}; {raw_results[f'{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}'].mean():.2f}%; {raw_results[f'{diagnoser_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean():.2f}%")
+    for fixer_output_name in tester_constants.fixers_output_names:
+        print(f"{diagnoser_output_name}-{fixer_output_name}: {raw_results[f'{diagnoser_output_name}-{fixer_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean():.3f}; {raw_results[f'{diagnoser_output_name}-{fixer_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}'].mean():.2f}%; {raw_results[f'{diagnoser_output_name}-{fixer_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean():.2f}%")
 
 print()
 print(f"Results saved to {results_file_path}")

@@ -15,7 +15,6 @@ class AFixer(ABC):
                  y: pd.Series,
                  diagnoser__class_name: str,
                  diagnoser_parameters: dict[str, object],
-                 diagnoser_output_name: str = None
     ):
         """
         Initialize the Fixer.
@@ -26,14 +25,12 @@ class AFixer(ABC):
         y (Series): The target column.
         diagnoser_name (str): The diagnoser name.
         diagnoser_parameters ( dict[str, object]): The diagnoser parameters.
-        diagnoser_output_name (str): The diagnoser output name.
         """
         self.original_mapped_tree = mapped_tree
         self.feature_types = mapped_tree.data_feature_types
         self.X = X
         self.y = y
         diagnoser_class = get_diagnoser(diagnoser__class_name)
-        self.diagnoser_output_name = diagnoser_output_name if diagnoser_output_name else diagnoser__class_name
         self.diagnoser: ADiagnoser = diagnoser_class(self.original_mapped_tree, self.X, self.y, **diagnoser_parameters)
         self.diagnoses = self.diagnoser.get_diagnoses()
         self.faulty_nodes: list[int] = self.diagnoses[0]

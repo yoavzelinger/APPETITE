@@ -38,7 +38,6 @@ class AFixer(ABC):
         self.diagnoses = self.diagnoser.get_diagnoses()
         self.faulty_nodes: list[int] = self.diagnoses[0]
         self.fixed_tree: DecisionTreeClassifier = None
-        self.tree_already_fixed = False
 
     def _filter_data_reached_fault(self,
                                   faulty_node_index: int
@@ -69,6 +68,6 @@ class AFixer(ABC):
             DecisionTreeClassifier: The fixed decision tree.
             list[int]: The indices of the faulty nodes.
         """
-        assert self.tree_already_fixed, "The tree wasn't fixed yet"
+        assert self.fixed_tree, "The tree wasn't fixed yet"
 
         return self.fixed_tree, self.faulty_nodes

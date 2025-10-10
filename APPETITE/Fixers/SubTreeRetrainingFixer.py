@@ -20,5 +20,4 @@ class SubTreeRetrainingFixer(AFixer):
             X_reached_faulty_node, y_reached_faulty_node = self._filter_data_reached_fault(faulty_node_index)
             self.fixed_tree.replace_subtree(faulty_node_index, X_reached_faulty_node, y_reached_faulty_node)
         
-        self.tree_already_fixed = True
         return self.fixed_tree, self.faulty_nodes

@@ -21,5 +21,4 @@ class TopFeaturesNodesFixer(AIndependentFixer):
         for faulty_node_index, _ in top_features_faults.values():
             X_reached_faulty_node, _ = self._filter_data_reached_fault(faulty_node_index)
             self.fix_faulty_node(faulty_node_index, X_reached_faulty_node)
-        self.tree_already_fixed = True
         return super().fix_tree()

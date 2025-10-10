@@ -73,5 +73,7 @@ def build_tree(
         if current_accuracy > best_accuracy:
             best_accuracy = current_accuracy
             best_decision_tree = current_decision_tree
-            
-    return best_decision_tree if tester_constants.DRIFT_SYNTHESIZING_VERSION == 1 else best_decision_tree, best_accuracy
+    
+    best_decision_tree.best_accuracy = best_accuracy
+
+    return best_decision_tree

@@ -238,7 +238,8 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             if any(map(lambda data: data.empty, [X_before, X_repair, X_test])):
                 continue
 
-            sklearn_tree_model, pre_drift_accuracy = get_sklearn_tree(X_before, y_before)
+            sklearn_tree_model = get_sklearn_tree(X_before, y_before)
+            pre_drift_accuracy = sklearn_tree_model.best_accuracy
 
             if pre_drift_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:
                 # Original model is not good enough

@@ -28,15 +28,16 @@ class AFixer(ABC):
         diagnoser_parameters ( dict[str, object]): The diagnoser parameters.
         diagnoser_output_name (str): The diagnoser output name.
         """
-        self.mapped_tree = deepcopy(mapped_tree)
+        self.original_mapped_tree = mapped_tree
         self.feature_types = mapped_tree.data_feature_types
         self.X = X
         self.y = y
         diagnoser_class = get_diagnoser(diagnoser__class_name)
         self.diagnoser_output_name = diagnoser_output_name if diagnoser_output_name else diagnoser__class_name
-        self.diagnoser: ADiagnoser = diagnoser_class(self.mapped_tree, self.X, self.y, **diagnoser_parameters)
+        self.diagnoser: ADiagnoser = diagnoser_class(self.original_mapped_tree, self.X, self.y, **diagnoser_parameters)
         self.diagnoses = self.diagnoser.get_diagnoses()
         self.faulty_nodes: list[int] = self.diagnoses[0]
+        self.fixed_tree: DecisionTreeClassifier = None
         self.tree_already_fixed = False
 
     def _filter_data_reached_fault(self,
@@ -51,7 +52,7 @@ class AFixer(ABC):
         Returns:
             DataFrame: The data that reached the faulty nodes.
         """
-        faulty_node = self.mapped_tree.get_node(faulty_node_index)
+        faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
         filtered_data = faulty_node.get_data_reached_node(self.X, self.y)
         while filtered_data[0].empty and faulty_node.parent is not None:
             # Get the data that reached the parent node
@@ -66,11 +67,11 @@ class AFixer(ABC):
         Returns:
             MappedDecisionTree: The fixed decision tree.
         """
-        sklearn_tree_model = self.mapped_tree.sklearn_tree_model
-        feature_types = self.mapped_tree.data_feature_types
+        sklearn_tree_model = self.original_mapped_tree.sklearn_tree_model
+        feature_types = self.original_mapped_tree.data_feature_types
         # Create a new MappedDecisionTree object with the fixed sklearn tree model
         fixed_mapped_decision_tree = MappedDecisionTree(sklearn_tree_model, feature_types=feature_types)
-        self.mapped_tree = fixed_mapped_decision_tree
+        self.original_mapped_tree = fixed_mapped_decision_tree
         return fixed_mapped_decision_tree
     
     @abstractmethod

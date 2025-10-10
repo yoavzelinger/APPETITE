@@ -12,7 +12,7 @@ class TopFeaturesNodesFixer(AIndependentFixer):
             list[int]: The indices of the faulty nodes.
         """
         top_features_faults: dict[str, tuple[int, int]] = {}
-        for current_node in map(self.mapped_tree.get_node, self.faulty_nodes):
+        for current_node in map(self.original_mapped_tree.get_node, self.faulty_nodes):
             _, current_feature_fault_top_depth = top_features_faults.get(current_node.feature, (None, float('inf')))
             if current_node.depth < current_feature_fault_top_depth:
                 top_features_faults[current_node.feature] = (current_node.index, current_node.depth)

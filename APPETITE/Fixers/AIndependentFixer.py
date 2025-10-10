@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+from copy import deepcopy
+
+from sklearn.tree import DecisionTreeClassifier
 
 from .AFixer import AFixer
 
@@ -19,7 +22,7 @@ class AIndependentFixer(AFixer):
         """
         reached_labels = self.y[data_reached_faulty_node.index]
         
-        values = self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index]
+        values = self.original_mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index]
 
         if len(reached_labels):
             # Get the most common class in the data that reached the faulty node
@@ -38,7 +41,7 @@ class AIndependentFixer(AFixer):
             values[0][second_max_value_index] = max_value
         
         # print(f"{self.diagnoser_output_name}: Faulty node {faulty_node_index} (Terminal) class changed from {max(old_values[0])} to {max(values[0])}")
-        self.mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index] = values
+        self.fixed_tree.tree_.value[faulty_node_index] = values
 
 
     def _fix_numeric_faulty_node(self, 
@@ -53,7 +56,7 @@ class AIndependentFixer(AFixer):
             faulty_node_index (int): The index of the faulty node.
             data_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
-        faulty_node = self.mapped_tree.get_node(faulty_node_index)
+        faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
         node_feature_average_before_drift = faulty_node.feature_average_value
         if node_feature_average_before_drift is None:
             raise NotImplementedError("The average feature value before the drift is not available")
@@ -61,7 +64,7 @@ class AIndependentFixer(AFixer):
         node_feature_average_difference = node_feature_average_after_drift - node_feature_average_before_drift
         new_threshold = faulty_node.threshold + node_feature_average_difference
         # print(f"{self.diagnoser_output_name}: Faulty node {faulty_node_index} (Numeric) threshold changed from {faulty_node.threshold:.2f} to {new_threshold:.2f}")
-        self.mapped_tree.sklearn_tree_model.tree_.threshold[faulty_node_index] = new_threshold
+        self.fixed_tree.tree_.threshold[faulty_node_index] = new_threshold
 
     def _fix_categorical_faulty_node(self,
                                     faulty_node_index: int,
@@ -74,11 +77,11 @@ class AIndependentFixer(AFixer):
                 faulty_node_index (int): The index of the faulty node.
                 data_reached_faulty_node (DataFrame): The data that reached the faulty node.
           """
-          faulty_node = self.mapped_tree.get_node(faulty_node_index)
+          faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
           left_child, right_child = faulty_node.left_child, faulty_node.right_child
           left_child_index, right_child_index = left_child.sk_index, right_child.sk_index
-          self.mapped_tree.sklearn_tree_model.tree_.children_left[faulty_node_index] = right_child_index
-          self.mapped_tree.sklearn_tree_model.tree_.children_right[faulty_node_index] = left_child_index
+          self.fixed_tree.tree_.children_left[faulty_node_index] = right_child_index
+          self.fixed_tree.tree_.children_right[faulty_node_index] = left_child_index
         #   print(f"{self.diagnoser_output_name}: Faulty node {faulty_node_index} (Categorical) condition flipped")
           
     def fix_faulty_node(self,
@@ -92,7 +95,8 @@ class AIndependentFixer(AFixer):
             faulty_node_index (int): The index of the faulty node.
             data_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
-        faulty_node = self.mapped_tree.get_node(faulty_node_index)
+        self.fixed_tree: DecisionTreeClassifier = deepcopy(self.original_mapped_tree.sklearn_tree_model)
+        faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
         if faulty_node.is_terminal():
             self._fix_terminal_faulty_node(faulty_node_index, data_reached_faulty_node)
             return

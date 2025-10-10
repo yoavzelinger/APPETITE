@@ -1,14 +1,16 @@
+from sklearn.tree import DecisionTreeClassifier
+
 from APPETITE.MappedDecisionTree import MappedDecisionTree
 
 from .AIndependentFixer import AIndependentFixer
 
 class TopNodeFixer(AIndependentFixer):
-    def fix_tree(self) -> tuple[MappedDecisionTree, list[int]]:
+    def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
         """
         Fix the decision tree.
 
         Returns:
-            MappedDecisionTree: The fixed decision tree.
+            DecisionTreeClassifier: The fixed decision tree.
             list[int]: The indices of the faulty nodes.
         """
         top_faulty_node_index = min(self.faulty_nodes, key=lambda node_index: self.original_mapped_tree.get_node(node_index).depth)

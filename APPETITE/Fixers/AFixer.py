@@ -59,30 +59,16 @@ class AFixer(ABC):
             faulty_node = faulty_node.parent
             filtered_data = faulty_node.get_data_reached_node(self.X, self.y)
         return filtered_data
-
-    def _create_fixed_mapped_tree(self) -> MappedDecisionTree:
-        """
-        Create new mapped decision tree after the fix.
-
-        Returns:
-            MappedDecisionTree: The fixed decision tree.
-        """
-        sklearn_tree_model = self.original_mapped_tree.sklearn_tree_model
-        feature_types = self.original_mapped_tree.data_feature_types
-        # Create a new MappedDecisionTree object with the fixed sklearn tree model
-        fixed_mapped_decision_tree = MappedDecisionTree(sklearn_tree_model, feature_types=feature_types)
-        self.original_mapped_tree = fixed_mapped_decision_tree
-        return fixed_mapped_decision_tree
     
     @abstractmethod
-    def fix_tree(self) -> tuple[DecisionTreeClassifier | MappedDecisionTree, list[int]]:
+    def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
         """
         Fix the decision tree.
 
         Returns:
-            MappedDecisionTree: The fixed decision tree.
+            DecisionTreeClassifier: The fixed decision tree.
             list[int]: The indices of the faulty nodes.
         """
         assert self.tree_already_fixed, "The tree wasn't fixed yet"
 
-        return self._create_fixed_mapped_tree(), self.faulty_nodes
+        return self.fixed_tree, self.faulty_nodes

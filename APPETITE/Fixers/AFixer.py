@@ -69,5 +69,6 @@ class AFixer(ABC):
             list[int]: The indices of the faulty nodes.
         """
         assert self.fixed_tree, "The tree wasn't fixed yet"
+        assert self.faulty_nodes, "No faulty nodes were found"
 
         return self.fixed_tree, self.faulty_nodes

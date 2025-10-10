@@ -177,7 +177,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
 
             for diagnoser_data in diagnosers_data:
                 diagnoser_output_name, diagnoser_class_name, diagnoser_parameters = diagnoser_data["output_name"], diagnoser_data["class_name"], diagnoser_data["parameters"]
-                fixer = AllNodesFixer(mapped_tree, X_repair, y_repair, diagnoser__class_name=diagnoser_class_name, diagnoser_parameters=diagnoser_parameters, diagnoser_output_name=diagnoser_output_name)
+                fixer = AllNodesFixer(mapped_tree, X_repair, y_repair, diagnoser__class_name=diagnoser_class_name, diagnoser_parameters=diagnoser_parameters)
                 fixed_tree, faulty_nodes_indices = fixer.fix_tree()
                 faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
                 detected_faulty_features = set([faulty_node.feature if not faulty_node.is_terminal() else "target" for faulty_node in faulty_nodes])
@@ -327,24 +327,25 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             }
 
             for diagnoser_data in diagnosers_data:
-                diagnoser_output_name, diagnoser_class_name, diagnoser_parameters = diagnoser_data["output_name"], diagnoser_data["class_name"], diagnoser_data["parameters"]
-                fixer = AllNodesFixer(mapped_tree, X_repair, y_repair, diagnoser__class_name=diagnoser_class_name, diagnoser_parameters=diagnoser_parameters, diagnoser_output_name=diagnoser_output_name)
-                fixed_tree, faulty_nodes_indices = fixer.fix_tree()
-                faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
-                detected_faulty_features = set([faulty_node.feature if not faulty_node.is_terminal() else "target" for faulty_node in faulty_nodes])
-                fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
-                test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
-                diagnoses = fixer.diagnoses
-                wasted_effort = get_wasted_effort(mapped_tree, diagnoses, faulty_features_nodes)
-                correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
-                current_results_dict.update({
-                    f"{diagnoser_output_name} {tester_constants.FAULTY_FEATURES_NAME_SUFFIX}": ", ".join(detected_faulty_features),
-                    f"{diagnoser_output_name} {tester_constants.DIAGNOSES_NAME_SUFFIX}": ", ".join(map(str, diagnoses)),
-                    f"{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}": wasted_effort,
-                    f"{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}": correctly_identified * 100,
-                    f"{diagnoser_output_name} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
-                    f"{diagnoser_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": test_accuracy_bump * 100
-                })
+                for FixerType in [AllNodesFixer, TopNodeFixer, TopFeaturesNodesFixer, SubTreeRetrainingFixer]:
+                    diagnoser_output_name, diagnoser_class_name, diagnoser_parameters = diagnoser_data["output_name"], diagnoser_data["class_name"], diagnoser_data["parameters"]
+                    fixer = FixerType(mapped_tree, X_repair, y_repair, diagnoser__class_name=diagnoser_class_name, diagnoser_parameters=diagnoser_parameters)
+                    fixed_tree, faulty_nodes_indices = fixer.fix_tree()
+                    faulty_nodes = [mapped_tree.get_node(faulty_node_index) for faulty_node_index in faulty_nodes_indices]
+                    detected_faulty_features = set([faulty_node.feature if not faulty_node.is_terminal() else "target" for faulty_node in faulty_nodes])
+                    fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
+                    test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
+                    diagnoses = fixer.diagnoses
+                    wasted_effort = get_wasted_effort(mapped_tree, diagnoses, faulty_features_nodes)
+                    correctly_identified = get_correctly_identified_ratio(detected_faulty_features, drifted_features)
+                    current_results_dict.update({
+                        f"{diagnoser_output_name}-{FixerType.__name__} {tester_constants.FAULTY_FEATURES_NAME_SUFFIX}": ", ".join(detected_faulty_features),
+                        f"{diagnoser_output_name}-{FixerType.__name__} {tester_constants.DIAGNOSES_NAME_SUFFIX}": ", ".join(map(str, diagnoses)),
+                        f"{diagnoser_output_name}-{FixerType.__name__} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}": wasted_effort,
+                        f"{diagnoser_output_name}-{FixerType.__name__} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}": correctly_identified * 100,
+                        f"{diagnoser_output_name}-{FixerType.__name__} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
+                        f"{diagnoser_output_name}-{FixerType.__name__} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": test_accuracy_bump * 100
+                    })
             yield current_results_dict
         except Exception as e:
             exception_class = e.__class__.__name__

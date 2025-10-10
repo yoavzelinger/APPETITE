@@ -111,6 +111,7 @@ with open(os_path.join(__package__, f"{TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAM
     diagnosers_data = load_json(testing_diagnosers_configuration_file)
 diagnosers_data = [diagnoser_data for diagnoser_data in diagnosers_data if not diagnoser_data.get("disabled", False)]
 diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output_name"], diagnosers_data))
+fixers_output_names = ["AllNodesFixer", "TopNodeFixer", "TopFeaturesNodesFixer", "SubTreeRetrainingFixer"]
 
 
 #   TESTING INFO COLUMNS
@@ -184,12 +185,13 @@ for baseline_output_name in BASELINES_OUTPUT_NAMES:
     METRICS_COLUMNS[f"{baseline_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
 
 for diagnoser_output_name in diagnosers_output_names:
-    METRICS_COLUMNS[f"{diagnoser_output_name} {DIAGNOSES_NAME_SUFFIX}"] = "string"
-    METRICS_COLUMNS[f"{diagnoser_output_name} {WASTED_EFFORT_NAME_SUFFIX}"] = "float64"
-    METRICS_COLUMNS[f"{diagnoser_output_name} {FAULTY_FEATURES_NAME_SUFFIX}"] = "string"
-    METRICS_COLUMNS[f"{diagnoser_output_name} {CORRECTLY_IDENTIFIED_NAME_SUFFIX}"] = "float64"
-    METRICS_COLUMNS[f"{diagnoser_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
-    METRICS_COLUMNS[f"{diagnoser_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
+    for fixer_output_name in fixers_output_names:
+        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {DIAGNOSES_NAME_SUFFIX}"] = "string"
+        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {WASTED_EFFORT_NAME_SUFFIX}"] = "float64"
+        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {FAULTY_FEATURES_NAME_SUFFIX}"] = "string"
+        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {CORRECTLY_IDENTIFIED_NAME_SUFFIX}"] = "float64"
+        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
+        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
 
 
 RAW_RESULTS_COLUMNS = GROUP_BY_COLUMNS | DRIFT_DESCRIBING_COLUMNS | METRICS_COLUMNS

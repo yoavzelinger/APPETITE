@@ -4,6 +4,9 @@ from datetime import datetime
 
 import APPETITE.Constants as constants
 
+from APPETITE.Diagnosers import Oracle
+from APPETITE.Fixers import *
+
 RANDOM_STATE = constants.RANDOM_STATE
 
 # Dataset partitions sizes
@@ -109,9 +112,10 @@ TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME = "TestingDiagnosersData"
 diagnosers_data = {}
 with open(os_path.join(__package__, f"{TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME}.json"), "r") as testing_diagnosers_configuration_file:
     diagnosers_data = load_json(testing_diagnosers_configuration_file)
-diagnosers_data = [diagnoser_data for diagnoser_data in diagnosers_data if not diagnoser_data.get("disabled", False)]
-diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data["output_name"], diagnosers_data))
-fixers_output_names = ["AllNodesFixer", "TopNodeFixer", "TopFeaturesNodesFixer", "SubTreeRetrainingFixer"]
+diagnosers_data: list[dict[str, object]] = [diagnoser_data for diagnoser_data in diagnosers_data if not diagnoser_data.get("disabled", False)]
+diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data.get("output_name", diagnoser_data["class_name"]), diagnosers_data))
+TESTED_FIXERS: list[AFixer] = [AllNodesFixer, TopNodeFixer, TopFeaturesNodesFixer, SubTreeRetrainingFixer]
+fixers_output_names = list(map(lambda fixer: fixer.alias, TESTED_FIXERS))
 
 
 #   TESTING INFO COLUMNS
@@ -164,16 +168,7 @@ FIX_ACCURACY_INCREASE_NAME_SUFFIX = "fix accuracy increase"
 NEW_DRIFT_RETRAIN_COLUMNS_PREFIX = "new-drift-retrain"
 NEW_ALL_RETRAIN_COLUMNS_PREFIX = "new-all-retrain"
 
-BASELINE_RETRAINERS_OUTPUT_NAMES = [NEW_DRIFT_RETRAIN_COLUMNS_PREFIX, NEW_ALL_RETRAIN_COLUMNS_PREFIX]
-
-#   Oracle FIXES PREFIXES
-ORACLE_FIX_ALL_COLUMNS_PREFIX = "oracle-fix_all"
-ORACLE_FIX_TOP_COLUMNS_PREFIX = "oracle-fix_top"
-ORACLE_FIX_SUBTREE_RETRAIN_COLUMNS_PREFIX = "oracle-subtree_retrain"
-
-BASELINE_ORACLE_FIXES_OUTPUT_NAMES = [ORACLE_FIX_ALL_COLUMNS_PREFIX, ORACLE_FIX_TOP_COLUMNS_PREFIX, ORACLE_FIX_SUBTREE_RETRAIN_COLUMNS_PREFIX]
-
-BASELINES_OUTPUT_NAMES = BASELINE_RETRAINERS_OUTPUT_NAMES + BASELINE_ORACLE_FIXES_OUTPUT_NAMES
+BASELINES_OUTPUT_NAMES = [NEW_DRIFT_RETRAIN_COLUMNS_PREFIX, NEW_ALL_RETRAIN_COLUMNS_PREFIX]
 
 METRICS_COLUMNS = {
     ORIGINAL_ACCURACY_COLUMN_NAME: "float64",
@@ -185,11 +180,12 @@ for baseline_output_name in BASELINES_OUTPUT_NAMES:
     METRICS_COLUMNS[f"{baseline_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
 
 for diagnoser_output_name in diagnosers_output_names:
+    if diagnoser_output_name != Oracle.__name__: 
+        METRICS_COLUMNS[f"{diagnoser_output_name} {DIAGNOSES_NAME_SUFFIX}"] = "string"
+        METRICS_COLUMNS[f"{diagnoser_output_name} {WASTED_EFFORT_NAME_SUFFIX}"] = "float64"
+        METRICS_COLUMNS[f"{diagnoser_output_name} {FAULTY_FEATURES_NAME_SUFFIX}"] = "string"
+        METRICS_COLUMNS[f"{diagnoser_output_name} {CORRECTLY_IDENTIFIED_NAME_SUFFIX}"] = "float64"
     for fixer_output_name in fixers_output_names:
-        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {DIAGNOSES_NAME_SUFFIX}"] = "string"
-        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {WASTED_EFFORT_NAME_SUFFIX}"] = "float64"
-        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {FAULTY_FEATURES_NAME_SUFFIX}"] = "string"
-        METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {CORRECTLY_IDENTIFIED_NAME_SUFFIX}"] = "float64"
         METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
         METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
 

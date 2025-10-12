@@ -1,3 +1,4 @@
+from .AFixer import AFixer
 from .AllNodesFixer import AllNodesFixer
 from .TopNodeFixer import TopNodeFixer
 from .TopFeaturesNodesFixer import TopFeaturesNodesFixer

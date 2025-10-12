@@ -14,8 +14,7 @@ class AFixer(ABC):
                  mapped_tree: MappedDecisionTree,
                  X: pd.DataFrame,
                  y: pd.Series,
-                 diagnoser__class_name: str,
-                 diagnoser_parameters: dict[str, object],
+                 faulty_nodes: list[int]
     ):
         """
         Initialize the Fixer.
@@ -24,8 +23,7 @@ class AFixer(ABC):
         mapped_tree (MappedDecisionTree): The mapped decision tree.
         X (DataFrame): The data.
         y (Series): The target column.
-        diagnoser_name (str): The diagnoser name.
-        diagnoser_parameters ( dict[str, object]): The diagnoser parameters.
+        faulty_nodes (list[int]): The indices of the faulty nodes.
         """
         assert self.alias is not None, "Alias must be set to a fixer class"
 
@@ -33,10 +31,7 @@ class AFixer(ABC):
         self.feature_types = mapped_tree.data_feature_types
         self.X = X
         self.y = y
-        diagnoser_class = get_diagnoser(diagnoser__class_name)
-        self.diagnoser: ADiagnoser = diagnoser_class(self.original_mapped_tree, self.X, self.y, **diagnoser_parameters)
-        self.diagnoses = self.diagnoser.get_diagnoses()
-        self.faulty_nodes: list[int] = self.diagnoses[0]
+        self.faulty_nodes = faulty_nodes
         self.fixed_tree: DecisionTreeClassifier = None
 
     def _filter_data_reached_fault(self,
@@ -60,15 +55,13 @@ class AFixer(ABC):
         return filtered_data
     
     @abstractmethod
-    def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
+    def fix_tree(self) -> DecisionTreeClassifier:
         """
         Fix the decision tree.
 
         Returns:
             DecisionTreeClassifier: The fixed decision tree.
-            list[int]: The indices of the faulty nodes.
         """
         assert self.fixed_tree, "The tree wasn't fixed yet"
-        assert self.faulty_nodes, "No faulty nodes were found"
 
-        return self.fixed_tree, self.faulty_nodes
+        return self.fixed_tree

@@ -270,34 +270,6 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             new_drift_retrained_accuracy = get_accuracy(new_drift_retrained_tree, X_test, y_test)
             new_drift_retrained_accuracy_bump = new_drift_retrained_accuracy - post_drift_test_accuracy
             
-            oracle_fixes_arguments = {
-                "mapped_tree": mapped_tree,
-                "X": X_repair,
-                "y": y_repair,
-                "diagnoser__class_name": Oracle.__name__,
-                "diagnoser_parameters": {
-                    "actual_faulty_features": drifted_features
-                }
-            }
-
-            oracle_AllNodesFixer_fixed_tree: MappedDecisionTree
-            oracle_AllNodesFixer = AllNodesFixer(**oracle_fixes_arguments)
-            oracle_AllNodesFixer_fixed_tree, _ = oracle_AllNodesFixer.fix_tree()
-            oracle_AllNodesFixer_accuracy = get_accuracy(oracle_AllNodesFixer_fixed_tree, X_test, y_test)
-            oracle_AllNodesFixer_accuracy_bump = oracle_AllNodesFixer_accuracy - post_drift_test_accuracy
-            
-            oracle_TopNodeFixer_fixed_tree: MappedDecisionTree
-            oracle_TopNodeFixer = TopNodeFixer(**oracle_fixes_arguments)
-            oracle_TopNodeFixer_fixed_tree, _ = oracle_TopNodeFixer.fix_tree()
-            oracle_TopNodeFixer_accuracy = get_accuracy(oracle_TopNodeFixer_fixed_tree, X_test, y_test)
-            oracle_TopNodeFixer_accuracy_bump = oracle_TopNodeFixer_accuracy - post_drift_test_accuracy
-
-            oracle_SubTreeRetrainingFixer_fixed_tree: DecisionTreeClassifier
-            oracle_SubTreeRetrainingFixer = SubTreeRetrainingFixer(**oracle_fixes_arguments)
-            oracle_SubTreeRetrainingFixer_fixed_tree, _ = oracle_SubTreeRetrainingFixer.fix_tree()
-            oracle_SubTreeRetrainingFixer_accuracy = get_accuracy(oracle_SubTreeRetrainingFixer_fixed_tree, X_test, y_test)
-            oracle_SubTreeRetrainingFixer_accuracy_bump = oracle_SubTreeRetrainingFixer_accuracy - post_drift_test_accuracy
-
             current_results_dict = {
                 tester_constants.DATASET_NAME_COLUMN_NAME: file_name,
                 tester_constants.DATASET_SIZE_COLUMN_NAME: len(dataset),
@@ -317,13 +289,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 f"{tester_constants.NEW_DRIFT_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": new_drift_retrained_accuracy * 100,
                 f"{tester_constants.NEW_DRIFT_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_drift_retrained_accuracy_bump * 100,
                 f"{tester_constants.NEW_ALL_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": new_all_retrained_accuracy * 100,
-                f"{tester_constants.NEW_ALL_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_all_retrained_accuracy_bump * 100,
-                f"{tester_constants.ORACLE_FIX_ALL_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": oracle_AllNodesFixer_accuracy * 100,
-                f"{tester_constants.ORACLE_FIX_ALL_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": oracle_AllNodesFixer_accuracy_bump * 100,
-                f"{tester_constants.ORACLE_FIX_TOP_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": oracle_TopNodeFixer_accuracy * 100,
-                f"{tester_constants.ORACLE_FIX_TOP_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": oracle_TopNodeFixer_accuracy_bump * 100,
-                f"{tester_constants.ORACLE_FIX_SUBTREE_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": oracle_SubTreeRetrainingFixer_accuracy * 100,
-                f"{tester_constants.ORACLE_FIX_SUBTREE_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": oracle_SubTreeRetrainingFixer_accuracy_bump * 100
+                f"{tester_constants.NEW_ALL_RETRAIN_COLUMNS_PREFIX} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": new_all_retrained_accuracy_bump * 100
             }
 
             for diagnoser_data in diagnosers_data:

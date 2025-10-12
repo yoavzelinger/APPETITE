@@ -231,7 +231,7 @@ def drift_tree_v2(dataset: Dataset,
                 for (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description in dataset.drift_generator_v2(drifting_features):
                     yield (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description, set(drifting_features), drifted_features_types, drift_size
 
-def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data=tester_constants.DEFAULT_TESTING_DIAGNOSER):
+def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_DIAGNOSER):
     dataset = get_dataset(directory, file_name, file_extension=file_extension)
     for (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description, drifted_features, drifted_features_types, drift_size in drift_tree_v2(dataset, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
         try:

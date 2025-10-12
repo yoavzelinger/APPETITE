@@ -260,6 +260,8 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 # insignificant drift
                 continue
 
+            faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)
+
             new_all_retrained_tree = get_sklearn_tree(pd.concat([X_before, X_repair]), pd.concat([y_before, y_repair]), previous_model=mapped_tree.sklearn_tree_model)
             new_all_retrained_accuracy = get_accuracy(new_all_retrained_tree, X_test, y_test)
             new_all_retrained_accuracy_bump = new_all_retrained_accuracy - post_drift_test_accuracy
@@ -295,8 +297,6 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             oracle_SubTreeRetrainingFixer_fixed_tree, _ = oracle_SubTreeRetrainingFixer.fix_tree()
             oracle_SubTreeRetrainingFixer_accuracy = get_accuracy(oracle_SubTreeRetrainingFixer_fixed_tree, X_test, y_test)
             oracle_SubTreeRetrainingFixer_accuracy_bump = oracle_SubTreeRetrainingFixer_accuracy - post_drift_test_accuracy
-
-            faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)
 
             current_results_dict = {
                 tester_constants.DATASET_NAME_COLUMN_NAME: file_name,

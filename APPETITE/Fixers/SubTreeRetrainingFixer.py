@@ -5,6 +5,7 @@ from APPETITE.SubTreeReplaceableDecisionTree import SubTreeReplaceableDecisionTr
 from .AFixer import AFixer
 
 class SubTreeRetrainingFixer(AFixer):
+    alias = "subtree_retrain"
     def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
         """
         Fix the decision tree.

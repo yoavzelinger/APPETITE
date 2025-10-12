@@ -5,6 +5,7 @@ from APPETITE.MappedDecisionTree import MappedDecisionTree
 from .AIndependentFixer import AIndependentFixer
 
 class TopFeaturesNodesFixer(AIndependentFixer):
+    alias = "fix_top_per_features"
     def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
         """
         Fix the decision tree.

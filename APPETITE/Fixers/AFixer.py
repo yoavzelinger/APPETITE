@@ -9,6 +9,7 @@ from APPETITE.MappedDecisionTree import MappedDecisionTree
 from APPETITE.Diagnosers import *
 
 class AFixer(ABC):
+    alias = None
     def __init__(self, 
                  mapped_tree: MappedDecisionTree,
                  X: pd.DataFrame,
@@ -26,6 +27,8 @@ class AFixer(ABC):
         diagnoser_name (str): The diagnoser name.
         diagnoser_parameters ( dict[str, object]): The diagnoser parameters.
         """
+        assert self.alias is not None, "Alias must be set to a fixer class"
+
         self.original_mapped_tree = mapped_tree
         self.feature_types = mapped_tree.data_feature_types
         self.X = X

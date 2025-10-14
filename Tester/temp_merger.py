@@ -67,12 +67,7 @@ output_df = output_df[tester_constants.EXTENDED_METRICS_COLUMN_NAMES]
 
 output_full_path_prefix = os.path.join(tester_constants.OUTPUT_DIRECTORY_FULL_PATH, f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{args.output}")
 
-if args.raw:
-    raw_output_full_path = f"{output_full_path_prefix}_raw.csv"
-    raw_df.to_csv(raw_output_full_path, index=False)
-
 merged_output_full_path = f"{output_full_path_prefix}.xlsx"
-merged_results_sheet_name = "merged_results"
 excel_writer_arguments = {
     "path": merged_output_full_path,
     "mode": "w",
@@ -82,9 +77,13 @@ if os.path.exists(merged_output_full_path):
     excel_writer_arguments["mode"] = "a"
     excel_writer_arguments["if_sheet_exists"] = "replace"
 with pd.ExcelWriter(**excel_writer_arguments) as excel_writer:
-    output_df.to_excel(excel_writer, sheet_name=merged_results_sheet_name, merge_cells=False)
+    output_df.to_excel(excel_writer, sheet_name=tester_constants.MERGED_RESULTS_SHEET_NAME, merge_cells=False)
+    if args.raw:
+        raw_df.to_excel(excel_writer, sheet_name=tester_constants.RAW_RESULTS_SHEET_NAME, merge_cells=False)
 output_workbook = load_workbook(merged_output_full_path)
-output_workbook[merged_results_sheet_name].sheet_view.rightToLeft = True
+output_workbook[tester_constants.MERGED_RESULTS_SHEET_NAME].sheet_view.rightToLeft = True
+if args.raw:
+    output_workbook[tester_constants.RAW_RESULTS_SHEET_NAME].sheet_view.rightToLeft = True
 output_workbook.save(merged_output_full_path)
 
 print(f"Results saved to {output_full_path_prefix}")

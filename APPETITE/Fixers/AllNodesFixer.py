@@ -5,7 +5,7 @@ from APPETITE.MappedDecisionTree import MappedDecisionTree
 from .AIndependentFixer import AIndependentFixer
 
 class AllNodesFixer(AIndependentFixer):
-    alias = "fix_all"
+    alias = "all_nodes_tweak"
 
     def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
         """

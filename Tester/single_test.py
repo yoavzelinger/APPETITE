@@ -82,35 +82,37 @@ def get_total_drift_types(drifted_features_types):
 def run_single_test(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_DIAGNOSER):
     dataset = get_dataset(directory, file_name, file_extension=file_extension)
 
-    X_train, y_train = dataset.get_before_concept_data()
-    sklearn_tree_model = get_sklearn_tree(X_train, y_train)
+    X_before, y_before = dataset.get_before_concept_data()
+    
+    sklearn_tree_model = get_sklearn_tree(X_before, y_before)
+    pre_drift_accuracy = get_accuracy(sklearn_tree_model, *dataset.get_test_data())
 
-    pre_drift_X_test, y_test = dataset.get_test_data()
-    pre_drift_accuracy = get_accuracy(sklearn_tree_model, pre_drift_X_test, y_test)
-    if pre_drift_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:  # Original model is not good enough
-        # print(f"Original model is not good enough, accuracy: {original_accuracy}")
+    if pre_drift_accuracy < tester_constants.MINIMUM_ORIGINAL_ACCURACY:
+        # Original model is not good enough
         return
+    
+    mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_before, y_before)
     
     pre_drift_repair_accuracy = get_accuracy(sklearn_tree_model, *dataset.get_repair_data())
     
-    mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_train, y_train)
     for (X_repair, y_repair), (X_test, y_test), (drift_severity_level, drift_description), drifted_features, drifted_features_types, drift_size in drift_tree(mapped_tree, dataset, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
         try:
             if X_repair.empty or X_test.empty:
                 continue
+            
             post_drift_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test, y_test)
             post_drift_test_accuracy_drop = pre_drift_accuracy - post_drift_test_accuracy
+            
             if pre_drift_repair_accuracy - get_accuracy(sklearn_tree_model, X_repair, y_repair) < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
 
-            print(f"\t\t\t\tDiagnosing")
-
-            drifted_features_types = [drifted_features_types] if isinstance(drifted_features_types, str) else drifted_features_types
-
-            drifted_features = drifted_features if isinstance(drifted_features, set) else set([drifted_features])
             faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)
 
-            new_all_retrained_tree = get_sklearn_tree(pd.concat([X_train, X_repair]), pd.concat([y_train, y_repair]), previous_model=mapped_tree.sklearn_tree_model)
+            print(f"\t\t\t\tDiagnosing")
+
+            # Comparable Baselines
+
+            new_all_retrained_tree = get_sklearn_tree(pd.concat([X_before, X_repair]), pd.concat([y_before, y_repair]), previous_model=mapped_tree.sklearn_tree_model)
             new_all_retrained_accuracy = get_accuracy(new_all_retrained_tree, X_test, y_test)
             new_all_retrained_accuracy_bump = new_all_retrained_accuracy - post_drift_test_accuracy
 
@@ -211,11 +213,9 @@ def drift_tree_v2(dataset: Dataset,
 
 def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_DIAGNOSER):
     dataset = get_dataset(directory, file_name, file_extension=file_extension)
+    
     for (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description, drifted_features, drifted_features_types, drift_size in drift_tree_v2(dataset, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
         try:
-            if any(map(lambda data: data.empty, [X_before, X_repair, X_test])):
-                continue
-
             sklearn_tree_model = get_sklearn_tree(X_before, y_before)
             pre_drift_accuracy = sklearn_tree_model.best_accuracy
 
@@ -225,20 +225,23 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             
             mapped_tree = get_mapped_tree(sklearn_tree_model, dataset.feature_types, X_before, y_before)
 
-            if not all(map(lambda feature: feature in mapped_tree.tree_features_set, drifted_features)):
-                # redundant features drifted
+            if not all(map(lambda feature: feature in mapped_tree.tree_features_set, drifted_features)):    # redundant features drifted
                 continue
 
-            post_drift_repair_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_repair, y_repair)
-            post_drift_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test, y_test)
+            if X_repair.empty or X_test.empty:
+                continue
             
+            post_drift_test_accuracy = get_accuracy(mapped_tree.sklearn_tree_model, X_test, y_test)
             post_drift_test_accuracy_drop = pre_drift_accuracy - post_drift_test_accuracy
-
-            if pre_drift_accuracy - post_drift_repair_accuracy < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:
-                # insignificant drift
+            
+            if pre_drift_accuracy - get_accuracy(mapped_tree.sklearn_tree_model, X_repair, y_repair) < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:    # insignificant drift
                 continue
 
             faulty_features_nodes = get_drifted_nodes(mapped_tree, drifted_features)
+
+            print(f"\t\t\t\tDiagnosing")
+
+            # Comparable Baselines
 
             new_all_retrained_tree = get_sklearn_tree(pd.concat([X_before, X_repair]), pd.concat([y_before, y_repair]), previous_model=mapped_tree.sklearn_tree_model)
             new_all_retrained_accuracy = get_accuracy(new_all_retrained_tree, X_test, y_test)

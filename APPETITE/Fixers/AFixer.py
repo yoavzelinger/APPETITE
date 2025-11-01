@@ -27,7 +27,7 @@ class AFixer(ABC):
         """
         assert self.alias is not None, "Alias must be set to a fixer class"
 
-        self.original_mapped_tree = mapped_tree
+        self.original_mapped_tree = deepcopy(mapped_tree)
         self.feature_types = mapped_tree.data_feature_types
         self.X = X
         self.y = y

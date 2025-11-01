@@ -210,6 +210,7 @@ class SFLDT(ADiagnoser):
                         self.error_vector[test_index] = node.confidence if self.error_vector[test_index] else (1 - node.confidence)
             test_participation_vector = self.spectra[:, test_index]
             self.path_tests_indices[tuple(test_participation_vector)].append(test_index)
+        
         assert np.any(self.error_vector > 0), "No errors found in the error vector, cannot perform diagnosis."
         if self.group_feature_nodes:
             self.update_spectra_to_feature_components()

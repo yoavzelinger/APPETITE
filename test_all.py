@@ -18,7 +18,7 @@ from Tester import *
 ##### Parser Arguments #####
 parser = ArgumentParser(description="Run all tests")
 parser.add_argument("-o", "--output", type=str, help=f"Output file name prefix, default is the result_{tester_constants.DEFAULT_RESULTS_FILENAME_PREFIX}_<TIMESTAMP>", default=tester_constants.DEFAULT_RESULTS_FILENAME_EXTENDED_PREFIX)
-parser.add_argument("-s", "--skip", action="store_true", help=f"skip exceptions, default is {tester_constants.SKIP_EXCEPTIONS}. If true will write the errors to errors file", default=tester_constants.SKIP_EXCEPTIONS)
+parser.add_argument("-e", "--exception", action="store_true", help=f"skip exceptions, default is {tester_constants.SKIP_EXCEPTIONS}. If true will write the errors to errors file", default=tester_constants.SKIP_EXCEPTIONS)
 parser.add_argument("-n", "--names", type=str, nargs="+", help="Specific datasets to run, default is all", default=())
 parser.add_argument("-p", "--prefixes", type=str, nargs="+", help="prefixes to datasets to run, default is all. Relevant only if names argument is not provided", default=())
 parser.add_argument("-w", "--repair_window", type=float, nargs="+", help="Repair window sizes, default is all", default=tester_constants.REPAIR_WINDOW_TEST_SIZES)

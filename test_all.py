@@ -51,7 +51,7 @@ datasets_count = args.count
 if datasets_count > 0:
     print(f"Running tests for the first {datasets_count} datasets")
 
-skip_exceptions = args.skip
+skip_exceptions = args.exception
 if skip_exceptions:
     print("Skip exceptions is set to True. Exceptions will be written to errors file.")
 else:

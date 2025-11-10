@@ -37,7 +37,6 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             if replaced_node.is_successor_of(node_to_replace):
                 # The node to replace is an ancestor of an already replaced subtree
                 del self.replaced_subtrees[replaced_node]
-                break
 
         self.replaced_subtrees[node_to_replace] = deepcopy(self.base_sklearn_tree_model)
         self.replaced_subtrees[node_to_replace].fit(new_X, new_y)

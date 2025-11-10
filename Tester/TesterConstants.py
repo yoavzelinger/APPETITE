@@ -16,7 +16,7 @@ TEST_PROPORTION = 0.2
 PROPORTIONS_TUPLE = (BEFORE_PROPORTION, REPAIR_PROPORTION, TEST_PROPORTION)
 DEFAULT_REPAIR_WINDOW_PROPORTION = 1
 
-DRIFT_SYNTHESIZING_VERSION = 1
+DRIFT_SYNTHESIZING_VERSION = 2
 
 VALIDATION_SIZE = 0.2
 
@@ -116,7 +116,7 @@ with open(os_path.join(__package__, f"{TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAM
     diagnosers_data = load_json(testing_diagnosers_configuration_file)
 diagnosers_data: list[dict[str, object]] = [diagnoser_data for diagnoser_data in diagnosers_data if not diagnoser_data.get("disabled", False)]
 diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data.get("output_name", diagnoser_data["class_name"]), diagnosers_data))
-TESTED_FIXERS: list[AFixer] = [AllNodesFixer, TopNodeFixer, TopFeaturesNodesFixer, SubTreeRetrainingFixer]
+TESTED_FIXERS: list[AFixer] = [AllNodesFixer, TopFeaturesNodesFixer, TopNodeFixer, SubTreeRetrainingFixer]
 fixers_output_names = list(map(lambda fixer: fixer.alias, TESTED_FIXERS))
 
 

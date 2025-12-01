@@ -110,9 +110,11 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
 
             print(f"\t\t\t\tDiagnosing")
 
+            X_before_repair, y_before_repair = pd.concat([X_before, X_repair]), pd.concat([y_before, y_repair])
+
             # Comparable Baselines
 
-            new_all_retrained_tree = get_sklearn_tree(pd.concat([X_before, X_repair]), pd.concat([y_before, y_repair]), previous_model=mapped_tree.sklearn_tree_model)
+            new_all_retrained_tree = get_sklearn_tree(X_before_repair, y_before_repair, previous_model=mapped_tree.sklearn_tree_model)
             new_all_retrained_accuracy = get_accuracy(new_all_retrained_tree, X_test, y_test)
             new_all_retrained_accuracy_bump = new_all_retrained_accuracy - post_drift_test_accuracy
 

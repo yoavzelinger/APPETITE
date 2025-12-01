@@ -168,7 +168,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                         f"{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}": correctly_identified * 100
                     })
                 for FixerClass in tester_constants.TESTED_FIXERS:
-                    fixer: AFixer = FixerClass(mapped_tree, X_repair, y_repair, faulty_nodes=faulty_nodes_indices)
+                    fixer: AFixer = FixerClass(mapped_tree, X_before_repair, y_before_repair, faulty_nodes=faulty_nodes_indices)
                     fixed_tree = fixer.fix_tree()
                     fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
                     test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
@@ -301,7 +301,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                         f"{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}": correctly_identified * 100
                     })
                 for FixerClass in tester_constants.TESTED_FIXERS:
-                    fixer: AFixer = FixerClass(mapped_tree, X_repair, y_repair, faulty_nodes=faulty_nodes_indices)
+                    fixer: AFixer = FixerClass(mapped_tree, X_before_repair, y_before_repair, faulty_nodes=faulty_nodes_indices)
                     fixed_tree = fixer.fix_tree()
                     fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
                     test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy

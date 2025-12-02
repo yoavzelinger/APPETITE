@@ -5,6 +5,8 @@ import numpy as np
 
 from sklearn.tree import DecisionTreeClassifier
 
+from APPETITE.Constants import SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE, SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES
+
 from .MappedDecisionTree import MappedDecisionTree
 
 class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
@@ -33,11 +35,13 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         previously_replaced_nodes = list(self.replaced_subtrees.keys())
         for current_replaced_node in previously_replaced_nodes:
             if current_replaced_node.is_ancestor_of(new_node_to_replace):
-                # The node to replace is part of an already replaced subtree
-                return
+                if SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE == SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.TAKE_TOP:
+                    # The node to replace is part of an already replaced subtree
+                    return
             if current_replaced_node.is_successor_of(new_node_to_replace):
-                # The node to replace is an ancestor of an already replaced subtree
-                del self.replaced_subtrees[current_replaced_node]
+                if SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE == SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.TAKE_TOP:
+                    # The node to replace is an ancestor of an already replaced subtree
+                    del self.replaced_subtrees[current_replaced_node]
 
         self.replaced_subtrees[new_node_to_replace] = deepcopy(self.base_sklearn_tree_model)
         self.replaced_subtrees[new_node_to_replace].fit(new_X, new_y)

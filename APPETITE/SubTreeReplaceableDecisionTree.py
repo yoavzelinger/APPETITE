@@ -17,7 +17,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
 
         self.replaced_subtrees: dict[MappedDecisionTree.DecisionTreeNode, DecisionTreeClassifier] = {}
 
-    def replace_subtree(self, current_node_index_to_replace: int, new_X: pd.DataFrame, new_y: pd.Series) -> None:
+    def replace_subtree(self, new_node_index_to_replace: int, new_X: pd.DataFrame, new_y: pd.Series) -> None:
         """
         Replace a subtree rooted at the given node with a new subtree.
 

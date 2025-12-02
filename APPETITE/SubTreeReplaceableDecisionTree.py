@@ -26,20 +26,20 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             new_X (pd.DataFrame): The new input features for the subtree.
             new_y (pd.Series): The new target labels for the subtree.
         """
-        assert current_node_index_to_replace in self.mapped_tree.tree_dict, "The specified node is not part of the tree."
+        assert new_node_index_to_replace in self.mapped_tree.tree_dict, "The specified node is not part of the tree."
 
-        current_node_to_replace = self.mapped_tree.tree_dict[current_node_index_to_replace]
+        new_node_to_replace = self.mapped_tree.tree_dict[new_node_index_to_replace]
 
-        for previously_replaced_node in self.replaced_subtrees:
-            if previously_replaced_node.is_ancestor_of(current_node_to_replace):
+        for current_replaced_node in self.replaced_subtrees:
+            if current_replaced_node.is_ancestor_of(new_node_to_replace):
                 # The node to replace is part of an already replaced subtree
                 return
-            if previously_replaced_node.is_successor_of(current_node_to_replace):
+            if current_replaced_node.is_successor_of(new_node_to_replace):
                 # The node to replace is an ancestor of an already replaced subtree
-                del self.replaced_subtrees[previously_replaced_node]
+                del self.replaced_subtrees[current_replaced_node]
 
-        self.replaced_subtrees[current_node_to_replace] = deepcopy(self.base_sklearn_tree_model)
-        self.replaced_subtrees[current_node_to_replace].fit(new_X, new_y)
+        self.replaced_subtrees[new_node_to_replace] = deepcopy(self.base_sklearn_tree_model)
+        self.replaced_subtrees[new_node_to_replace].fit(new_X, new_y)
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """

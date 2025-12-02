@@ -30,7 +30,8 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
 
         new_node_to_replace = self.mapped_tree.tree_dict[new_node_index_to_replace]
 
-        for current_replaced_node in self.replaced_subtrees:
+        previously_replaced_nodes = list(self.replaced_subtrees.keys())
+        for current_replaced_node in previously_replaced_nodes:
             if current_replaced_node.is_ancestor_of(new_node_to_replace):
                 # The node to replace is part of an already replaced subtree
                 return

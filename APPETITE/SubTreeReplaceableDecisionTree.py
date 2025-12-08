@@ -98,8 +98,8 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         """
         self.resolve_candidates_conflicts()
         for candidate_node in self.replacement_candidates:
-            filtered_X, filtered_y = candidate_node.get_data_reached_node(X, y, allow_empty=False)
             self.replaced_subtrees[candidate_node] = deepcopy(self.base_sklearn_tree_model)
+            filtered_X, filtered_y = candidate_node.get_data_reached_node(X, y, allow_empty=False)
             self.replaced_subtrees[candidate_node].fit(filtered_X, filtered_y)
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:

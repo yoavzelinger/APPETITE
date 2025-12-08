@@ -159,7 +159,7 @@ class MappedDecisionTree:
                     current_X = current_X[current_X[feature] > threshold]
                 if y is not None:
                     current_y = current_y[current_X.index]
-            if not allow_empty and current_X.empty:
+            if not allow_empty and current_X.empty and self.parent is not None:
                 return self.parent.get_data_reached_node(X, y, allow_empty)
             return current_X if y is None else (current_X, current_y)
         

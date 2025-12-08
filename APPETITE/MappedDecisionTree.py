@@ -136,7 +136,8 @@ class MappedDecisionTree:
         
         def get_data_reached_node(self,
                                   X: pd.DataFrame,
-                                  y: pd.Series = None
+                                  y: pd.Series = None,
+                                  allow_empty: bool = True
          ) -> pd.DataFrame | tuple[pd.DataFrame, pd.Series]:
             """
             Filter the data that reached the node.
@@ -148,16 +149,19 @@ class MappedDecisionTree:
             Returns:
                 DataFrame | tuple[DataFrame, Series]: The data that reached the node.
             """
+            current_X, current_y = X, y
             for condition in self.conditions_path:
                 feature, sign, threshold = condition.values()
                 assert feature in X.columns, f"Feature {feature} not in the dataset"
                 if sign == "<=":
-                    X = X[X[feature] <= threshold]
+                    current_X = current_X[current_X[feature] <= threshold]
                 else:
-                    X = X[X[feature] > threshold]
+                    current_X = current_X[current_X[feature] > threshold]
                 if y is not None:
-                    y = y[X.index]
-            return X if y is None else (X, y)
+                    current_y = current_y[current_X.index]
+            if not allow_empty and current_X.empty:
+                return self.parent.get_data_reached_node(X, y, allow_empty)
+            return current_X if y is None else (current_X, current_y)
         
         def update_node_data_attributes(self, 
                                         X: pd.DataFrame,

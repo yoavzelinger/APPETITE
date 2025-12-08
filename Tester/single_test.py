@@ -110,7 +110,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
 
             print(f"\t\t\t\tDiagnosing")
 
-            X_before_repair, y_before_repair = pd.concat([X_before, X_repair]), pd.concat([y_before, y_repair])
+            X_before_repair, y_before_repair = pd.concat([X_before, X_repair]).reset_index(drop=True), pd.concat([y_before, y_repair]).reset_index(drop=True)
 
             # Comparable Baselines
 
@@ -243,7 +243,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
 
             print(f"\t\t\t\tDiagnosing")
 
-            X_before_repair, y_before_repair = pd.concat([X_before, X_repair]), pd.concat([y_before, y_repair])
+            X_before_repair, y_before_repair = pd.concat([X_before, X_repair]).reset_index(drop=True), pd.concat([y_before, y_repair]).reset_index(drop=True)
             
             # Comparable Baselines
 

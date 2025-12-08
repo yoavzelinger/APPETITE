@@ -207,7 +207,7 @@ def drift_tree_v2(dataset: Dataset,
             for drifting_features in combinations(dataset.feature_types.keys(), drift_size):
                 print(f"\t\t\tDrifting {', '.join(drifting_features)}")
                 drifted_features_types = sorted([dataset.feature_types[drifting_feature] for drifting_feature in drifting_features])
-                if not is_drift_contains_numeric_features(drifted_features_types): # TODO: remove
+                if not is_drift_contains_numeric_features(drifted_features_types): # TODO: Remove the condition
                     print(f"\t\t\t\tSkipping non-numeric drift: {', '.join(drifting_features)}")
                     continue
                 for (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description in dataset.drift_generator_v2(drifting_features):

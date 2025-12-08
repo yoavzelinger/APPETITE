@@ -47,12 +47,7 @@ class AFixer(ABC):
             DataFrame: The data that reached the faulty nodes.
         """
         faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
-        filtered_data = faulty_node.get_data_reached_node(self.X, self.y)
-        while filtered_data[0].empty and faulty_node.parent is not None:
-            # Get the data that reached the parent node
-            faulty_node = faulty_node.parent
-            filtered_data = faulty_node.get_data_reached_node(self.X, self.y)
-        return filtered_data
+        return faulty_node.get_data_reached_node(self.X, self.y, allow_empty=False)
     
     @abstractmethod
     def fix_tree(self) -> DecisionTreeClassifier:

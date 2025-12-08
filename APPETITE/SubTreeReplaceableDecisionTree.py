@@ -5,7 +5,7 @@ import numpy as np
 
 from sklearn.tree import DecisionTreeClassifier
 
-from APPETITE.Constants import SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE, SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES
+import APPETITE.Constants as constants
 
 from .MappedDecisionTree import MappedDecisionTree
 
@@ -13,38 +13,94 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     """
     A Decision Tree Classifier that allows replacing subtrees.
     """
-    def __init__(self, original_mapped_tree: MappedDecisionTree):
+    def __init__(self, original_mapped_tree: MappedDecisionTree, indices_to_replace: list[int]):
         self.mapped_tree = original_mapped_tree
-        self.base_sklearn_tree_model = original_mapped_tree.sklearn_tree_model
-
+        self.base_sklearn_tree_model = deepcopy(original_mapped_tree.sklearn_tree_model)
+        
+        self.replacement_candidates: list[MappedDecisionTree.DecisionTreeNode] = list(map(self.mapped_tree.get_node, indices_to_replace))
         self.replaced_subtrees: dict[MappedDecisionTree.DecisionTreeNode, DecisionTreeClassifier] = {}
+    
+    def get_candidate_conflicts_indices(self,
+                                        current_candidate_index: int,
+                                        current_candidate_node: MappedDecisionTree.DecisionTreeNode) -> list[int]:
+        all_candidate_conflict_indices = []
+        for lower_candidate_index in range(current_candidate_index + 1, len(self.replacement_candidates)):
+            if current_candidate_node.is_ancestor_of(self.replacement_candidates[lower_candidate_index]):
+                all_candidate_conflict_indices.append(lower_candidate_index)
+        return all_candidate_conflict_indices
 
-    def replace_subtree(self, new_node_index_to_replace: int, new_X: pd.DataFrame, new_y: pd.Series) -> None:
+    def get_unrelated_child(self,
+                            node: MappedDecisionTree.DecisionTreeNode,
+                            successor_node: MappedDecisionTree.DecisionTreeNode
+                            ) -> MappedDecisionTree.DecisionTreeNode:
         """
-        Replace a subtree rooted at the given node with a new subtree.
+        Get a child of the given node that is not on the same path as the successor node.
+        """
+        assert node.is_ancestor_of(successor_node), "The given node is not an ancestor of the successor node."
+        if node.left_child.is_ancestor_of(successor_node):
+            return node.right_child
+        return node.left_child
+    
+    def resolve_candidate_conflicts(self, 
+                                    current_candidate_index: int) -> int:
+        """
+        Resolve conflicts for the current candidate node.
+        
+        current_candidate_index (int): The index of the current candidate node.
+        Returns:
+            int: The next candidate index to look for conflicts at.
+        """        
+        current_candidate_node = self.replacement_candidates[current_candidate_index]
+        
+        all_candidate_conflict_indices = self.get_candidate_conflicts_indices(current_candidate_index, current_candidate_node)
+        
+        if not all_candidate_conflict_indices:
+            # No conflicts, move to the next candidate
+            return current_candidate_index + 1
+        
+        match constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE:
+            case constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.TAKE_TOP:
+                # Remove all successors
+                for candidate_conflict_index in all_candidate_conflict_indices:
+                    del self.replacement_candidates[candidate_conflict_index]
+                # No change required to the current candidate, move to the next one
+                return current_candidate_index + 1
+            case constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.REPLACE_ANCESTORS:        
+                if len(self.replacement_candidates) >= 2 and self.replacement_candidates[all_candidate_conflict_indices[0]].get_sibling() == self.replacement_candidates[all_candidate_conflict_indices[1]]:
+                    # Both children need to be replaced, remove the current node (the parent)
+                    del self.replacement_candidates[current_candidate_index]
+                else:
+                    # No more than one direct-child needs to be replaced.
+                    highest_successor_node = self.replacement_candidates[all_candidate_conflict_indices[0]]
+                    unrelated_child = self.get_unrelated_child(current_candidate_node, highest_successor_node)
+                    self.replacement_candidates[current_candidate_index] = unrelated_child
+                # changes were made, re-check the current index
+                return current_candidate_index
+            case _:
+                raise NotImplementedError("The specified dependency handling type is not implemented yet for this fixer")
+
+    def resolve_candidates_conflicts(self):
+        """
+        Resolve cases where there are multiple nodes on the same path.
+        """
+        self.replacement_candidates.sort(key=lambda node: node.depth)
+        current_candidate_index = 0
+        while current_candidate_index < len(self.replacement_candidates):
+            current_candidate_index = self.resolve_candidate_conflicts(current_candidate_index)
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """
+        Fit the decision tree to the data.
 
         Parameters:
-            node_index_to_replace (int): The index of the node to replace.
-            new_X (pd.DataFrame): The new input features for the subtree.
-            new_y (pd.Series): The new target labels for the subtree.
+            X (pd.DataFrame): The input features.
+            y (pd.Series): The target labels.
         """
-        assert new_node_index_to_replace in self.mapped_tree.tree_dict, "The specified node is not part of the tree."
-
-        new_node_to_replace = self.mapped_tree.tree_dict[new_node_index_to_replace]
-
-        previously_replaced_nodes = list(self.replaced_subtrees.keys())
-        for current_replaced_node in previously_replaced_nodes:
-            if current_replaced_node.is_ancestor_of(new_node_to_replace):
-                if SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE == SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.TAKE_TOP:
-                    # The node to replace is part of an already replaced subtree
-                    return
-            if current_replaced_node.is_successor_of(new_node_to_replace):
-                if SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE == SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.TAKE_TOP:
-                    # The node to replace is an ancestor of an already replaced subtree
-                    del self.replaced_subtrees[current_replaced_node]
-
-        self.replaced_subtrees[new_node_to_replace] = deepcopy(self.base_sklearn_tree_model)
-        self.replaced_subtrees[new_node_to_replace].fit(new_X, new_y)
+        self.resolve_candidates_conflicts()
+        for candidate_node in self.replacement_candidates:
+            filtered_X, filtered_y = candidate_node.get_data_reached_node(X, y, allow_empty=False)
+            self.replaced_subtrees[candidate_node] = deepcopy(self.base_sklearn_tree_model)
+            self.replaced_subtrees[candidate_node].fit(filtered_X, filtered_y)
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """

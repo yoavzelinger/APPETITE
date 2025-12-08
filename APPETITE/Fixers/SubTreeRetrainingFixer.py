@@ -15,10 +15,7 @@ class SubTreeRetrainingFixer(AFixer):
             list[int]: The indices of the faulty nodes.
         """
         # print(f"Fixing faulty nodes: {self.faulty_nodes}")
-        self.fixed_tree = SubTreeReplaceableDecisionTree(self.original_mapped_tree)
-        
-        for faulty_node_index in self.faulty_nodes:
-            X_reached_faulty_node, y_reached_faulty_node = self._filter_data_reached_fault(faulty_node_index)
-            self.fixed_tree.replace_subtree(faulty_node_index, X_reached_faulty_node, y_reached_faulty_node)
+        self.fixed_tree = SubTreeReplaceableDecisionTree(self.original_mapped_tree, self.faulty_nodes)
+        self.fixed_tree.fit(self.X, self.y)
         
         return super().fix_tree()

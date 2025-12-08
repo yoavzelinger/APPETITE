@@ -138,10 +138,10 @@ elif os.path.exists(errors_file_path):
 
 print("All tests are done! Wasted-Effort; Correctly-Identified; Accuracy Increase:")
 for baseline_output_name in tester_constants.BASELINES_OUTPUT_NAMES:
-    print(f"{baseline_output_name}: XXXX; XXXX; {raw_results[f'{baseline_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean():.2f}%")
+    print(f"{baseline_output_name}: xxxx; xxxx; {raw_results[f'{baseline_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean():.2f}%")
 print()
 for diagnoser_output_name in tester_constants.diagnosers_output_names:
-    diagnoser_diagnosis_results = f"{diagnoser_output_name}: XXXX; XXXX;"
+    diagnoser_diagnosis_results = f"{diagnoser_output_name}: xxxx; xxxx;"
     if diagnoser_output_name != Oracle.__name__:
         diagnoser_diagnosis_results = f"{diagnoser_output_name}: {raw_results[f'{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean():.2f}; {raw_results[f'{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}'].mean():.2f}%;"
     for fixer_output_name in tester_constants.fixers_output_names:

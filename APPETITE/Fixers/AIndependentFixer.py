@@ -9,7 +9,8 @@ from .AFixer import AFixer
 class AIndependentFixer(AFixer):
     def _fix_terminal_faulty_node(self,
                                  faulty_node_index: int,
-                                 data_reached_faulty_node: pd.DataFrame
+                                 X_reached_faulty_node: pd.DataFrame,
+                                 y_reached_faulty_node: pd.Series
      ) -> None:
         """
         Fix a terminal faulty node.
@@ -18,15 +19,15 @@ class AIndependentFixer(AFixer):
         
         Parameters:
             faulty_node_index (int): The index of the faulty node.
-            data_reached_faulty_node (DataFrame): The data that reached the faulty node.
+            X_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
-        reached_labels = self.y[data_reached_faulty_node.index]
+        y_reached_faulty_node = self.y[X_reached_faulty_node.index]
         
         values = self.original_mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index]
 
-        if len(reached_labels):
+        if len(y_reached_faulty_node):
             # Get the most common class in the data that reached the faulty node
-            most_common_class_index = reached_labels.value_counts().idxmax()
+            most_common_class_index = y_reached_faulty_node.value_counts().idxmax()
 
             # Make the most common class the class with the max count in the node
             max_value_count = np.max(values)
@@ -46,7 +47,7 @@ class AIndependentFixer(AFixer):
 
     def _fix_numeric_faulty_node(self, 
                                   faulty_node_index: int,
-                                  data_reached_faulty_node: pd.DataFrame
+                                  X_reached_faulty_node: pd.DataFrame
      ) -> None:
         """
         Fix a numeric faulty node.
@@ -54,13 +55,13 @@ class AIndependentFixer(AFixer):
 
         Parameters:
             faulty_node_index (int): The index of the faulty node.
-            data_reached_faulty_node (DataFrame): The data that reached the faulty node.
+            X_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
         faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
         node_feature_average_before_drift = faulty_node.feature_average_value
         if node_feature_average_before_drift is None:
             raise NotImplementedError("The average feature value before the drift is not available")
-        node_feature_average_after_drift = data_reached_faulty_node[faulty_node.feature].mean()
+        node_feature_average_after_drift = X_reached_faulty_node[faulty_node.feature].mean()
         node_feature_average_difference = node_feature_average_after_drift - node_feature_average_before_drift
         new_threshold = faulty_node.threshold + node_feature_average_difference
         # print(f"{self.diagnoser_output_name}: Faulty node {faulty_node_index} (Numeric) threshold changed from {faulty_node.threshold:.2f} to {new_threshold:.2f}")
@@ -75,7 +76,7 @@ class AIndependentFixer(AFixer):
     
           Parameters:
                 faulty_node_index (int): The index of the faulty node.
-                data_reached_faulty_node (DataFrame): The data that reached the faulty node.
+                X_reached_faulty_node (DataFrame): The data that reached the faulty node.
           """
           faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
           left_child, right_child = faulty_node.left_child, faulty_node.right_child
@@ -86,25 +87,26 @@ class AIndependentFixer(AFixer):
           
     def fix_faulty_node(self,
                         faulty_node_index: int,
-                        data_reached_faulty_node: pd.DataFrame
+                        X_reached_faulty_node: pd.DataFrame,
+                        y_reached_faulty_node: pd.Series
      ) -> None:
         """
         Fix a faulty node.
 
         Parameters:
             faulty_node_index (int): The index of the faulty node.
-            data_reached_faulty_node (DataFrame): The data that reached the faulty node.
+            X_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
         self.fixed_tree: DecisionTreeClassifier = deepcopy(self.original_mapped_tree.sklearn_tree_model)
         faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
         if faulty_node.is_terminal():
-            self._fix_terminal_faulty_node(faulty_node_index, data_reached_faulty_node)
+            self._fix_terminal_faulty_node(faulty_node_index, X_reached_faulty_node, y_reached_faulty_node)
             return
         faulty_node_feature_type = faulty_node.feature_type
         if faulty_node_feature_type is None:
             # Determine the type from the after drift dataset
             faulty_node_feature_type = self.feature_types[faulty_node.feature]
         if faulty_node_feature_type == "numeric":
-            self._fix_numeric_faulty_node(faulty_node_index, data_reached_faulty_node)
+            self._fix_numeric_faulty_node(faulty_node_index, X_reached_faulty_node)
         else:
             self._fix_categorical_faulty_node(faulty_node_index)

@@ -17,6 +17,6 @@ class AllNodesFixer(AIndependentFixer):
         """
         # print(f"Fixing faulty nodes: {self.faulty_nodes}")
         for faulty_node_index in self.faulty_nodes:
-            X_reached_faulty_node, _ = self._filter_data_reached_fault(faulty_node_index)
-            self.fix_faulty_node(faulty_node_index, X_reached_faulty_node)
+            X_reached_faulty_node, y_reached_faulty_node = self._filter_data_reached_fault(faulty_node_index)
+            self.fix_faulty_node(faulty_node_index, X_reached_faulty_node, y_reached_faulty_node)
         return super().fix_tree()

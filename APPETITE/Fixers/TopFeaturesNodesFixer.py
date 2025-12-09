@@ -20,6 +20,6 @@ class TopFeaturesNodesFixer(AIndependentFixer):
             if current_node.depth < current_feature_fault_top_depth:
                 top_features_faults[current_node.feature] = (current_node.sk_index, current_node.depth)
         for faulty_node_index, _ in top_features_faults.values():
-            X_reached_faulty_node, _ = self._filter_data_reached_fault(faulty_node_index)
-            self.fix_faulty_node(faulty_node_index, X_reached_faulty_node)
+            X_reached_faulty_node, y_reached_faulty_node = self._filter_data_reached_fault(faulty_node_index)
+            self.fix_faulty_node(faulty_node_index, X_reached_faulty_node, y_reached_faulty_node)
         return super().fix_tree()

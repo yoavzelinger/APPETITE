@@ -21,8 +21,6 @@ class AIndependentFixer(AFixer):
             faulty_node_index (int): The index of the faulty node.
             X_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
-        y_reached_faulty_node = self.y[X_reached_faulty_node.index]
-        
         values = self.original_mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index]
 
         if len(y_reached_faulty_node):

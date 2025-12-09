@@ -153,12 +153,11 @@ class MappedDecisionTree:
             for condition in self.conditions_path:
                 feature, sign, threshold = condition.values()
                 assert feature in X.columns, f"Feature {feature} not in the dataset"
-                if sign == "<=":
-                    current_X = current_X[current_X[feature] <= threshold]
-                else:
-                    current_X = current_X[current_X[feature] > threshold]
+                indices_filter = current_X[feature] <= threshold if sign == "<=" else current_X[feature] > threshold
+                current_X = current_X[indices_filter]
                 if y is not None:
-                    current_y = current_y[current_X.index]
+                    current_y = current_y[indices_filter]
+                    assert len(current_X) == len(current_y)
             if not allow_empty and current_X.empty and self.parent is not None:
                 return self.parent.get_data_reached_node(X, y, allow_empty)
             return current_X if y is None else (current_X, current_y)

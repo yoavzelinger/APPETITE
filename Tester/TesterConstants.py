@@ -128,9 +128,14 @@ with open(os_path.join(__package__, f"{TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAM
     diagnosers_data = load_json(testing_diagnosers_configuration_file)
 diagnosers_data: list[dict[str, object]] = [diagnoser_data for diagnoser_data in diagnosers_data if not diagnoser_data.get("disabled", False)]
 diagnosers_output_names = list(map(lambda diagnoser_data: diagnoser_data.get("output_name", diagnoser_data["class_name"]), diagnosers_data))
-TESTED_FIXERS: list[AFixer] = [AllNodesFixer, TopFeaturesNodesFixer, TopNodeFixer, SubTreeRetrainingFixer]
-fixers_output_names = list(map(lambda fixer: fixer.alias, TESTED_FIXERS))
 
+#   TESTING FIXERS DATA
+TESTING_FIXERS_CONFIGURATION_FILE_NAME = "TestingFixersData"
+fixers_data = {}
+with open(os_path.join(__package__, f"{TESTING_FIXERS_CONFIGURATION_FILE_NAME}.json"), "r") as testing_fixers_configuration_file:
+    fixers_data = load_json(testing_fixers_configuration_file)
+fixers_data: list[dict[str, object]] = [fixer_data for fixer_data in fixers_data if not fixer_data.get("disabled", False)]
+fixers_output_names = list(map(lambda fixer_data: fixer_data.get("output_name", fixer_data["class_name"]), fixers_data))
 
 #   TESTING INFO COLUMNS
 DATASET_NAME_COLUMN_NAME = "dataset name"

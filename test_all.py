@@ -32,7 +32,7 @@ print(f"Running tests with {len(tester_constants.diagnosers_output_names)} diagn
 
 if args.test:
     print(f"Running single test for {args.test}")
-    single_test.sanity_run(file_name=args.test + ".csv", diagnosers_data=tester_constants.diagnosers_data)
+    single_test.sanity_run(file_name=args.test + ".csv", diagnosers_data=tester_constants.diagnosers_data, fixers_data=tester_constants.fixers_data)
     sys.exit(0)
 
 specific_datasets_string = ""
@@ -94,7 +94,7 @@ with open(tester_constants.DATASET_DESCRIPTION_FILE_PATH, "r") as descriptions_f
         datasets_count -= 1
 
         print(f"Running tests for {dataset_name}")
-        for test_result in single_test_function(tester_constants.DATASETS_DIRECTORY_FULL_PATH, dataset_name, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=tester_constants.diagnosers_data):
+        for test_result in single_test_function(tester_constants.DATASETS_DIRECTORY_FULL_PATH, dataset_name, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size, diagnosers_data=tester_constants.diagnosers_data, fixers_data=tester_constants.fixers_data):
             if isinstance(test_result, Exception):
                 if not skip_exceptions:
                     raise test_result

@@ -13,12 +13,18 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     """
     A Decision Tree Classifier that allows replacing subtrees.
     """
-    def __init__(self, original_mapped_tree: MappedDecisionTree, indices_to_replace: list[int]):
+    def __init__(self,
+                 original_mapped_tree: MappedDecisionTree,
+                 indices_to_replace: list[int],
+                 dependency_handling_type: constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = constants.DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE):
         self.mapped_tree = original_mapped_tree
         self.base_sklearn_tree_model = deepcopy(original_mapped_tree.sklearn_tree_model)
         
         self.replacement_candidates: list[MappedDecisionTree.DecisionTreeNode] = list(map(self.mapped_tree.get_node, indices_to_replace))
         self.replaced_subtrees: dict[MappedDecisionTree.DecisionTreeNode, DecisionTreeClassifier] = {}
+
+        assert isinstance(dependency_handling_type, constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES), f"expecting dependency_handling_type to be SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES but got {type(dependency_handling_type)}"
+        self.dependency_handling_type = dependency_handling_type
     
     def get_candidate_conflicts_indices(self,
                                         current_candidate_index: int,

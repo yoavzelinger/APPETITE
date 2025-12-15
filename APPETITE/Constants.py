@@ -32,11 +32,11 @@ BARINEL_THRESHOLD_ABOVE_STD_RATE = 0.5 # setting the error threshold (from which
 BARINEL_ADD_TARGET_TO_FEATURE_COMPONENTS = True # Whether to add the target as component if we're merging nodes based on the feature
 
 class SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES(Enum): #
-    TAKE_TOP = auto() # Do not handle dependencies
-    TAKE_BOTTOM = auto() # Replace also all dependent subtrees
-    REPLACE_ANCESTORS = auto() # Replace also all ancestor subtrees
+    Take_Top = auto() # Do not handle dependencies
+    Take_Bottom = auto() # Replace also all dependent subtrees
+    Replace_Ancestors = auto() # Replace also all ancestor subtrees
 
-SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE = SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.TAKE_TOP
+DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE = SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.Take_Top
 
-if SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE == SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.TAKE_BOTTOM:
+if DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE == SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.Take_Bottom:
     raise NotImplementedError("TAKE_BOTTOM handling type is not implemented yet.")

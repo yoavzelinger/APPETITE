@@ -64,14 +64,14 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             # No conflicts, move to the next candidate
             return current_candidate_index + 1
         
-        match constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE:
-            case constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.TAKE_TOP:
+        match self.dependency_handling_type:
+            case constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.Take_Top:
                 # Remove all successors
                 for candidate_conflict_index in all_candidate_conflict_indices:
                     del self.replacement_candidates[candidate_conflict_index]
                 # No change required to the current candidate, move to the next one
                 return current_candidate_index + 1
-            case constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.REPLACE_ANCESTORS:        
+            case constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.Replace_Ancestors:        
                 if len(self.replacement_candidates) >= 2 and self.replacement_candidates[all_candidate_conflict_indices[0]].get_sibling() == self.replacement_candidates[all_candidate_conflict_indices[1]]:
                     # Both children need to be replaced, remove the current node (the parent)
                     del self.replacement_candidates[current_candidate_index]

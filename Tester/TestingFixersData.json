@@ -3,19 +3,22 @@
         "output_name": "all_nodes_tweak",
         "class_name": "AllNodesFixer",
         "parameters": {
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "single_top_tweak",
         "class_name": "TopNodeFixer",
         "parameters": {
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "per_features_top_tweak",
         "class_name": "TopFeaturesNodesFixer",
         "parameters": {
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "subtree_retrain_top",

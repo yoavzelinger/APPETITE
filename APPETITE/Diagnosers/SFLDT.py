@@ -104,6 +104,14 @@ class SFLDT(ADiagnoser):
         """
         if self.aggregate_tests:
             self.aggregate_tests_by_paths()
+            if self.combine_prior_confidence:
+                # find for each path the terminal node
+                for test_index in range(self.tests_count):
+                    path_participation_vector = self.spectra[:, test_index]
+                    participated_nodes_indices = np.where(path_participation_vector > 0)[0]
+                    terminal_node_index = max(participated_nodes_indices, key=lambda node_index: self.mapped_tree.get_node(node_index).depth)
+                    terminal_node = self.mapped_tree.get_node(terminal_node_index)
+                    self.error_vector[test_index] = max(terminal_node.confidence - (1 - self.error_vector[test_index]), 0)
 
     def add_target_to_feature_components(self,
                                          target_name: str = "target"
@@ -206,7 +214,7 @@ class SFLDT(ADiagnoser):
                 self.spectra[node.spectra_index, test_index] = (node.depth + 1) / path_length if self.combine_components_depth else 1
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
-                    if self.combine_prior_confidence:
+                    if self.combine_prior_confidence and not self.aggregate_tests:
                         self.error_vector[test_index] = node.confidence if self.error_vector[test_index] else (1 - node.confidence)
             test_participation_vector = self.spectra[:, test_index]
             self.path_tests_indices[tuple(test_participation_vector)].append(test_index)

@@ -35,7 +35,8 @@
         "class_name": "BARINEL",
         "parameters": {
             "group_feature_nodes": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "Prior_Confidence-BARINEL",
@@ -58,7 +59,8 @@
         "parameters": {
             "aggregate_tests": true,
             "group_feature_nodes": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "Prior_Confidence-Aggregated_Tests-BARINEL",
@@ -74,7 +76,8 @@
         "parameters": {
             "combine_components_depth": true,
             "group_feature_nodes": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "Prior_Confidence-Components_Depth-BARINEL",
@@ -90,7 +93,8 @@
         "parameters": {
             "group_feature_nodes": true,
             "combine_prior_confidence": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "SHAP_Contributions-Feature_Components-BARINEL",
@@ -98,7 +102,8 @@
         "parameters": {
             "group_feature_nodes": true,
             "use_shap_contribution": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "Feature_Components-Components_Depth-Aggregated_Tests-BARINEL",
@@ -107,7 +112,8 @@
             "aggregate_tests": true,
             "combine_components_depth": true,
             "group_feature_nodes": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "Prior_Confidence-Components_Depth-Aggregated_Tests-BARINEL",
@@ -125,7 +131,8 @@
             "aggregate_tests": true,
             "group_feature_nodes": true,
             "combine_prior_confidence": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "Prior_Confidence-Feature_Components-Components_Depth-BARINEL",
@@ -134,7 +141,8 @@
             "combine_components_depth": true,
             "group_feature_nodes": true,
             "combine_prior_confidence": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "SHAP_Contributions-Feature_Components-Components_Depth-BARINEL",
@@ -143,7 +151,8 @@
             "combine_components_depth": true,
             "group_feature_nodes": true,
             "use_shap_contribution": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "SHAP_Contributions-Prior_Confidence-Feature_Components-BARINEL",
@@ -152,7 +161,8 @@
             "group_feature_nodes": true,
             "combine_prior_confidence": true,
             "use_shap_contribution": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "SHAP_Contributions-Feature_Components-Aggregated_Tests-BARINEL",
@@ -161,7 +171,8 @@
             "aggregate_tests": true,
             "group_feature_nodes": true,
             "use_shap_contribution": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "Prior_Confidence-Feature_Components-Components_Depth-Aggregated_Tests-BARINEL",
@@ -171,7 +182,8 @@
             "combine_components_depth": true,
             "group_feature_nodes": true,
             "combine_prior_confidence": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "SHAP_Contributions-Feature_Components-Components_Depth-Aggregated_Tests-BARINEL",
@@ -181,7 +193,8 @@
             "combine_components_depth": true,
             "group_feature_nodes": true,
             "use_shap_contribution": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "SHAP_Contributions-Prior_Confidence-Feature_Components-Aggregated_Tests-BARINEL",
@@ -191,7 +204,8 @@
             "group_feature_nodes": true,
             "combine_prior_confidence": true,
             "use_shap_contribution": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "SHAP_Contributions-Prior_Confidence-Feature_Components-Components_Depth-BARINEL",
@@ -201,7 +215,8 @@
             "group_feature_nodes": true,
             "combine_prior_confidence": true,
             "use_shap_contribution": true
-        }
+        },
+        "disabled": true
     },
     {
         "output_name": "SHAP_Contributions-Prior_Confidence-Feature_Components-Components_Depth-Aggregated_Tests-BARINEL",
@@ -212,6 +227,7 @@
             "group_feature_nodes": true,
             "combine_prior_confidence": true,
             "use_shap_contribution": true
-        }
+        },
+        "disabled": true
     }
 ]

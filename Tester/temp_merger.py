@@ -78,7 +78,7 @@ if os.path.exists(merged_output_full_path):
     excel_writer_arguments["if_sheet_exists"] = "replace"
 with pd.ExcelWriter(**excel_writer_arguments) as excel_writer:
     if args.raw:
-        raw_df.to_excel(excel_writer, sheet_name=tester_constants.RAW_RESULTS_SHEET_NAME, merge_cells=False)
+        raw_df.to_excel(excel_writer, sheet_name=tester_constants.RAW_RESULTS_SHEET_NAME, merge_cells=False, index=False)
     output_df.to_excel(excel_writer, sheet_name=tester_constants.MERGED_RESULTS_SHEET_NAME, merge_cells=False)
 output_workbook = load_workbook(merged_output_full_path)
 if args.raw:

@@ -16,7 +16,7 @@ TEST_PROPORTION = 0.2
 PROPORTIONS_TUPLE = (BEFORE_PROPORTION, REPAIR_PROPORTION, TEST_PROPORTION)
 DEFAULT_REPAIR_WINDOW_PROPORTION = 1
 
-DRIFT_SYNTHESIZING_VERSION = 2
+DRIFT_SYNTHESIZING_VERSION = 1
 
 VALIDATION_SIZE = 0.2
 
@@ -103,11 +103,23 @@ DEFAULT_TESTING_DIAGNOSER = {
             "use_tests_confidence": False
         }
     }
+#   DEFAULT TESTING FIXER
+DEFAULT_TESTING_FIXER = {
+        "output_name": "all_nodes_tweak",
+        "class_name": "AllNodesFixer",
+        "parameters": {
+        }
+    }
 
 if isinstance(DEFAULT_TESTING_DIAGNOSER, dict):
     DEFAULT_TESTING_DIAGNOSER = [DEFAULT_TESTING_DIAGNOSER]
 assert isinstance(DEFAULT_TESTING_DIAGNOSER, list) and all(isinstance(diagnoser_data, dict) for diagnoser_data in DEFAULT_TESTING_DIAGNOSER), \
     "DEFAULT_FIXING_DIAGNOSER must be a tuple of dictionaries, each dictionary representing a diagnoser."
+
+if isinstance(DEFAULT_TESTING_FIXER, dict):
+    DEFAULT_TESTING_FIXER = [DEFAULT_TESTING_FIXER]
+assert isinstance(DEFAULT_TESTING_FIXER, list) and all(isinstance(fixer_data, dict) for fixer_data in DEFAULT_TESTING_FIXER), \
+    "DEFAULT_FIXING_FIXER must be a tuple of dictionaries, each dictionary representing a fixer."
 
 #   TESTING DIAGNOSERS DATA
 TESTING_DIAGNOSERS_CONFIGURATION_FILE_NAME = "TestingDiagnosersData"

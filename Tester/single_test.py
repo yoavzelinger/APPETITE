@@ -79,7 +79,7 @@ def get_total_drift_types(drifted_features_types):
         return "numeric"
     return "binary"
 
-def run_single_test(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_DIAGNOSER):
+def run_single_test(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_DIAGNOSER, fixers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_FIXER):
     dataset = get_dataset(directory, file_name, file_extension=file_extension)
 
     X_before, y_before = dataset.get_before_concept_data()
@@ -167,14 +167,18 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                         f"{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}": wasted_effort,
                         f"{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}": correctly_identified * 100
                     })
-                for FixerClass in tester_constants.TESTED_FIXERS:
-                    fixer: AFixer = FixerClass(mapped_tree, X_before_repair, y_before_repair, faulty_nodes=faulty_nodes_indices)
+                for fixer_data in fixers_data:
+                    fixer_class_name = fixer_data["class_name"]
+                    fixer_output_name = fixer_data.get("output_name", fixer_class_name)
+                    fixer_parameters = fixer_data.get("parameters")
+                    fixer_class = get_fixer(fixer_class_name)
+                    fixer: AFixer = fixer_class(mapped_tree, X_before_repair, y_before_repair, faulty_nodes=faulty_nodes_indices, **fixer_parameters)
                     fixed_tree = fixer.fix_tree()
                     fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
                     test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
                     current_results_dict.update({
-                        f"{diagnoser_output_name}-{FixerClass.alias} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
-                        f"{diagnoser_output_name}-{FixerClass.alias} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": test_accuracy_bump * 100
+                        f"{diagnoser_output_name}-{fixer_output_name} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
+                        f"{diagnoser_output_name}-{fixer_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": test_accuracy_bump * 100
                     })
             yield current_results_dict
         except Exception as e:
@@ -213,7 +217,7 @@ def drift_tree_v2(dataset: Dataset,
                 for (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description in dataset.drift_generator_v2(drifting_features):
                     yield (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description, set(drifting_features), drifted_features_types, drift_size
 
-def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_DIAGNOSER):
+def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_DIAGNOSER, fixers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_FIXER):
     dataset = get_dataset(directory, file_name, file_extension=file_extension)
     
     for (X_before, y_before), (X_repair, y_repair), (X_test, y_test), drift_description, drifted_features, drifted_features_types, drift_size in drift_tree_v2(dataset, repair_window_test_sizes=repair_window_test_sizes, min_drift_size=min_drift_size, max_drift_size=max_drift_size):
@@ -300,14 +304,18 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                         f"{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}": wasted_effort,
                         f"{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}": correctly_identified * 100
                     })
-                for FixerClass in tester_constants.TESTED_FIXERS:
-                    fixer: AFixer = FixerClass(mapped_tree, X_before_repair, y_before_repair, faulty_nodes=faulty_nodes_indices)
+                for fixer_data in fixers_data:
+                    fixer_class_name = fixer_data["class_name"]
+                    fixer_output_name = fixer_data.get("output_name", fixer_class_name)
+                    fixer_parameters = fixer_data.get("parameters")
+                    fixer_class = get_fixer(fixer_class_name)
+                    fixer: AFixer = fixer_class(mapped_tree, X_before_repair, y_before_repair, faulty_nodes=faulty_nodes_indices, **fixer_parameters)
                     fixed_tree = fixer.fix_tree()
                     fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
                     test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
                     current_results_dict.update({
-                        f"{diagnoser_output_name}-{FixerClass.alias} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
-                        f"{diagnoser_output_name}-{FixerClass.alias} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": test_accuracy_bump * 100
+                        f"{diagnoser_output_name}-{fixer_output_name} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
+                        f"{diagnoser_output_name}-{fixer_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}": test_accuracy_bump * 100
                     })
             yield current_results_dict
         except Exception as e:

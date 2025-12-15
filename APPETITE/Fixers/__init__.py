@@ -1,5 +1,52 @@
+import os
+import importlib
+import inspect
+
 from .AFixer import AFixer
-from .AllNodesFixer import AllNodesFixer
-from .TopNodeFixer import TopNodeFixer
-from .TopFeaturesNodesFixer import TopFeaturesNodesFixer
-from .SubTreeRetrainingFixer import SubTreeRetrainingFixer
+
+FIXER_CLASSES_DICT = {}
+
+def _load_fixer_classes():
+    """
+    Load all classes in this package and subpackages that inherit from AFixer.
+    """
+    base_dir = os.path.dirname(__file__)
+    base_pkg = __name__
+
+    for dirpath, _, filenames in os.walk(base_dir):
+        for filename in filenames:
+            if filename.endswith(".py") and filename != "__init__.py":
+                # Build module path
+                full_path = os.path.join(dirpath, filename)
+                rel_path = os.path.relpath(full_path, base_dir)
+                module_name = rel_path[:-3].replace(os.sep, '.')
+                full_module_name = f"{base_pkg}.{module_name}"
+
+                module = importlib.import_module(full_module_name)
+                for _, cls in inspect.getmembers(
+                    module,
+                    lambda c: inspect.isclass(c) and issubclass(c, AFixer) and c is not AFixer
+                ):
+                    FIXER_CLASSES_DICT[cls.__name__] = cls
+
+_load_fixer_classes()
+
+def get_fixer(fixer_name: str
+ ) -> AFixer:
+    """
+    Get a fixer class by its name.
+    
+    Parameters:
+    fixer_name (str): The name of the fixer class.
+    
+    Returns:
+    AFixer: The fixer class.
+    
+    Raises:
+    ValueError: If the fixer class is not found.
+    """
+    assert fixer_name in FIXER_CLASSES_DICT, f"Fixer {fixer_name} is not supported"
+    
+    return FIXER_CLASSES_DICT[fixer_name]
+
+__all__ = ["AFixer", "get_fixer"]

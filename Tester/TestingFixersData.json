@@ -4,34 +4,36 @@
         "class_name": "AllNodesFixer",
         "parameters": {
         },
-        "disabled": true
+        "disabled": false
     },
     {
         "output_name": "single_top_tweak",
         "class_name": "TopNodeFixer",
         "parameters": {
         },
-        "disabled": true
+        "disabled": false
     },
     {
         "output_name": "per_features_top_tweak",
         "class_name": "TopFeaturesNodesFixer",
         "parameters": {
         },
-        "disabled": true
+        "disabled": false
     },
     {
         "output_name": "subtree_retrain_top",
         "class_name": "SubTreeRetrainingFixer",
         "parameters": {
             "dependency_handling_type": "Take_Top"
-        }
+        },
+        "disabled": false
     },
     {
         "output_name": "subtree_retrain",
         "class_name": "SubTreeRetrainingFixer",
         "parameters": {
             "dependency_handling_type": "Replace_Ancestors"
-        }
+        },
+        "disabled": false
     }
 ]

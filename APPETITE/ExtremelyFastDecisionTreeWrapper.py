@@ -23,7 +23,7 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
 
         self.model = ExtremelyFastDecisionTreeClassifier(**kwargs)
 
-        if X_prior is not None and y_prior is not None:
+        if X_prior is not None:
             self.fit(X_prior, y_prior)
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:

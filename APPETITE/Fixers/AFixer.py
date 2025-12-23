@@ -14,7 +14,9 @@ class AFixer(ABC):
                  mapped_tree: MappedDecisionTree,
                  X: pd.DataFrame,
                  y: pd.Series,
-                 faulty_nodes: list[int]
+                 faulty_nodes: list[int],
+                 X_prior: pd.DataFrame = None,
+                 y_prior: pd.Series = None
     ):
         """
         Initialize the Fixer.
@@ -34,6 +36,9 @@ class AFixer(ABC):
         self.faulty_nodes = faulty_nodes
         self.fixed_tree: DecisionTreeClassifier = None
 
+        self.X_prior = X_prior
+        self.y_prior = y_prior
+        
     def _filter_data_reached_fault(self,
                                   faulty_node_index: int
         ) -> pd.DataFrame:

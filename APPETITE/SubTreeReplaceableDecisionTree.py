@@ -94,7 +94,11 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         while current_candidate_index < len(self.replacement_candidates):
             current_candidate_index = self.resolve_candidate_conflicts(current_candidate_index)
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+    def fit(self, 
+            X: pd.DataFrame,
+            y: pd.Series, 
+            X_prior: pd.DataFrame = None,
+            y_prior: pd.Series = None) -> None:
         """
         Fit the decision tree to the data.
 

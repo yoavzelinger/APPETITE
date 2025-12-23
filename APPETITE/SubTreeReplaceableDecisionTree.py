@@ -109,9 +109,11 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             y (pd.Series): The target labels.
         """
         self.resolve_candidates_conflicts()
+        
         get_tree_function = lambda: ExtremelyFastDecisionTree(X_prior=X_prior,
                                                               y_prior=y_prior) \
                                         if X_prior is not None else deepcopy(self.base_sklearn_tree_model)
+        
         for candidate_node in self.replacement_candidates:
             self.replaced_subtrees[candidate_node] = get_tree_function()
             filtered_X, filtered_y = candidate_node.get_data_reached_node(X, y, allow_empty=False)

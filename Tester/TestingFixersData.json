@@ -21,14 +21,6 @@
         "disabled": false
     },
     {
-        "output_name": "subtree_retrain_top",
-        "class_name": "SubTreeRetrainingFixer",
-        "parameters": {
-            "dependency_handling_type": "Take_Top"
-        },
-        "disabled": false
-    },
-    {
         "output_name": "subtree_retrain",
         "class_name": "SubTreeRetrainingFixer",
         "parameters": {

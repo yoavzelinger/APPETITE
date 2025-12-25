@@ -108,9 +108,9 @@ class SFLDT(ADiagnoser):
                 # find for each path the terminal node
                 for test_index in range(self.tests_count):
                     path_participation_vector = self.spectra[:, test_index]
-                    participated_nodes_spectra_indices = np.where(path_participation_vector > 0)[0]
-                    terminal_node_spectra_index = max(participated_nodes_spectra_indices, key=lambda spectra_index: self.mapped_tree.get_node(spectra_index, use_spectra_index=True).depth)
-                    terminal_node = self.mapped_tree.get_node(terminal_node_spectra_index, use_spectra_index=True)
+                    participated_nodes_indices = np.where(path_participation_vector > 0)[0]
+                    terminal_node_index = max(participated_nodes_indices, key=lambda node_index: self.mapped_tree.get_node(node_index).depth)
+                    terminal_node = self.mapped_tree.get_node(terminal_node_index)
                     self.error_vector[test_index] = max(terminal_node.confidence - (1 - self.error_vector[test_index]), 0)
 
     def add_target_to_feature_components(self,

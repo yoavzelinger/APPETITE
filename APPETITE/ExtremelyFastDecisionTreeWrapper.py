@@ -19,6 +19,7 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
         assert (X_prior is None) == (y_prior is None), "X_pretrain and y_pretrain must be both provided or None"
         
         if "nominal_attributes" not in kwargs:
+            assert X_prior is not None, "X_prior must be provided to infer nominal attributes in case not specified"
             kwargs["nominal_attributes"] = list(filter(lambda column_name: X_prior[column_name].dtype in [object, bool], X_prior.columns))
 
         self.model = ExtremelyFastDecisionTreeClassifier(**kwargs)

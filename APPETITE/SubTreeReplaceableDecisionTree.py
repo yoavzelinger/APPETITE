@@ -96,6 +96,20 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         while current_candidate_index < len(self.replacement_candidates):
             current_candidate_index = self.resolve_candidate_conflicts(current_candidate_index)
 
+    def create_replaceable_subtree(self, 
+                                node_to_replace: MappedDecisionTree.DecisionTreeNode,
+                                X_prior: pd.DataFrame = None,
+                                y_prior: pd.Series = None) -> DecisionTreeClassifier:
+        if X_prior is None:
+            return deepcopy(self.base_sklearn_tree_model)
+        
+        # TODO: add arguments to customize the ExtremelyFastDecisionTree
+        tree_kwargs = {
+
+        }
+        filtered_X_prior, filtered_y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior, allow_empty=False)
+        return ExtremelyFastDecisionTree(X_prior=filtered_X_prior, y_prior=filtered_y_prior, **tree_kwargs)
+    
     def fit(self, 
             X: pd.DataFrame,
             y: pd.Series,
@@ -110,14 +124,9 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         """
         self.resolve_candidates_conflicts()
         
-        get_tree_function = lambda: ExtremelyFastDecisionTree(X_prior=X_prior,
-                                                              y_prior=y_prior) \
-                                        if X_prior is not None else deepcopy(self.base_sklearn_tree_model)
-        
-        for candidate_node in self.replacement_candidates:
-            self.replaced_subtrees[candidate_node] = get_tree_function()
-            filtered_X, filtered_y = candidate_node.get_data_reached_node(X, y, allow_empty=False)
-            self.replaced_subtrees[candidate_node].fit(filtered_X, filtered_y)
+        for node_to_replace in self.replacement_candidates:
+            self.replaced_subtrees[node_to_replace] = self.create_replaceable_subtree(node_to_replace, X_prior, y_prior)
+            self.replaced_subtrees[node_to_replace].fit(*node_to_replace.get_data_reached_node(X, y, allow_empty=False))
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """

@@ -119,7 +119,7 @@ if temp_files_suffix:
         output_path = f"{output_path}_{output_files_suffix}"
     output_files_suffix = temp_files_suffix
 results_file_name, errors_file_name = f"{tester_constants.RESULTS_FILE_NAME_PREFIX}_{output_files_suffix}.csv", f"{tester_constants.ERRORS_FILE_NAME_PREFIX}_{output_files_suffix}.csv"
-if raw_results.empty:
+if raw_results.empty and tester_constants.STORE_EMPTY_RESULTS:
     results_file_name = f"{tester_constants.EMPTY_RESULTS_FILE_NAME_PREFIX}_{results_file_name}"
 
 results_file_path = os.path.join(output_path, results_file_name)

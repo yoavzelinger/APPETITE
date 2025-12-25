@@ -49,8 +49,8 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
         
         # Make the model more sensitive
         self.model.grace_period = int(self.model.grace_period * current_weight)
-        self.model.delta = 0.01
-        self.model.tau = 0.01
+        self.model.delta = 0.05
+        self.model.tau = 0.1
 
         for x_i, y_i in iter_pandas(X, y):
             self.model.learn_one(x_i, y_i, current_weight)

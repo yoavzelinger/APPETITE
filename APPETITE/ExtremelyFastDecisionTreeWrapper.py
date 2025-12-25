@@ -51,6 +51,6 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
             pd.Series: The predicted labels.
         """
         predictions = []
-        for x_i in iter_pandas(X):
+        for x_i, _ in iter_pandas(X):
             predictions.append(self.model.predict_one(x_i))
         return np.array(predictions)

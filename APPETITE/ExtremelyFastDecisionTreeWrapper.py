@@ -41,7 +41,7 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
         if self.X_prior is not None:
             single_sample_weight = len(self.X_prior) + len(X)
             # balance the weights between prior and current data
-            prior_weight, current_weight = (len(self.X_prior) / single_sample_weight), \
+            prior_weight, current_weight = (len(self.X) / single_sample_weight), \
                                             (len(X) / single_sample_weight)
             for x_i, y_i in iter_pandas(self.X_prior, self.y_prior):
                 self.model.learn_one(x_i, y_i, prior_weight)

@@ -24,8 +24,7 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
 
         self.model = ExtremelyFastDecisionTreeClassifier(**kwargs)
 
-        if X_prior is not None:
-            self.fit(X_prior, y_prior)
+        self.X_prior, self.y_prior = X_prior, y_prior
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         """
@@ -38,6 +37,14 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
         Returns:
             ExtremelyFastDecisionTreeWrapper: The fitted model.
         """
+        current_weight = 1
+        if self.X_prior is not None:
+            single_sample_weight = len(self.X_prior) + len(X)
+            # balance the weights between prior and current data
+            prior_weight, current_weight = (len(self.X_prior) / single_sample_weight), \
+                                            (len(X) / single_sample_weight)
+            for x_i, y_i in iter_pandas(self.X_prior, self.y_prior):
+                self.model.learn_one(x_i, y_i, prior_weight)
         for x_i, y_i in iter_pandas(X, y):
             self.model.learn_one(x_i, y_i)
     

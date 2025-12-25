@@ -38,6 +38,7 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
             ExtremelyFastDecisionTreeWrapper: The fitted model.
         """
         current_weight = 1
+        
         if self.X_prior is not None:
             single_sample_weight = len(self.X_prior) + len(X)
             # balance the weights between prior and current data
@@ -45,8 +46,14 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
                                             (len(X) / single_sample_weight)
             for x_i, y_i in iter_pandas(self.X_prior, self.y_prior):
                 self.model.learn_one(x_i, y_i, prior_weight)
+        
+        # Make the model more sensitive
+        self.model.grace_period = int(self.model.grace_period * current_weight)
+        self.model.delta = 0.01
+        self.model.tau = 0.01
+
         for x_i, y_i in iter_pandas(X, y):
-            self.model.learn_one(x_i, y_i)
+            self.model.learn_one(x_i, y_i, current_weight)
     
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """

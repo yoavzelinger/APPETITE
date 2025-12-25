@@ -1,4 +1,5 @@
 from copy import deepcopy
+from math import log2
 
 import pandas as pd
 import numpy as np
@@ -105,8 +106,13 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         
         X_prior, y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior, allow_empty=False)
         # TODO: add arguments to customize the ExtremelyFastDecisionTree
+        prior_count = len(X_prior)
         tree_kwargs = {
-
+            "split_criterion": self.mapped_tree.sklearn_tree_model.criterion.replace("entropy", "info_gain"),
+            "grace_period": 50,
+            "min_samples_reevaluate": 5,
+            "delta": 0.01,
+            "tau": 0.05
         }
         return ExtremelyFastDecisionTree(X_prior=X_prior, y_prior=y_prior, **tree_kwargs)
     

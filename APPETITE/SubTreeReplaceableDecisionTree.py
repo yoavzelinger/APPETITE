@@ -103,12 +103,12 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         if X_prior is None:
             return deepcopy(self.base_sklearn_tree_model)
         
+        X_prior, y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior, allow_empty=False)
         # TODO: add arguments to customize the ExtremelyFastDecisionTree
         tree_kwargs = {
 
         }
-        filtered_X_prior, filtered_y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior, allow_empty=False)
-        return ExtremelyFastDecisionTree(X_prior=filtered_X_prior, y_prior=filtered_y_prior, **tree_kwargs)
+        return ExtremelyFastDecisionTree(X_prior=X_prior, y_prior=y_prior, **tree_kwargs)
     
     def fit(self, 
             X: pd.DataFrame,

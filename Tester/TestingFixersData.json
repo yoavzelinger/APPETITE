@@ -11,14 +11,14 @@
         "class_name": "TopNodeFixer",
         "parameters": {
         },
-        "disabled": false
+        "disabled": true
     },
     {
         "output_name": "per_features_top_tweak",
         "class_name": "TopFeaturesNodesFixer",
         "parameters": {
         },
-        "disabled": false
+        "disabled": true
     },
     {
         "output_name": "subtree_retrain",

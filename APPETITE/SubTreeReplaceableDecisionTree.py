@@ -105,8 +105,8 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             return deepcopy(self.base_sklearn_tree_model)
         
         X_prior, y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior, allow_empty=False)
-        # TODO: add arguments to customize the ExtremelyFastDecisionTree
-        prior_count = len(X_prior)
+        prior_count = len(X_prior) # TODO: Check if this is needed
+        # TODO: Adjust arguments to improve the ExtremelyFastDecisionTree
         tree_kwargs = {
             "split_criterion": self.mapped_tree.sklearn_tree_model.criterion.replace("entropy", "info_gain"),
             "grace_period": 50,

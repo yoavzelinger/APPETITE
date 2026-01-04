@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.tree._tree import TREE_LEAF
 
+from .DataSynthesizer import DataSynthesizer
+
 class MappedDecisionTree:
     class DecisionTreeNode:
         def __init__(self, 
@@ -42,6 +44,7 @@ class MappedDecisionTree:
             self.depth = 0 if parent is None else parent.depth + 1
             self.feature_average_value = None
             self.class_distribution = class_distribution
+            self.data_synthesizer = None
 
         def update_children(self, 
                             left_child: 'MappedDecisionTree.DecisionTreeNode', 
@@ -189,6 +192,7 @@ class MappedDecisionTree:
                 if self.is_terminal():
                     self.correct_classifications_count = (y == self.class_name).sum()
                     self.misclassifications_count = (y != self.class_name).sum()
+                    self.data_synthesizer = DataSynthesizer(X, y, feature_types) if feature_types is not None else None
                 else:
                     self.correct_classifications_count = self.left_child.correct_classifications_count + self.right_child.correct_classifications_count
                     self.misclassifications_count = self.left_child.misclassifications_count + self.right_child.misclassifications_count

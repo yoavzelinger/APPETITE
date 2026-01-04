@@ -164,7 +164,8 @@ class MappedDecisionTree:
         
         def update_node_data_attributes(self, 
                                         X: pd.DataFrame,
-                                        y: pd.Series
+                                        y: pd.Series,
+                                        feature_types: dict[str, str] = None
          ) -> None:
             """
             Update the average feature value of the node.
@@ -181,8 +182,8 @@ class MappedDecisionTree:
                 self.feature_average_value = X[self.feature].mean()
             if not self.is_terminal():
                 # update the descendant stats
-                self.left_child.update_node_data_attributes(X, y)
-                self.right_child.update_node_data_attributes(X, y)
+                self.left_child.update_node_data_attributes(X, y, feature_types)
+                self.right_child.update_node_data_attributes(X, y, feature_types)
             if y is not None:
                 # count correct classifications
                 if self.is_terminal():
@@ -297,7 +298,7 @@ class MappedDecisionTree:
             if node.class_name:
                 self.classes_set.add(node.class_name)
         if X is not None:
-            self.root.update_node_data_attributes(X, y)
+            self.root.update_node_data_attributes(X, y, self.data_feature_types)
         self.spectra_dict = {node.spectra_index: node for node in self.tree_dict.values()}
 
     def map_tree(self, 

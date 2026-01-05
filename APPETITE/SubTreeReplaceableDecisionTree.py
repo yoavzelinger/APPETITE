@@ -32,6 +32,9 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
 
         assert isinstance(dependency_handling_type, constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES), f"expecting dependency_handling_type to be SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES but got {type(dependency_handling_type)}"
         self.dependency_handling_type = dependency_handling_type
+
+        assert isinstance(use_prior_knowledge, constants.PRIOR_KNOWLEDGE_USAGE_TYPES), f"expecting use_prior_knowledge to be PRIOR_KNOWLEDGE_USAGE_TYPES but got {type(use_prior_knowledge)}"
+        self.use_prior_knowledge = use_prior_knowledge
     
     def get_candidate_conflicts_indices(self,
                                         current_candidate_index: int,

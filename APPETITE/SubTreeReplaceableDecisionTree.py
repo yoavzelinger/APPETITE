@@ -115,7 +115,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Ignore:
                 return deepcopy(self.base_sklearn_tree_model)
             case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Use:
-                X_prior, y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior)
+                X_prior, y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior, allow_empty=False)
             case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Synthesize:
                 X_prior, y_prior = node_to_replace.synthesize_data_reached_node()
 

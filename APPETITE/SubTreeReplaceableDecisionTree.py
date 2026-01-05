@@ -22,6 +22,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
                  indices_to_replace: list[int],
                  dependency_handling_type: constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = constants.DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE,
                  use_prior_knowledge: constants.PRIOR_KNOWLEDGE_USAGE_TYPES = constants.DEFAULT_USE_OF_PRIOR_KNOWLEDGE,
+                 subtree_type: constants.SubTreeType = constants.DEFAULT_SUBTREE_TYPE,
                  X_prior: pd.DataFrame = None,
                  y_prior: pd.Series = None
                  ):
@@ -36,6 +37,9 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
 
         assert isinstance(use_prior_knowledge, constants.PRIOR_KNOWLEDGE_USAGE_TYPES), f"expecting use_prior_knowledge to be PRIOR_KNOWLEDGE_USAGE_TYPES but got {type(use_prior_knowledge)}"
         self.use_prior_knowledge = use_prior_knowledge
+
+        assert isinstance(subtree_type, constants.SubTreeType), f"expecting subtree_type to be SubTreeType but got {type(subtree_type)}"
+        self.subtree_type = subtree_type
         
         self.X_prior = X_prior
         self.y_prior = y_prior
@@ -120,7 +124,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Synthesize:
                 X_prior, y_prior = node_to_replace.synthesize_data_reached_node()
 
-        if constants.DEFAULT_SUBTREE_TYPE == constants.SubTreeType.Original:
+        if self.subtree_type == constants.SubTreeType.Original:
             return PriorDataDecisionTreeClassifier(deepcopy(self.base_sklearn_tree_model), X_prior=X_prior, y_prior=y_prior)
         
         tree_kwargs = {
@@ -129,10 +133,10 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             "delta": 0.01,
             "tau": 0.05
         }
-        if constants.DEFAULT_SUBTREE_TYPE == constants.SubTreeType.HoeffdingAdaptiveTreeClassifier:
+        if self.subtree_type == constants.SubTreeType.HoeffdingAdaptiveTreeClassifier:
             tree_kwargs["seed"] = constants.RANDOM_STATE
-            
-        return RiverDecisionTree(X_prior=X_prior, y_prior=y_prior, **tree_kwargs)
+
+        return RiverDecisionTree(X_prior=X_prior, y_prior=y_prior, subtree_type=self.subtree_type, **tree_kwargs)
     
     def fit(self, 
             X: pd.DataFrame,

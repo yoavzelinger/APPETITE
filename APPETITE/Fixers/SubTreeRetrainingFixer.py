@@ -12,6 +12,7 @@ class SubTreeRetrainingFixer(AFixer):
                  *args,
                  dependency_handling_type: str | constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = constants.DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE,
                  use_prior_knowledge: str | constants.PRIOR_KNOWLEDGE_USAGE_TYPES = constants.DEFAULT_USE_OF_PRIOR_KNOWLEDGE,
+                 subtree_type: str | constants.SubTreeType = constants.DEFAULT_SUBTREE_TYPE,
                  **kwargs):
         super().__init__(*args, **kwargs)
         
@@ -26,6 +27,10 @@ class SubTreeRetrainingFixer(AFixer):
                 constants.PRIOR_KNOWLEDGE_USAGE_TYPES[use_prior_knowledge]
         self.use_prior_knowledge: constants.PRIOR_KNOWLEDGE_USAGE_TYPES = use_prior_knowledge
 
+        if isinstance(subtree_type, str):
+            subtree_type: constants.SubTreeType = constants.SubTreeType[subtree_type]
+        self.subtree_type: constants.SubTreeType = subtree_type
+
     def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
         """
         Fix the decision tree.
@@ -39,6 +44,7 @@ class SubTreeRetrainingFixer(AFixer):
                                                          self.faulty_nodes,
                                                          dependency_handling_type=self.dependency_handling_type,
                                                          use_prior_knowledge=self.use_prior_knowledge,
+                                                         subtree_type=self.subtree_type,
                                                          X_prior=self.X_prior,
                                                          y_prior=self.y_prior)
         

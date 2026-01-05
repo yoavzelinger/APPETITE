@@ -35,6 +35,9 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
 
         assert isinstance(use_prior_knowledge, constants.PRIOR_KNOWLEDGE_USAGE_TYPES), f"expecting use_prior_knowledge to be PRIOR_KNOWLEDGE_USAGE_TYPES but got {type(use_prior_knowledge)}"
         self.use_prior_knowledge = use_prior_knowledge
+        
+        self.X_prior = X_prior
+        self.y_prior = y_prior
     
     def get_candidate_conflicts_indices(self,
                                         current_candidate_index: int,
@@ -125,9 +128,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     
     def fit(self, 
             X: pd.DataFrame,
-            y: pd.Series,
-            X_prior: pd.DataFrame = None,
-            y_prior: pd.Series = None) -> None:
+            y: pd.Series) -> None:
         """
         Fit the decision tree to the data.
 
@@ -138,7 +139,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         self.resolve_candidates_conflicts()
         
         for node_to_replace in self.replacement_candidates:
-            self.replaced_subtrees[node_to_replace] = self.create_replaceable_subtree(node_to_replace, X_prior, y_prior)
+            self.replaced_subtrees[node_to_replace] = self.create_replaceable_subtree(node_to_replace, self.X_prior, self.y_prior)
             self.replaced_subtrees[node_to_replace].fit(*node_to_replace.get_data_reached_node(X, y, allow_empty=False))
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:

@@ -117,14 +117,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Use:
                 X_prior, y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior)
             case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Synthesize:
-                # concatenate the data generated from all the leaves in the subtree
-                X_prior, y_prior = pd.DataFrame(), pd.Series()
-                leaves: list[MappedDecisionTree.DecisionTreeNode] = node_to_replace.get_all_leaves()
-                for leaf in leaves:
-                    if leaf.data_synthesizer is not None:
-                        synthesized_X, synthesized_y = leaf.data_synthesizer.synthesize_data(num_samples=100)
-                        X_prior = pd.concat([X_prior, synthesized_X], ignore_index=True)
-                        y_prior = pd.concat([y_prior, synthesized_y], ignore_index=True)
+                X_prior, y_prior = node_to_replace.synthesize_data_reached_node()
 
         tree_kwargs = {
             "split_criterion": self.mapped_tree.sklearn_tree_model.criterion.replace("entropy", "info_gain"),

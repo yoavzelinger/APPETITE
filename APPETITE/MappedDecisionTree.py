@@ -44,7 +44,7 @@ class MappedDecisionTree:
             self.depth = 0 if parent is None else parent.depth + 1
             self.feature_average_value = None
             self.class_distribution = class_distribution
-            self.data_synthesizer = None
+            self.data_synthesizer: DataSynthesizer = None
 
         def update_children(self, 
                             left_child: 'MappedDecisionTree.DecisionTreeNode', 
@@ -268,6 +268,18 @@ class MappedDecisionTree:
             if self.right_child is not None:
                 leaves += self.right_child.get_all_leaves()
             return leaves
+        
+        def synthesize_data_reached_node(self) -> tuple[pd.DataFrame, pd.Series]:
+            """
+            Synthesize data that reached the node.
+            """
+            X, y = pd.DataFrame(), pd.Series()
+            for leaf in self.get_all_leaves():
+                synthesized_X, synthesized_y = leaf.data_synthesizer.synthesize()
+                X = pd.concat([X, synthesized_X], ignore_index=True)
+                y = pd.concat([y, synthesized_y], ignore_index=True)
+            
+            return X, y
 
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,

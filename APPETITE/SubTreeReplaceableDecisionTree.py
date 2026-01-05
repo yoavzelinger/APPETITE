@@ -11,6 +11,7 @@ import APPETITE.Constants as constants
 from .MappedDecisionTree import MappedDecisionTree
 
 from .RiverDecisionTreeWrapper import RiverDecisionTreeWrapper as RiverDecisionTree
+from .PriorDataDecisionTreeClassifierWrapper import PriorDataDecisionTreeClassifierWrapper as PriorDataDecisionTreeClassifier
 
 class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     """
@@ -119,6 +120,9 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Synthesize:
                 X_prior, y_prior = node_to_replace.synthesize_data_reached_node()
 
+        if constants.DEFAULT_SUBTREE_TYPE == constants.SubTreeType.Original:
+            return PriorDataDecisionTreeClassifier(deepcopy(self.base_sklearn_tree_model), X_prior=X_prior, y_prior=y_prior)
+        
         tree_kwargs = {
             "split_criterion": self.mapped_tree.sklearn_tree_model.criterion.replace("entropy", "info_gain"),
             "grace_period": 50,

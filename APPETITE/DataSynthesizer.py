@@ -13,10 +13,10 @@ class DataSynthesizer:
 
         self.features_distribution = {}
         for feature in X.columns:
-            if data_feature_types[feature] == 'categorical':
+            if data_feature_types[feature] == 'binary' or data_feature_types[feature] == 'categorical':
                 feature_counts = X[feature].value_counts().to_dict()
                 self.features_distribution[feature] = {category: feature_counts[category] / self.count for category in feature_counts.keys()}
-            elif data_feature_types[feature] == 'numerical':
+            elif data_feature_types[feature] == 'numeric':
                 self.features_distribution[feature] = {
                     'mean': X[feature].mean(),
                     'std': X[feature].std(),

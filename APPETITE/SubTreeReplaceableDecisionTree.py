@@ -125,6 +125,9 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             "delta": 0.01,
             "tau": 0.05
         }
+        if constants.DEFAULT_SUBTREE_TYPE == constants.SubTreeType.HoeffdingAdaptiveTreeClassifier:
+            tree_kwargs["seed"] = constants.RANDOM_STATE
+            
         return RiverDecisionTree(X_prior=X_prior, y_prior=y_prior, **tree_kwargs)
     
     def fit(self, 

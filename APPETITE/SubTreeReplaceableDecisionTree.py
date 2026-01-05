@@ -19,7 +19,11 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     def __init__(self,
                  original_mapped_tree: MappedDecisionTree,
                  indices_to_replace: list[int],
-                 dependency_handling_type: constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = constants.DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE):
+                 dependency_handling_type: constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = constants.DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE,
+                 use_prior_knowledge: constants.PRIOR_KNOWLEDGE_USAGE_TYPES = constants.DEFAULT_USE_OF_PRIOR_KNOWLEDGE,
+                 X_prior: pd.DataFrame = None,
+                 y_prior: pd.Series = None
+                 ):
         self.mapped_tree = original_mapped_tree
         self.base_sklearn_tree_model = deepcopy(original_mapped_tree.sklearn_tree_model)
         

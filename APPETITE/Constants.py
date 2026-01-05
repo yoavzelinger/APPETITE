@@ -46,4 +46,4 @@ class PRIOR_KNOWLEDGE_USAGE_TYPES(Enum): #
     Ignore = auto() # Ignore prior knowledge when fitting
     Synthesize = auto() # Synthesize prior knowledge data when fitting
 
-DEFAULT_USE_OF_PRIOR_KNOWLEDGE = PRIOR_KNOWLEDGE_USAGE_TYPES.Use
+DEFAULT_USE_OF_PRIOR_KNOWLEDGE = PRIOR_KNOWLEDGE_USAGE_TYPES.Synthesize

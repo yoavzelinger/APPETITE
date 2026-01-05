@@ -2,17 +2,20 @@ import pandas as pd
 import numpy as np
 
 from sklearn.tree import DecisionTreeClassifier
-from river.tree import ExtremelyFastDecisionTreeClassifier
+from river.tree import HoeffdingTreeClassifier, HoeffdingAdaptiveTreeClassifier, ExtremelyFastDecisionTreeClassifier
 
 from river.stream import iter_pandas
 
-class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
+import APPETITE.Constants as constants
+
+class RiverDecisionTreeWrapper(DecisionTreeClassifier):
     """
-    A wrapper for the ExtremelyFastDecisionTreeClassifier from the river library to make it compatible with sklearn's DecisionTreeClassifier interface.
+    A wrapper for the RiverDecisionTreeClassifiers from the river library to make it compatible with sklearn's DecisionTreeClassifier interface.
     """
     def __init__(self,
                  X_prior: pd.DataFrame = None,
                  y_prior: pd.Series = None,
+                 subtree_type: constants.SubTreeType = constants.DEFAULT_SUBTREE_TYPE,
                  **kwargs):
         super().__init__()
         
@@ -22,7 +25,13 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
             assert X_prior is not None, "X_prior must be provided to infer nominal attributes in case not specified"
             kwargs["nominal_attributes"] = list(filter(lambda column_name: X_prior[column_name].dtype in [object, bool], X_prior.columns))
 
-        self.model = ExtremelyFastDecisionTreeClassifier(**kwargs)
+        self.model = None
+        try:
+            self.model: HoeffdingTreeClassifier = globals()[subtree_type.name](**kwargs)
+        except Exception as e:
+            raise ValueError(f"Error while trying to create subtree type: {subtree_type}") from e
+        
+        self.subtree_type = subtree_type
 
         self.X_prior, self.y_prior = X_prior, y_prior
 
@@ -51,6 +60,12 @@ class ExtremelyFastDecisionTreeWrapper(DecisionTreeClassifier):
         self.model.grace_period = int(self.model.grace_period * current_weight)
         self.model.delta = 0.05
         self.model.tau = 0.1
+        match self.subtree_type:
+            case constants.SubTreeType.ExtremelyFastDecisionTreeClassifier:
+                self.model.min_samples_reevaluate = 5
+            case constants.SubTreeType.HoeffdingAdaptiveTreeClassifier:
+                pass # TODO: make adjustments
+
 
         for x_i, y_i in iter_pandas(X, y):
             self.model.learn_one(x_i, y_i, w=current_weight)

@@ -10,7 +10,7 @@ import APPETITE.Constants as constants
 
 from .MappedDecisionTree import MappedDecisionTree
 
-from .ExtremelyFastDecisionTreeWrapper import ExtremelyFastDecisionTreeWrapper as ExtremelyFastDecisionTree
+from .ExtremelyFastDecisionTreeWrapper import RiverDecisionTreeWrapper as ExtremelyFastDecisionTree
 
 class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     """
@@ -122,7 +122,6 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         tree_kwargs = {
             "split_criterion": self.mapped_tree.sklearn_tree_model.criterion.replace("entropy", "info_gain"),
             "grace_period": 50,
-            "min_samples_reevaluate": 5,
             "delta": 0.01,
             "tau": 0.05
         }

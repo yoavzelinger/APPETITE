@@ -47,3 +47,10 @@ class PRIOR_KNOWLEDGE_USAGE_TYPES(Enum): #
     Synthesize = auto() # Synthesize prior knowledge data when fitting
 
 DEFAULT_USE_OF_PRIOR_KNOWLEDGE = PRIOR_KNOWLEDGE_USAGE_TYPES.Synthesize
+
+class SubTreeType(Enum):
+    Original = auto()
+    ExtremelyFastDecisionTreeClassifier = auto()
+    HoeffdingAdaptiveTreeClassifier = auto()
+
+DEFAULT_SUBTREE_TYPE = SubTreeType.HoeffdingAdaptiveTreeClassifier

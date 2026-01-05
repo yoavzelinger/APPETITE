@@ -251,6 +251,23 @@ class MappedDecisionTree:
                 bool: True if the node is connected to the other node, False otherwise.
             """
             return self.is_successor_of(other) or self.is_ancestor_of(other)
+        
+        def get_all_leaves(self
+        ) -> list['MappedDecisionTree.DecisionTreeNode']:
+            """
+            Get all leaves under the node.
+
+            Returns:
+                list[DecisionTreeNode]: The leaves under the node.
+            """
+            if self.is_terminal():
+                return [self]
+            leaves = []
+            if self.left_child is not None:
+                leaves += self.left_child.get_all_leaves()
+            if self.right_child is not None:
+                leaves += self.right_child.get_all_leaves()
+            return leaves
 
     def __init__(self, 
                  sklearn_tree_model: DecisionTreeClassifier,
@@ -269,7 +286,7 @@ class MappedDecisionTree:
             y (Series): The target column.
         """
         assert sklearn_tree_model is not None and feature_types is not None
-        self.sklearn_tree_model = sklearn_tree_model
+        self.sklearn_tree_model: DecisionTreeClassifier = sklearn_tree_model
         self.data_feature_types = feature_types        
 
         self.tree_dict = self.map_tree()

@@ -108,15 +108,24 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             current_candidate_index = self.resolve_candidate_conflicts(current_candidate_index)
 
     def create_replaceable_subtree(self, 
-                                node_to_replace: MappedDecisionTree.DecisionTreeNode,
-                                X_prior: pd.DataFrame = None,
-                                y_prior: pd.Series = None) -> DecisionTreeClassifier:
-        if X_prior is None:
-            return deepcopy(self.base_sklearn_tree_model)
-        
-        X_prior, y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior, allow_empty=False)
-        prior_count = len(X_prior) # TODO: Check if this is needed
-        # TODO: Adjust arguments to improve the ExtremelyFastDecisionTree
+                                   node_to_replace: MappedDecisionTree.DecisionTreeNode,
+                                   X_prior: pd.DataFrame = None,
+                                   y_prior: pd.Series = None) -> DecisionTreeClassifier:
+        match self.use_prior_knowledge:
+            case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Ignore:
+                return deepcopy(self.base_sklearn_tree_model)
+            case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Use:
+                X_prior, y_prior = node_to_replace.get_data_reached_node(X_prior, y_prior)
+            case constants.PRIOR_KNOWLEDGE_USAGE_TYPES.Synthesize:
+                # concatenate the data generated from all the leaves in the subtree
+                X_prior, y_prior = pd.DataFrame(), pd.Series()
+                leaves: list[MappedDecisionTree.DecisionTreeNode] = node_to_replace.get_all_leaves()
+                for leaf in leaves:
+                    if leaf.data_synthesizer is not None:
+                        synthesized_X, synthesized_y = leaf.data_synthesizer.synthesize_data(num_samples=100)
+                        X_prior = pd.concat([X_prior, synthesized_X], ignore_index=True)
+                        y_prior = pd.concat([y_prior, synthesized_y], ignore_index=True)
+
         tree_kwargs = {
             "split_criterion": self.mapped_tree.sklearn_tree_model.criterion.replace("entropy", "info_gain"),
             "grace_period": 50,

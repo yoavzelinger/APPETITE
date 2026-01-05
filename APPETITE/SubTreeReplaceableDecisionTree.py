@@ -10,7 +10,7 @@ import APPETITE.Constants as constants
 
 from .MappedDecisionTree import MappedDecisionTree
 
-from .ExtremelyFastDecisionTreeWrapper import RiverDecisionTreeWrapper as ExtremelyFastDecisionTree
+from .RiverDecisionTreeWrapper import RiverDecisionTreeWrapper as RiverDecisionTree
 
 class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     """
@@ -125,7 +125,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             "delta": 0.01,
             "tau": 0.05
         }
-        return ExtremelyFastDecisionTree(X_prior=X_prior, y_prior=y_prior, **tree_kwargs)
+        return RiverDecisionTree(X_prior=X_prior, y_prior=y_prior, **tree_kwargs)
     
     def fit(self, 
             X: pd.DataFrame,

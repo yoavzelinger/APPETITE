@@ -135,6 +135,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         }
         if self.subtree_type == constants.SubTreeType.HoeffdingAdaptiveTreeClassifier:
             tree_kwargs["seed"] = constants.RANDOM_STATE
+            tree_kwargs["drift_window_threshold"] = 30
 
         return RiverDecisionTree(X_prior=X_prior, y_prior=y_prior, subtree_type=self.subtree_type, **tree_kwargs)
     

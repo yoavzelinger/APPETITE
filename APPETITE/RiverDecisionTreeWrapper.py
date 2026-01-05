@@ -64,7 +64,7 @@ class RiverDecisionTreeWrapper(DecisionTreeClassifier):
             case constants.SubTreeType.ExtremelyFastDecisionTreeClassifier:
                 self.model.min_samples_reevaluate = 5
             case constants.SubTreeType.HoeffdingAdaptiveTreeClassifier:
-                pass # TODO: make adjustments
+                self.model.drift_window_threshold = 10
 
 
         for x_i, y_i in iter_pandas(X, y):

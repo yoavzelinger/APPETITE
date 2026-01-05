@@ -42,7 +42,7 @@ class DataSynthesizer:
             np.random.choice(
                 list(self.class_distribution.keys()),
                 size=self.count,
-                p=list(self.class_distribution)
+                p=list(self.class_distribution.values())
             )
         )
 

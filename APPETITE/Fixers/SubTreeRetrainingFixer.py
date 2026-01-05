@@ -10,16 +10,21 @@ class SubTreeRetrainingFixer(AFixer):
 
     def __init__(self,
                  *args,
-                 dependency_handling_type: str = constants.DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE,
-                 use_prior_knowledge: constants.PRIOR_KNOWLEDGE_USAGE_TYPES = constants.DEFAULT_USE_OF_PRIOR_KNOWLEDGE,
+                 dependency_handling_type: str | constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = constants.DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE,
+                 use_prior_knowledge: str | constants.PRIOR_KNOWLEDGE_USAGE_TYPES = constants.DEFAULT_USE_OF_PRIOR_KNOWLEDGE,
                  **kwargs):
         super().__init__(*args, **kwargs)
         
-        self.dependency_handling_type: constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = \
-            constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES[dependency_handling_type]
+        # check type of handling type
+        if isinstance(dependency_handling_type, str):
+            dependency_handling_type: constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = \
+                constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES[dependency_handling_type]
+        self.dependency_handling_type: constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = dependency_handling_type
         
-        self.use_prior_knowledge: constants.PRIOR_KNOWLEDGE_USAGE_TYPES = \
-            constants.PRIOR_KNOWLEDGE_USAGE_TYPES[use_prior_knowledge]
+        if isinstance(use_prior_knowledge, str):
+            use_prior_knowledge: constants.PRIOR_KNOWLEDGE_USAGE_TYPES = \
+                constants.PRIOR_KNOWLEDGE_USAGE_TYPES[use_prior_knowledge]
+        self.use_prior_knowledge: constants.PRIOR_KNOWLEDGE_USAGE_TYPES = use_prior_knowledge
 
     def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
         """

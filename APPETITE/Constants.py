@@ -41,4 +41,9 @@ DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE = SUBTREE_RETRAINING_DEPENDE
 if DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE == SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES.Take_Bottom:
     raise NotImplementedError("TAKE_BOTTOM handling type is not implemented yet.")
 
-DEFAULT_USE_OF_PRIOR_KNOWLEDGE = True
+class PRIOR_KNOWLEDGE_USAGE_TYPES(Enum): #
+    Use = auto() # Use prior knowledge when fitting
+    Ignore = auto() # Ignore prior knowledge when fitting
+    Synthesize = auto() # Synthesize prior knowledge data when fitting
+
+DEFAULT_USE_OF_PRIOR_KNOWLEDGE = PRIOR_KNOWLEDGE_USAGE_TYPES.Use

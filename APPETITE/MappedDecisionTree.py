@@ -319,7 +319,6 @@ class MappedDecisionTree:
             X (DataFrame): The data. If provided - calculating the data reached each node and the average feature value.
             y (Series): The target column. If provided - calculating the correct classifications count.
         """
-        self.node_count = len(self.tree_dict)
         self.max_depth = max(map(lambda node: node.depth, self.tree_dict.values()))
         self.tree_features_set, self.classes_set = set(), set()
         for ordered_index, node in enumerate(self.tree_dict.values()):

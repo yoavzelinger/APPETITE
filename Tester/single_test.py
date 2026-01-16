@@ -125,7 +125,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
             current_results_dict = {
                 tester_constants.DATASET_NAME_COLUMN_NAME: file_name,
                 tester_constants.DATASET_SIZE_COLUMN_NAME: len(dataset),
-                tester_constants.TREE_SIZE_COLUMN_NAME: mapped_tree.node_count,
+                tester_constants.TREE_SIZE_COLUMN_NAME: len(mapped_tree),
                 tester_constants.TREE_FEATURES_COUNT_COLUMN_NAME: len(mapped_tree.tree_features_set),
                 tester_constants.REPAIR_WINDOW_PERCENTAGE_COLUMN_NAME: dataset.repair_proportion * dataset.repair_window_proportion * 100,
                 tester_constants.REPAIR_WINDOW_SIZE_COLUMN_NAME: dataset.repair_window_size,
@@ -262,7 +262,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             current_results_dict = {
                 tester_constants.DATASET_NAME_COLUMN_NAME: file_name,
                 tester_constants.DATASET_SIZE_COLUMN_NAME: len(dataset),
-                tester_constants.TREE_SIZE_COLUMN_NAME: mapped_tree.node_count,
+                tester_constants.TREE_SIZE_COLUMN_NAME: len(mapped_tree),
                 tester_constants.TREE_FEATURES_COUNT_COLUMN_NAME: len(mapped_tree.tree_features_set),
                 tester_constants.REPAIR_WINDOW_PERCENTAGE_COLUMN_NAME: dataset.repair_proportion * dataset.repair_window_proportion * 100,
                 tester_constants.REPAIR_WINDOW_SIZE_COLUMN_NAME: dataset.repair_window_size,

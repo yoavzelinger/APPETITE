@@ -40,7 +40,7 @@ class SFLDT(ADiagnoser):
         """
         super().__init__(mapped_tree, X, y)
         
-        self.components_count = mapped_tree.node_count
+        self.components_count = len(mapped_tree)
         self.tests_count = len(X)
         
         self.spectra = np.zeros((self.components_count, self.tests_count))

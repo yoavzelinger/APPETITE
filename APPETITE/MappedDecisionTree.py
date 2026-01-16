@@ -333,7 +333,7 @@ class MappedDecisionTree:
             self.root.update_node_data_attributes(X, y, self.data_feature_types)
         self.spectra_dict = {node.spectra_index: node for node in self.tree_dict.values()}
 
-    def map_tree(self, 
+    def map_tree(self
     ) -> dict[int, 'MappedDecisionTree.DecisionTreeNode']:
         self.sk_features = self.sklearn_tree_model.tree_.feature
         self.sk_thresholds = self.sklearn_tree_model.tree_.threshold

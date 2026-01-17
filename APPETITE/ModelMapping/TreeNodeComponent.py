@@ -51,6 +51,25 @@ class TreeNodeComponent:
         self.parent = parent
         self.depth = 0 if parent is None else parent.depth + 1
 
+    def get_index(self, 
+                    index_type: constants.NodeIndexType
+    ) -> int:
+        """
+        Get the index of the node.
+
+        Parameters:
+            index_type (constants.NodeIndexType): The index type.
+        Returns:
+            int: The index of the node.
+        """
+        match index_type:
+            case constants.NodeIndexType.COMPONENT_INDEX:
+                return self.component_index
+            case constants.NodeIndexType.SPECTRA_INDEX:
+                return self.spectra_index
+            case _:
+                raise ValueError(f"Unsupported index type: {index_type}")
+
     def update_children(self, 
                         left_child: 'TreeNodeComponent', 
                         right_child: 'TreeNodeComponent'

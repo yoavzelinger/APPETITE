@@ -8,6 +8,10 @@ class FeatureType(Enum):
     Categorical = auto()
     Binary = auto()
 
+class NodeIndexType(Enum):
+    COMPONENT_INDEX = auto()
+    SPECTRA_INDEX = auto()
+
 # Random state
 RANDOM_STATE = 7
 

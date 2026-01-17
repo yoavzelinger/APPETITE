@@ -203,9 +203,9 @@ class TreeNodeComponent:
         self.right_child.update_condition()
     
     def get_data_reached_node(self,
-                                X: pd.DataFrame,
-                                y: pd.Series = None,
-                                allow_empty: bool = True
+                              X: pd.DataFrame,
+                              y: pd.Series = None,
+                              allow_empty: bool = True
         ) -> pd.DataFrame | tuple[pd.DataFrame, pd.Series]:
         """
         Filter the data that reached the node.

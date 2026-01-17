@@ -3,6 +3,11 @@ from enum import Enum, auto
 from sys import float_info
 EPSILON = float_info.epsilon
 
+class FeatureType(Enum):
+    Numeric = auto()
+    Categorical = auto()
+    Binary = auto()
+
 # Random state
 RANDOM_STATE = 7
 

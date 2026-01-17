@@ -193,10 +193,14 @@ class TreeNodeComponent:
         """
         if self.parent is None:
             self.conditions_path = []
+        else:
+            current_operator = lambda column, threshold: column <= threshold if self.is_left_child() else column > threshold
+            current_condition: Callable[[pd.DataFrame], pd.Series] = lambda X: current_operator(X[self.parent.feature], self.parent.threshold)
+            self.conditions_path = self.parent.conditions_path + [current_condition]
+        if self.is_terminal():
             return
-        current_operator = lambda column, threshold: column <= threshold if self.is_left_child() else column > threshold
-        current_condition: Callable[[pd.DataFrame], pd.Series] = lambda X: current_operator(X[self.parent.feature], self.parent.threshold)
-        self.conditions_path = self.parent.conditions_path + [current_condition]
+        self.left_child.update_condition()
+        self.right_child.update_condition()
     
     def get_data_reached_node(self,
                                 X: pd.DataFrame,

@@ -180,12 +180,7 @@ class TreeNodeComponent:
         """
         if self.is_terminal():
             return [self]
-        leaves = []
-        if self.left_child is not None:
-            leaves += self.left_child.get_all_leaves()
-        if self.right_child is not None:
-            leaves += self.right_child.get_all_leaves()
-        return leaves
+        return = self.left_child.get_all_leaves() + self.right_child.get_all_leaves()
     
     def update_condition(self) -> None:
         """

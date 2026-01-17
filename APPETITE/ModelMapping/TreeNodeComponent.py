@@ -101,8 +101,7 @@ class TreeNodeComponent:
         
         Returns:
             bool: True if the node is a left child, False otherwise."""
-        if self.parent is None:
-            return False
+        assert self.parent is not None, "A root is not a child of any node"
         return self.parent.left_child == self
     
     def is_right_child(self) -> bool:
@@ -112,8 +111,6 @@ class TreeNodeComponent:
         Returns:
             bool: True if the node is a right child, False otherwise.
         """
-        if self.parent is None:
-            return False
         return not self.is_left_child()
     
     def get_sibling(self) -> 'TreeNodeComponent':

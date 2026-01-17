@@ -31,7 +31,7 @@ class TreeNodeComponent:
     data_synthesizer: DataSynthesizer # Data synthesizer for the node
 
     def __init__(self, 
-                    component_index: int = 0,
+                    component_index: int,
                     parent: 'TreeNodeComponent' = None
     ):
         """

@@ -40,10 +40,7 @@ class ATreeBasedMappedModel(ABC):
         pass
     
     @abstractmethod
-    def update_model_statistics(self,
-                                X: pd.DataFrame,
-                                y: pd.Series
-    ) -> None:
+    def update_model_statistics(self, X: pd.DataFrame, y: pd.Series):
         """
         Update the model statistics based on the data.
 

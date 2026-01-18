@@ -31,8 +31,8 @@ class TreeNodeComponent:
     conditions_path: list[Callable[[pd.DataFrame], pd.Series]] # The conditions path from the root to the node
 
     def __init__(self, 
-                    component_index: int,
-                    parent: 'TreeNodeComponent' = None
+                 component_index: int,
+                 parent: 'TreeNodeComponent' = None
     ):
         """
         Initialize the TreeNodeComponent.
@@ -93,7 +93,8 @@ class TreeNodeComponent:
         Check if the node is a left child.
         
         Returns:
-            bool: True if the node is a left child, False otherwise."""
+            bool: True if the node is a left child, False otherwise.
+        """
         assert self.parent is not None, "A root is not a child of any node"
         return self.parent.left_child == self
     

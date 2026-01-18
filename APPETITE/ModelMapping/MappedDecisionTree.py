@@ -46,8 +46,7 @@ class MappedDecisionTree(ATreeBasedMappedModel):
         if X is not None:
             self.root.update_node_data_attributes(X, y, self.data_feature_types)
 
-    def map_tree(self
-    ) -> dict[int, TreeNodeComponent]:
+    def map_model(self):
         self.sk_features = self.model.tree_.feature
         self.sk_thresholds = self.model.tree_.threshold
         self.sk_children_left = self.model.tree_.children_left
@@ -56,7 +55,7 @@ class MappedDecisionTree(ATreeBasedMappedModel):
         sk_class_names = self.model.classes_
         
         self.components_map = {}
-        nodes_to_check = [TreeNodeComponent(sk_index=0)]
+        nodes_to_check = [TreeNodeComponent(0)]
 
         while len(nodes_to_check):
             current_node = nodes_to_check.pop(0)
@@ -79,7 +78,7 @@ class MappedDecisionTree(ATreeBasedMappedModel):
             current_node.feature_type = self.data_feature_types[current_node.feature]
             right_child_index = self.sk_children_right[current_index]
             for child_index in (left_child_index, right_child_index):
-                child_node = TreeNodeComponent(sk_index=child_index, parent=current_node)
+                child_node = TreeNodeComponent(child_index, parent=current_node)
                 nodes_to_check.append(child_node)
             current_node.update_children(*(nodes_to_check[-2: ]))
 

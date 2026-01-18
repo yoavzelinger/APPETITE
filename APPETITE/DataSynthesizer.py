@@ -30,24 +30,28 @@ class DataSynthesizer:
                 case _:
                     raise ValueError(f"Unsupported feature type: {data_feature_types[feature]} for feature: {feature}")
 
+        # Caching
+        self.synthesized_X, self.synthesized_y = None, None
+
     def synthesize(self) -> tuple[pd.DataFrame, pd.Series]:
-        synthesized_X = pd.DataFrame()
-        for feature, distribution in self.features_distribution.items():
-            if isinstance(distribution, dict) and 'mean' in distribution:
-                synthesized_X[feature] = pd.Series(
-                    np.random.normal(loc=distribution['mean'], scale=distribution['std'], size=self.count)
-                ).clip(lower=distribution['min'], upper=distribution['max'])
-            else:
-                synthesized_X[feature] = pd.Series(
-                    np.random.choice(list(distribution.keys()), size=self.count, p=list(distribution.values()))
+        if self.synthesized_X is None or self.synthesized_y is None:
+            self.synthesized_X = pd.DataFrame()
+            for feature, distribution in self.features_distribution.items():
+                if isinstance(distribution, dict) and 'mean' in distribution:
+                    self.synthesized_X[feature] = pd.Series(
+                        np.random.normal(loc=distribution['mean'], scale=distribution['std'], size=self.count)
+                    ).clip(lower=distribution['min'], upper=distribution['max'])
+                else:
+                    self.synthesized_X[feature] = pd.Series(
+                        np.random.choice(list(distribution.keys()), size=self.count, p=list(distribution.values()))
+                    )
+
+            self.synthesized_y = pd.Series(
+                np.random.choice(
+                    list(self.class_distribution.keys()),
+                    size=self.count,
+                    p=list(self.class_distribution.values())
                 )
-
-        synthesized_y = pd.Series(
-            np.random.choice(
-                list(self.class_distribution.keys()),
-                size=self.count,
-                p=list(self.class_distribution.values())
             )
-        )
 
-        return synthesized_X, synthesized_y
+        return self.synthesized_X, self.synthesized_y

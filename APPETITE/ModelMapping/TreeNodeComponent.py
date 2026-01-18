@@ -88,6 +88,15 @@ class TreeNodeComponent:
         """
         return self.left_child is None
     
+    def is_internal(self) -> bool:
+        """
+        Check if the node is an internal node.
+        
+        Returns:
+            bool: True if the node is an internal node, False otherwise.
+        """
+        return not self.is_terminal()
+    
     def is_left_child(self) -> bool:
         """
         Check if the node is a left child.

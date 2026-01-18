@@ -48,7 +48,7 @@ class ATreeBasedMappedModel(ABC):
         X (DataFrame): The data.
         y (Series): The target column.
         """
-        self.model_used_features = set(map(lambda component: component.feature, self))
+        self.model_used_features = set(map(lambda component: component.feature, filter(TreeNodeComponent.is_internal, self)))
     
     def __init__(self,
                  model: ClassifierMixin,

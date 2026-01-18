@@ -52,6 +52,12 @@ class TreeNodeComponent:
         self.update_children(None, None)
         self.depth = 0 if parent is None else parent.depth + 1
 
+        self.feature = None
+        self.feature_type = None
+        self.feature_average_value = None
+        self.threshold = None
+        self.class_name = None
+
     def get_index(self) -> int:
         """
         Get the index of the node.

@@ -174,7 +174,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                     fixer_output_name = fixer_data.get("output_name", fixer_class_name)
                     fixer_parameters = fixer_data.get("parameters")
                     fixer_class = get_fixer(fixer_class_name)
-                    fixer: AFixer = fixer_class(mapped_model, X_repair, y_repair, faulty_nodes=faulty_nodes_indices, X_prior=X_repair, y_prior=y_repair, **fixer_parameters)
+                    fixer: AFixer = fixer_class(mapped_model, X_repair, y_repair, faulty_nodes_indices=faulty_nodes_indices, X_prior=X_repair, y_prior=y_repair, **fixer_parameters)
                     fixed_tree = fixer.fix_tree()
                     fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
                     test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
@@ -311,7 +311,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                     fixer_output_name = fixer_data.get("output_name", fixer_class_name)
                     fixer_parameters = fixer_data.get("parameters")
                     fixer_class = get_fixer(fixer_class_name)
-                    fixer: AFixer = fixer_class(mapped_model, X_repair, y_repair, faulty_nodes=faulty_nodes_indices, X_prior=X_repair, y_prior=y_repair, **fixer_parameters)
+                    fixer: AFixer = fixer_class(mapped_model, X_repair, y_repair, faulty_nodes_indices=faulty_nodes_indices, X_prior=X_repair, y_prior=y_repair, **fixer_parameters)
                     fixed_tree = fixer.fix_tree()
                     fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
                     test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy

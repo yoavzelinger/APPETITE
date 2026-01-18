@@ -43,7 +43,7 @@ if specific_datasets:
     specific_datasets_string = '-'.join(specific_datasets)
 elif specific_prefixes:
     specific_prefixes = tuple(map(str.lower, specific_prefixes))
-    specific_datasets_string = "prefix_" + '-'.join(specific_datasets)
+    specific_datasets_string = "prefix_" + '-'.join(specific_prefixes)
 if specific_datasets_string:
     print(f"Running tests for {specific_datasets_string}")
 

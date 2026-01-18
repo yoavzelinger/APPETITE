@@ -125,7 +125,7 @@ class TreeNodeComponent:
         return self.parent.left_child if self.is_right_child() else self.parent.right_child
     
     def is_successor_of(self,
-                            other: 'TreeNodeComponent'
+                        other: 'TreeNodeComponent'
     ) -> bool:
         """
         Check if the node is a successor of another node.
@@ -135,6 +135,7 @@ class TreeNodeComponent:
         Returns:
             bool: True if the node is a successor of the other node, False otherwise.
         """
+        assert isinstance(other, TreeNodeComponent), "other must be a TreeNodeComponent"
         if self == other:
             return True
         if self.is_terminal():
@@ -142,7 +143,7 @@ class TreeNodeComponent:
         return self.left_child.is_successor_of(other) or self.right_child.is_successor_of(other)
     
     def is_ancestor_of(self,
-                            other: 'TreeNodeComponent'
+                       other: 'TreeNodeComponent'
     ) -> bool:
         """
         Check if the node is a ancestor of another node.
@@ -155,7 +156,7 @@ class TreeNodeComponent:
         return other.is_successor_of(self)
     
     def are_connected(self,
-                        other: 'TreeNodeComponent'
+                      other: 'TreeNodeComponent'
     ) -> bool:
         """
         Check if the node is connected to another node.
@@ -167,8 +168,7 @@ class TreeNodeComponent:
         """
         return self.is_successor_of(other) or self.is_ancestor_of(other)
     
-    def get_all_leaves(self
-    ) -> list['TreeNodeComponent']:
+    def get_all_leaves(self) -> list['TreeNodeComponent']:
         """
         Get all leaves under the node.
 
@@ -177,17 +177,19 @@ class TreeNodeComponent:
         """
         if self.is_terminal():
             return [self]
-        return = self.left_child.get_all_leaves() + self.right_child.get_all_leaves()
+        return self.left_child.get_all_leaves() + self.right_child.get_all_leaves()
     
-    def update_condition(self) -> None:
+    def update_condition(self,
+                         recursive: bool = True
+    ) -> None:
         """
         Update the conditions path of the node.
         
-        The conditions path is the path from the root to the node. Each condition is a dictionary with the following items:
-            "feature" (str): The feature.
-            "sign" (str): The sign of the threshold.
-            "threshold" (float): The threshold.
-        """
+        The conditions path is the a filter function that filters the data that reached the node.
+
+        Parameters:
+            recursive (bool): Whether to update the conditions path of the children nodes.
+            """
         if self.parent is None:
             self.conditions_path = []
         else:
@@ -196,8 +198,9 @@ class TreeNodeComponent:
             self.conditions_path = self.parent.conditions_path + [current_condition]
         if self.is_terminal():
             return
-        self.left_child.update_condition()
-        self.right_child.update_condition()
+        if recursive:
+            self.left_child.update_condition(recursive=recursive)
+            self.right_child.update_condition(recursive=recursive)
     
     def get_data_reached_node(self,
                               X: pd.DataFrame,
@@ -274,15 +277,15 @@ class TreeNodeComponent:
         
         return X, y
     
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, TreeNodeComponent):
             return self.component_index == other.component_index
         if isinstance(other, int):
             return self.component_index == other
         return False
     
-    def __hash__(self):
-        return hash(self.component_index)
+    def __hash__(self) -> int:
+        return hash(str(self))
     
     def __repr__(self) -> str:
         """

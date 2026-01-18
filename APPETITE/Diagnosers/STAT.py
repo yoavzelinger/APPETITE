@@ -1,23 +1,24 @@
 from copy import deepcopy
 
 from .ADiagnoser import *
+from APPETITE.ModelMapping.TreeNodeComponent import TreeNodeComponent
 
 class STAT(ADiagnoser):
     def __init__(self, 
-                 mapped_tree: MappedDecisionTree,
+                 mapped_model: ATreeBasedMappedModel,
                  X: pd.DataFrame,
                  y: pd.Series
     ):
-        super().__init__(mapped_tree, X, y)
-
+        super().__init__(mapped_model, X, y)
+    
     @staticmethod
-    def get_violation_ratio(node: MappedDecisionTree.DecisionTreeNode
+    def get_violation_ratio(node: TreeNodeComponent
      ) -> float:
         """
         Get the violation ratio of the node.
 
         Parameters:
-        node (MappedDecisionTree.DecisionTreeNode): The node.
+        node (TreeNodeComponent): The node.
 
         Returns:
         float: The violation ratio of the node.
@@ -42,7 +43,7 @@ class STAT(ADiagnoser):
         Returns:
         float: The violation of the node before the drift.
         """
-        node = self.mapped_tree.get_node(node_index)
+        node = self.mapped_model[node_index]
         return STAT.get_violation_ratio(node)
     
     def get_after_violation(self,
@@ -57,7 +58,7 @@ class STAT(ADiagnoser):
         Returns:
         float: The violation of the node after the drift.
         """
-        node = self.mapped_tree.get_node(node_index)
+        node = self.mapped_model[node_index]
         # copy the node and calculate the violation for it
         node_after = deepcopy(node)
         node_after.update_node_data_attributes(self.X_after, self.y_after)
@@ -94,6 +95,6 @@ class STAT(ADiagnoser):
           where the first element is the index and the second is the violation ratio.
         """
         if self.diagnoses is None:
-            self.diagnoses = [([node_index], self.get_node_violation_difference(node_index)) for node_index in self.mapped_tree.tree_dict.keys()]
+            self.diagnoses = [([node_index], self.get_node_violation_difference(node_index)) for node_index in self.mapped_model.get_indices()]
             self.sort_diagnoses()
         return super().get_diagnoses(retrieve_ranks)

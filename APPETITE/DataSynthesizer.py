@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+from APPETITE import Constants as constants
+
 class DataSynthesizer:
     def __init__(self,
                  X: pd.DataFrame,
@@ -13,18 +15,20 @@ class DataSynthesizer:
 
         self.features_distribution = {}
         for feature in X.columns:
-            if data_feature_types[feature] == 'binary' or data_feature_types[feature] == 'categorical':
-                feature_counts = X[feature].value_counts().to_dict()
-                self.features_distribution[feature] = {category: feature_counts[category] / self.count for category in feature_counts.keys()}
-            elif data_feature_types[feature] == 'numeric':
-                self.features_distribution[feature] = {
-                    'mean': X[feature].mean(),
-                    'std': X[feature].std(),
-                    'min': X[feature].min(),
-                    'max': X[feature].max()
-                }
-            else:
-                raise ValueError(f"Unsupported feature type: {data_feature_types[feature]} for feature: {feature}")
+            assert isinstance(data_feature_types[feature], constants.FeatureType)
+            match data_feature_types[feature]:
+                case constants.FeatureType.Binary | constants.FeatureType.Categorical:
+                    feature_counts = X[feature].value_counts().to_dict()
+                    self.features_distribution[feature] = {category: feature_counts[category] / self.count for category in feature_counts.keys()}
+                case constants.FeatureType.Numeric:
+                    self.features_distribution[feature] = {
+                        'mean': X[feature].mean(),
+                        'std': X[feature].std(),
+                        'min': X[feature].min(),
+                        'max': X[feature].max()
+                        }
+                case _:
+                    raise ValueError(f"Unsupported feature type: {data_feature_types[feature]} for feature: {feature}")
 
     def synthesize(self) -> tuple[pd.DataFrame, pd.Series]:
         synthesized_X = pd.DataFrame()

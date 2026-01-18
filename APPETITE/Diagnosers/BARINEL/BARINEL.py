@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from APPETITE import Constants as constants
-from APPETITE.MappedDecisionTree import MappedDecisionTree
+from APPETITE.ModelMapping.ATreeBasedMappedModel import ATreeBasedMappedModel
 
 from APPETITE.Diagnosers.SFLDT import SFLDT
 
@@ -56,7 +56,7 @@ class BARINEL(SFLDT):
     """
 
     def __init__(self, 
-                 mapped_tree: MappedDecisionTree,
+                 mapped_model: ATreeBasedMappedModel,
                  X: pd.DataFrame,
                  y: pd.Series,
                  **kwargs: object
@@ -65,14 +65,14 @@ class BARINEL(SFLDT):
         Initialize the BARINEL diagnoser.
         
         Parameters:
-        mapped_tree (MappedDecisionTree): The mapped decision tree.
+        mapped_model (ATreeBasedMappedModel): The mapped model.
         X (DataFrame): The data.
         y (Series): The target column.
         kwargs (object): All the SFLDT parameters
         """
         self.components_prior_probabilities = None
         self.threshold = 1
-        super().__init__(mapped_tree, X, y, **kwargs)
+        super().__init__(mapped_model, X, y, **kwargs)
 
     def update_threshold(self
     ) -> None:
@@ -105,7 +105,7 @@ class BARINEL(SFLDT):
         the combination is done by using the stat ranks of the components as the prior probabilities of the components.
         """
         stat_diagnoses = self.load_stat_diagnoses()
-        stat_diagnoses.sort(key=lambda diagnosis: self.mapped_tree.convert_node_index_to_spectra_index(diagnosis[0][0])) # sort by the components order (to match the spectra indices)
+        stat_diagnoses.sort(key=lambda diagnosis: self.convert_node_index_to_spectra_index(diagnosis[0][0])) # sort by the components order (to match the spectra indices)
         nodes_stat_rank_vector = np.array([diagnosis[1] for diagnosis in stat_diagnoses])
         if self.group_feature_nodes:
             # get for each feature the average of the stat ranks of the components

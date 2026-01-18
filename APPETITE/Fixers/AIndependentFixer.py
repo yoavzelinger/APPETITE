@@ -4,6 +4,8 @@ from copy import deepcopy
 
 from sklearn.tree import DecisionTreeClassifier
 
+from APPETITE import Constants as constants
+
 from .AFixer import AFixer
 
 class AIndependentFixer(AFixer):
@@ -21,7 +23,7 @@ class AIndependentFixer(AFixer):
             faulty_node_index (int): The index of the faulty node.
             X_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
-        values = self.original_mapped_tree.sklearn_tree_model.tree_.value[faulty_node_index]
+        values = self.sklearn_model.tree_.value[faulty_node_index]
 
         if len(y_reached_faulty_node):
             # Get the most common class in the data that reached the faulty node
@@ -55,7 +57,7 @@ class AIndependentFixer(AFixer):
             faulty_node_index (int): The index of the faulty node.
             X_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
-        faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
+        faulty_node = self.original_mapped_model[faulty_node_index]
         node_feature_average_before_drift = faulty_node.feature_average_value
         if node_feature_average_before_drift is None:
             raise NotImplementedError("The average feature value before the drift is not available")
@@ -76,9 +78,9 @@ class AIndependentFixer(AFixer):
                 faulty_node_index (int): The index of the faulty node.
                 X_reached_faulty_node (DataFrame): The data that reached the faulty node.
           """
-          faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
+          faulty_node = self.original_mapped_model[faulty_node_index]
           left_child, right_child = faulty_node.left_child, faulty_node.right_child
-          left_child_index, right_child_index = left_child.sk_index, right_child.sk_index
+          left_child_index, right_child_index = left_child.get_index(), right_child.get_index()
           self.fixed_tree.tree_.children_left[faulty_node_index] = right_child_index
           self.fixed_tree.tree_.children_right[faulty_node_index] = left_child_index
         #   print(f"{self.diagnoser_output_name}: Faulty node {faulty_node_index} (Categorical) condition flipped")
@@ -95,16 +97,19 @@ class AIndependentFixer(AFixer):
             faulty_node_index (int): The index of the faulty node.
             X_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
-        self.fixed_tree: DecisionTreeClassifier = deepcopy(self.original_mapped_tree.sklearn_tree_model)
-        faulty_node = self.original_mapped_tree.get_node(faulty_node_index)
+        self.fixed_tree: DecisionTreeClassifier = deepcopy(self.sklearn_model)
+        faulty_node = self.original_mapped_model[faulty_node_index]
         if faulty_node.is_terminal():
             self._fix_terminal_faulty_node(faulty_node_index, X_reached_faulty_node, y_reached_faulty_node)
             return
-        faulty_node_feature_type = faulty_node.feature_type
+        faulty_node_feature_type: constants.FeatureType = faulty_node.feature_type
         if faulty_node_feature_type is None:
             # Determine the type from the after drift dataset
-            faulty_node_feature_type = self.feature_types[faulty_node.feature]
-        if faulty_node_feature_type == "numeric":
-            self._fix_numeric_faulty_node(faulty_node_index, X_reached_faulty_node)
-        else:
-            self._fix_categorical_faulty_node(faulty_node_index)
+            faulty_node_feature_type: constants.FeatureType = self.feature_types[faulty_node.feature]
+        match faulty_node_feature_type:
+            case constants.FeatureType.Numeric:
+                self._fix_numeric_faulty_node(faulty_node_index, X_reached_faulty_node)
+            case constants.FeatureType.Binary | constants.FeatureType.Categorical:
+                self._fix_categorical_faulty_node(faulty_node_index)
+            case _:
+                raise ValueError(f"Unsupported feature type: {faulty_node_feature_type} for faulty node {faulty_node_index}")

@@ -7,6 +7,7 @@ class FeatureType(Enum):
     Numeric = auto()
     Categorical = auto()
     Binary = auto()
+    Mixed = auto()
 
 class NodeIndexType(Enum):
     COMPONENT_INDEX = auto()

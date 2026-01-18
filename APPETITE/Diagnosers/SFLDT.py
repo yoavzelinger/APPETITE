@@ -7,14 +7,14 @@ from scipy.stats import pearsonr as pearson_correlation
 from shap import TreeExplainer
 
 from APPETITE import Constants as constants
-from APPETITE.MappedDecisionTree import MappedDecisionTree
+from APPETITE.ModelMapping.TreeNodeComponent import TreeNodeComponent
 
-from .ADiagnoser import ADiagnoser
+from .ADiagnoser import *
 from .STAT import STAT
 
 class SFLDT(ADiagnoser):
     def __init__(self, 
-                 mapped_tree: MappedDecisionTree,
+                 mapped_model: ATreeBasedMappedModel,
                  X: pd.DataFrame,
                  y: pd.Series,
                  combine_stat: bool = constants.DEFAULT_COMBINE_STAT,
@@ -28,7 +28,7 @@ class SFLDT(ADiagnoser):
         Initialize the SFLDT diagnoser.
         
         Parameters:
-        mapped_tree (MappedDecisionTree): The mapped decision tree.
+        mapped_model (ATreeBasedMappedModel): The mapped model.
         X (DataFrame): The data.
         y (Series): The target column.
         combine_stat (bool): Whether to combine the diagnoses with the STAT diagnoser.
@@ -38,9 +38,9 @@ class SFLDT(ADiagnoser):
         combine_prior_confidence (bool): Whether to combine the confidence of the tests in the error vector calculation.
         combine_components_depth (bool): whether to include the components depth in the components' participations.
         """
-        super().__init__(mapped_tree, X, y)
+        super().__init__(mapped_model, X, y)
         
-        self.components_count = len(mapped_tree)
+        self.components_count = len(mapped_model)
         self.tests_count = len(X)
         
         self.spectra = np.zeros((self.components_count, self.tests_count))
@@ -57,8 +57,28 @@ class SFLDT(ADiagnoser):
         self.is_error_fuzzy = self.combine_prior_confidence or self.aggregate_tests
         self.path_tests_indices = defaultdict(list)
 
+        self.spectra_map: dict[int, TreeNodeComponent]
+        self.inverse_spectra_map: dict[TreeNodeComponent, int]
+        self.get_component_spectra_map()
+        
         self.fill_spectra_and_error_vector(X, y)
-        self.stat = STAT(mapped_tree, X, y) if combine_stat else None
+        self.stat = STAT(mapped_model, X, y) if combine_stat else None
+
+    def get_component_spectra_map(self):
+        self.spectra_map, self.inverse_spectra_map = {}, {}
+        for spectra_index, component in enumerate(self.mapped_model):
+            self.spectra_map[spectra_index] = component
+            self.inverse_spectra_map[component] = spectra_index
+    
+    def convert_node_index_to_spectra_index(self,
+                                            index: int
+    ) -> int:
+        return self.inverse_spectra_map[self.mapped_model[index]]
+    
+    def convert_spectra_index_to_node_index(self,
+                                            index: int
+    ) -> int:
+        return self.spectra_map[index].get_index()
 
     def shrink_spectra_based_on_paths(self,
                                       to_shrink_spectra: np.ndarray,
@@ -112,7 +132,7 @@ class SFLDT(ADiagnoser):
             return
         target_feature_index = len(self.feature_indices_dict)
         self.feature_indices_dict[target_name] = target_feature_index
-        target_nodes = [node_spectra_index for node_spectra_index, node in self.mapped_tree.spectra_dict.items() if node.is_terminal()]
+        target_nodes = [node_spectra_index for node_spectra_index, node in self.spectra_map.items() if node.is_terminal()]
         self.feature_index_to_node_indices_dict[target_feature_index] = target_nodes
 
     def update_spectra_to_feature_components(self
@@ -125,11 +145,11 @@ class SFLDT(ADiagnoser):
         # Create feature to feature_index mapping (based on the order in the data)
         self.feature_indices_dict = {feature: feature_index
                                      for (feature_index, feature) in enumerate(
-                                         filter(lambda feature: feature in self.mapped_tree.tree_features_set, self.X_after.columns)
+                                         filter(lambda feature: feature in self.mapped_model.model_used_features, self.X_after.columns)
                                          )}
         # Create feature_index to the corresponding nodes mapping
         self.feature_index_to_node_indices_dict = defaultdict(list)
-        for node_spectra_index, node in self.mapped_tree.spectra_dict.items():
+        for node_spectra_index, node in self.spectra_map.items():
             if node.is_terminal():
                 continue
             self.feature_index_to_node_indices_dict[self.feature_indices_dict[node.feature]].append(node_spectra_index)
@@ -150,12 +170,12 @@ class SFLDT(ADiagnoser):
         Update the participation matrix to use the shap contributions. For now only relevant for feature components.
         The participations are calculated as the weighted average of the SHAP values of the features. The weights are based on the predicted probabilities of the samples.
         """
-        explainer = TreeExplainer(self.mapped_tree.sklearn_tree_model)
+        explainer = TreeExplainer(self.mapped_model.model)
         
-        samples_predicted_probabilities = self.mapped_tree.sklearn_tree_model.predict_proba(self.X_after)   # shape: (|tests|, |classes|)
+        samples_predicted_probabilities = self.mapped_model.model.predict_proba(self.X_after)   # shape: (|tests|, |classes|)
         samples_predicted_probabilities = (samples_predicted_probabilities == samples_predicted_probabilities.max(axis=1, keepdims=True)).astype(int)
         samples_positive_shap_values = np.maximum(explainer.shap_values(self.X_after), 0)  # shape: (|tests|, |FEATURES!|, |classes)
-        tree_features_locations = [column_index for column_index, feature in enumerate(self.X_after.columns) if feature in self.mapped_tree.tree_features_set]
+        tree_features_locations = [column_index for column_index, feature in enumerate(self.X_after.columns) if feature in self.mapped_model.model_used_features]
         samples_positive_shap_values = samples_positive_shap_values[:, tree_features_locations, :]  # shape: (|tests|, |COMPONENTS!|, |classes)
         weighted_shap_values = samples_positive_shap_values * samples_predicted_probabilities[:, None, :]  # shape: (|tests|, |features=components|, |classes)
         
@@ -195,15 +215,15 @@ class SFLDT(ADiagnoser):
         y (Series): The target column.
         """
         # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
-        node_indicator = self.mapped_tree.sklearn_tree_model.tree_.decision_path(X.to_numpy(dtype="float32"))
+        node_indicator = self.mapped_model.model.tree_.decision_path(X.to_numpy(dtype="float32"))
         for test_index in range(self.tests_count):
             participated_nodes = node_indicator.indices[
                 node_indicator.indptr[test_index] : node_indicator.indptr[test_index + 1]
             ]
             path_length = len(participated_nodes)
             assert path_length >= 2, f"Test test_index: ({participated_nodes}, total {path_length}) has no participated nodes in the tree, but should have at least 2 (root and terminal node)."
-            for node in map(self.mapped_tree.get_node, participated_nodes):
-                self.spectra[node.spectra_index, test_index] = (node.depth + 1) / path_length if self.combine_components_depth else 1
+            for node in map(self.mapped_model.__getitem__, participated_nodes):
+                self.spectra[self.inverse_spectra_map[node], test_index] = (node.depth + 1) / path_length if self.combine_components_depth else 1
                 if node.is_terminal():
                     self.error_vector[test_index] = int(node.class_name != y[test_index])
                     if self.combine_prior_confidence:
@@ -260,7 +280,7 @@ class SFLDT(ADiagnoser):
             return
         return_indices_diagnoses = []
         for diagnosis, rank in self.diagnoses:
-            diagnosis = [self.mapped_tree.convert_spectra_index_to_node_index(spectra_index) for spectra_index in diagnosis]
+            diagnosis = [self.convert_spectra_index_to_node_index(spectra_index) for spectra_index in diagnosis]
             return_indices_diagnoses.append((diagnosis, rank))
         self.diagnoses = return_indices_diagnoses
 
@@ -398,7 +418,7 @@ class SFLDT(ADiagnoser):
         4. Multiply the SFLDT rank with the calculated average STAT rank.
         """
         stat_diagnoses_dict = {node_index[0]: rank for node_index, rank in self.load_stat_diagnoses()}
-        convert_spectra_to_node_indices_function = lambda spectra_indices: map(self.mapped_tree.convert_spectra_index_to_node_index, spectra_indices)
+        convert_spectra_to_node_indices_function = lambda spectra_indices: map(self.convert_spectra_index_to_node_index, spectra_indices)
         get_nodes_stat_ranks_function = lambda spectra_indices: map(stat_diagnoses_dict.get, convert_spectra_to_node_indices_function(spectra_indices))
         get_average_stat_rank_function = lambda spectra_indices: max(0.5, sum(get_nodes_stat_ranks_function(spectra_indices)) / len(spectra_indices))
         get_nodes_from_features = lambda spectra_indices: self.convert_features_diagnosis_to_nodes_diagnosis(spectra_indices) if self.group_feature_nodes else spectra_indices

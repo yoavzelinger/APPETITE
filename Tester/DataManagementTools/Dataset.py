@@ -38,7 +38,7 @@ class Dataset:
             column_type = self.data[column_name].dtype
             if column_type not in [object, bool]:   # Numeric
                 self.data[column_name] = self.data[column_name].fillna(self.data[column_name].mean())    # Fill NaN values
-                self.feature_types[column_name] = "numeric"
+                self.feature_types[column_name] = tester_constants.FeatureType.Numeric
                 continue
             # Categorical or Binary
             self.data[column_name] = self.data[column_name].fillna(self.data[column_name].mode().iloc[0])    # Fill NaN values
@@ -47,10 +47,10 @@ class Dataset:
             if column_type == bool or not tester_constants.ONE_HOT_ENCODING_CATEGORICAL:
                 self.data[column_name] = pd.Categorical(self.data[column_name])
                 self.data[column_name] = self.data[column_name].cat.codes
-                self.feature_types[column_name] = "binary" if column_type == bool else "categorical" 
+                self.feature_types[column_name] = tester_constants.FeatureType.Binary if column_type == bool else tester_constants.FeatureType.Categorical
                 continue
             # One hot encoding with multiple values
-            one_hot_encoded_dict.update({f"{column_name}_{value}": "binary" for value in self.data[column_name].unique()})
+            one_hot_encoded_dict.update({f"{column_name}_{value}": tester_constants.FeatureType.Binary for value in self.data[column_name].unique()})
             self.data = pd.get_dummies(self.data, columns=[column_name])
         self.feature_types.update(one_hot_encoded_dict)
 
@@ -191,7 +191,7 @@ class Dataset:
         
         feature = next(iter(features))
         
-        assert self.feature_types[feature] == "numeric", "Sorting by non-numeric feature is not supported"
+        assert self.feature_types[feature] == tester_constants.FeatureType.Numeric, "Sorting by non-numeric feature is not supported"
         
         # sort by the feature
         return self.data.sort_values(by=feature, ascending=True).reset_index(drop=True)

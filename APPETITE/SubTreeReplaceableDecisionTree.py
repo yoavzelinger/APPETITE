@@ -8,7 +8,8 @@ from sklearn.tree import DecisionTreeClassifier
 
 import APPETITE.Constants as constants
 
-from .MappedDecisionTree import MappedDecisionTree
+from .ModelMapping.ATreeBasedMappedModel import ATreeBasedMappedModel
+from .ModelMapping.TreeNodeComponent import TreeNodeComponent
 
 from .RiverDecisionTreeWrapper import RiverDecisionTreeWrapper as RiverDecisionTree
 from .PriorDataDecisionTreeClassifierWrapper import PriorDataDecisionTreeClassifierWrapper as PriorDataDecisionTreeClassifier
@@ -18,19 +19,18 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     A Decision Tree Classifier that allows replacing subtrees.
     """
     def __init__(self,
-                 original_mapped_tree: MappedDecisionTree,
-                 indices_to_replace: list[int],
+                 original_tree: DecisionTreeClassifier,
+                 nodes_to_replace: list[TreeNodeComponent],
                  dependency_handling_type: constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES = constants.DEFAULT_SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPE,
                  use_prior_knowledge: constants.PRIOR_KNOWLEDGE_USAGE_TYPES = constants.DEFAULT_USE_OF_PRIOR_KNOWLEDGE,
                  subtree_type: constants.SubTreeType = constants.DEFAULT_SUBTREE_TYPE,
                  X_prior: pd.DataFrame = None,
                  y_prior: pd.Series = None
                  ):
-        self.mapped_tree = original_mapped_tree
-        self.base_sklearn_tree_model = deepcopy(original_mapped_tree.sklearn_tree_model)
+        self.base_sklearn_tree_model = deepcopy(original_tree)
         
-        self.replacement_candidates: list[MappedDecisionTree.DecisionTreeNode] = list(map(self.mapped_tree.get_node, indices_to_replace))
-        self.replaced_subtrees: dict[MappedDecisionTree.DecisionTreeNode, DecisionTreeClassifier] = {}
+        self.replacement_candidates: list[TreeNodeComponent] = nodes_to_replace
+        self.replaced_subtrees: dict[TreeNodeComponent, DecisionTreeClassifier] = {}
 
         assert isinstance(dependency_handling_type, constants.SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES), f"expecting dependency_handling_type to be SUBTREE_RETRAINING_DEPENDENCY_HANDLING_TYPES but got {type(dependency_handling_type)}"
         self.dependency_handling_type = dependency_handling_type
@@ -46,7 +46,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
     
     def get_candidate_conflicts_indices(self,
                                         current_candidate_index: int,
-                                        current_candidate_node: MappedDecisionTree.DecisionTreeNode) -> list[int]:
+                                        current_candidate_node: TreeNodeComponent) -> list[int]:
         all_candidate_conflict_indices = []
         for lower_candidate_index in range(current_candidate_index + 1, len(self.replacement_candidates)):
             if current_candidate_node.is_ancestor_of(self.replacement_candidates[lower_candidate_index]):
@@ -54,9 +54,9 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         return all_candidate_conflict_indices
 
     def get_unrelated_child(self,
-                            node: MappedDecisionTree.DecisionTreeNode,
-                            successor_node: MappedDecisionTree.DecisionTreeNode
-                            ) -> MappedDecisionTree.DecisionTreeNode:
+                            node: TreeNodeComponent,
+                            successor_node: TreeNodeComponent
+                            ) -> TreeNodeComponent:
         """
         Get a child of the given node that is not on the same path as the successor node.
         """
@@ -113,7 +113,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             current_candidate_index = self.resolve_candidate_conflicts(current_candidate_index)
 
     def create_replaceable_subtree(self, 
-                                   node_to_replace: MappedDecisionTree.DecisionTreeNode,
+                                   node_to_replace: TreeNodeComponent,
                                    X_prior: pd.DataFrame = None,
                                    y_prior: pd.Series = None) -> DecisionTreeClassifier:
         match self.use_prior_knowledge:
@@ -128,7 +128,7 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             return PriorDataDecisionTreeClassifier(deepcopy(self.base_sklearn_tree_model), X_prior=X_prior, y_prior=y_prior)
         
         tree_kwargs = {
-            "split_criterion": self.mapped_tree.sklearn_tree_model.criterion.replace("entropy", "info_gain"),
+            "split_criterion": self.base_sklearn_tree_model.criterion.replace("entropy", "info_gain"),
             "grace_period": 50,
             "delta": 0.01,
             "tau": 0.05
@@ -165,11 +165,11 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
         Returns:
             np.ndarray: The predicted class labels.
         """
-        decision_paths = self.mapped_tree.sklearn_tree_model.decision_path(X)
+        decision_paths = self.base_sklearn_tree_model.decision_path(X)
         
         def get_prediction_tree(test_index: int) -> DecisionTreeClassifier:
             for replaced_node in self.replaced_subtrees:
-                if decision_paths[test_index, replaced_node.sk_index]:
+                if decision_paths[test_index, replaced_node.get_index()]:
                     return self.replaced_subtrees[replaced_node]
             return self.base_sklearn_tree_model
         

@@ -1,11 +1,11 @@
 import pandas as pd
 from abc import ABC, abstractmethod
 
-from APPETITE.MappedDecisionTree import MappedDecisionTree
+from APPETITE.ModelMapping.ATreeBasedMappedModel import ATreeBasedMappedModel
 
 class ADiagnoser(ABC):
     def __init__(self, 
-                 mapped_tree: MappedDecisionTree,
+                 mapped_model: ATreeBasedMappedModel,
                  X: pd.DataFrame,
                  y: pd.Series
     ):
@@ -13,11 +13,11 @@ class ADiagnoser(ABC):
         Initialize the STAT diagnoser.
         
         Parameters:
-        mapped_tree (MappedDecisionTree): The mapped decision tree.
+        mapped_model (ATreeBasedMappedModel): The mapped model.
         X (DataFrame): The data.
         y (Series): The target column.
         """
-        self.mapped_tree = mapped_tree
+        self.mapped_model = mapped_model
         self.X_after = X
         self.y_after = y
         self.diagnoses = None

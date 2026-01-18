@@ -3,7 +3,7 @@ from sklearn.tree import DecisionTreeClassifier
 import APPETITE.Constants as constants
 from APPETITE.SubTreeReplaceableDecisionTree import SubTreeReplaceableDecisionTree
 
-from .AFixer import AFixer
+from .AFixer import *
 
 class SubTreeRetrainingFixer(AFixer):
     alias = "subtree_retrain"
@@ -39,9 +39,9 @@ class SubTreeRetrainingFixer(AFixer):
             DecisionTreeClassifier: The fixed decision tree.
             list[int]: The indices of the faulty nodes.
         """
-        # print(f"Fixing faulty nodes: {self.faulty_nodes}")
-        self.fixed_tree = SubTreeReplaceableDecisionTree(self.original_mapped_tree,
-                                                         self.faulty_nodes,
+        # print(f"Fixing faulty nodes: {self.faulty_nodes_indices}")
+        self.fixed_tree = SubTreeReplaceableDecisionTree(self.sklearn_model,
+                                                         list(map(self.original_mapped_model.__getitem__, self.faulty_nodes_indices)),
                                                          dependency_handling_type=self.dependency_handling_type,
                                                          use_prior_knowledge=self.use_prior_knowledge,
                                                          subtree_type=self.subtree_type,

@@ -2,11 +2,12 @@ from os import path as os_path
 from json import load as load_json
 from datetime import datetime
 
-import APPETITE.Constants as constants
+from APPETITE import constants
 
 from APPETITE.Diagnosers import Oracle
 from APPETITE.Fixers import *
 
+FeatureType = constants.FeatureType
 RANDOM_STATE = constants.RANDOM_STATE
 
 # Dataset partitions sizes

@@ -2,14 +2,11 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-from APPETITE import Constants as constants
-from APPETITE.MappedDecisionTree import MappedDecisionTree
-
-from .ADiagnoser import ADiagnoser
+from .ADiagnoser import *
 
 class Oracle(ADiagnoser):
     def __init__(self, 
-                 mapped_tree: MappedDecisionTree,
+                 mapped_model: ATreeBasedMappedModel,
                  X: pd.DataFrame,
                  y: pd.Series,
                  actual_faulty_features: list[str]
@@ -18,12 +15,12 @@ class Oracle(ADiagnoser):
         Initialize the Oracle diagnoser.
         
         Parameters:
-        mapped_tree (MappedDecisionTree): The mapped decision tree.
+        mapped_model (ATreeBasedMappedModel): The mapped model.
         X (DataFrame): The data.
         y (Series): The target column.
         actual_faulty_features (list[str]): The actual faulty features.
         """
-        super().__init__(mapped_tree, X, y)
+        super().__init__(mapped_model, X, y)
 
         self.actual_faulty_features = actual_faulty_features
 
@@ -44,7 +41,7 @@ class Oracle(ADiagnoser):
         """
         if self.diagnoses is None:    
             actual_faulty_nodes = []
-            for node_index, node in self.mapped_tree.tree_dict.items():
+            for node_index, node in self.mapped_model.components_map.items():
                 if node.feature in self.actual_faulty_features:
                     actual_faulty_nodes.append(node_index)
             self.diagnoses = [(actual_faulty_nodes, 1)]

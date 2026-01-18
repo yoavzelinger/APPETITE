@@ -8,7 +8,6 @@ from APPETITE.DataSynthesizer import DataSynthesizer
 class TreeNodeComponent:
     # Indexing
     component_index: int # The model's index of the node. (in the sklearn tree)
-    spectra_index: int # The ordered index of the node (in the spectra matrix)
     
     # Tree structure
     parent: 'TreeNodeComponent' # The parent node
@@ -23,12 +22,13 @@ class TreeNodeComponent:
     threshold: float # The threshold
     class_name: str # The class name
     
-    conditions_path: list[Callable[[pd.DataFrame], pd.Series]] # The conditions path from the root to the node
-    
     # Data statistics
     reached_samples_count: int # The number of samples that reached the node
     confidence: float # The confidence of the node (correct classifications / reached samples)
     data_synthesizer: DataSynthesizer # Data synthesizer for the node
+
+    # Path
+    conditions_path: list[Callable[[pd.DataFrame], pd.Series]] # The conditions path from the root to the node
 
     def __init__(self, 
                     component_index: int,
@@ -51,9 +51,7 @@ class TreeNodeComponent:
         self.parent = parent
         self.depth = 0 if parent is None else parent.depth + 1
 
-    def get_index(self, 
-                    index_type: constants.NodeIndexType
-    ) -> int:
+    def get_index(self) -> int:
         """
         Get the index of the node.
 
@@ -62,14 +60,8 @@ class TreeNodeComponent:
         Returns:
             int: The index of the node.
         """
-        match index_type:
-            case constants.NodeIndexType.COMPONENT_INDEX:
-                return self.component_index
-            case constants.NodeIndexType.SPECTRA_INDEX:
-                return self.spectra_index
-            case _:
-                raise ValueError(f"Unsupported index type: {index_type}")
-
+        return self.component_index
+    
     def update_children(self, 
                         left_child: 'TreeNodeComponent', 
                         right_child: 'TreeNodeComponent'
@@ -279,9 +271,9 @@ class TreeNodeComponent:
     
     def __eq__(self, other) -> bool:
         if isinstance(other, TreeNodeComponent):
-            return self.component_index == other.component_index
+            return self.get_index() == other.get_index()
         if isinstance(other, int):
-            return self.component_index == other
+            return self.get_index() == other
         return False
     
     def __hash__(self) -> int:
@@ -292,4 +284,4 @@ class TreeNodeComponent:
         Get the string representation of the node.
         format: Node(c:<component_index>; s:<spectra_index>)
         """
-        return f"Node(c:{self.component_index}; s:{self.spectra_index})"
+        return f"Node({self.get_index()})"

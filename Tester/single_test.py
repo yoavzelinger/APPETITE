@@ -135,7 +135,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),
                 tester_constants.DRIFT_SEVERITY_LEVEL_COLUMN_NAME: drift_severity_level,
                 tester_constants.DRIFTED_FEATURES_COLUMN_NAME: ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
-                tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: get_drifted_features_types_string(),
+                tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: get_drifted_features_types_string(drifted_features_types),
                 tester_constants.DRIFT_DESCRIPTION_COLUMN_NAME: drift_description,
                 tester_constants.ORIGINAL_ACCURACY_COLUMN_NAME: pre_drift_accuracy * 100,
                 tester_constants.AFTER_ACCURACY_COLUMN_NAME: post_drift_test_accuracy * 100,
@@ -272,7 +272,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),
                 tester_constants.DRIFT_SEVERITY_LEVEL_COLUMN_NAME: 1, # v2 does not support severity levels
                 tester_constants.DRIFTED_FEATURES_COLUMN_NAME: ", ".join(map(lambda feature: f"{feature}: {faulty_features_nodes[feature]}", faulty_features_nodes)),
-                tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: get_drifted_features_types_string(),
+                tester_constants.DRIFTED_FEATURES_TYPES_COLUMN_NAME: get_drifted_features_types_string(drifted_features_types),
                 tester_constants.DRIFT_DESCRIPTION_COLUMN_NAME: drift_description,
                 tester_constants.ORIGINAL_ACCURACY_COLUMN_NAME: pre_drift_accuracy * 100,
                 tester_constants.AFTER_ACCURACY_COLUMN_NAME: post_drift_test_accuracy * 100,

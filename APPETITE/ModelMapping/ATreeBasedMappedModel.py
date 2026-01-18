@@ -39,17 +39,6 @@ class ATreeBasedMappedModel(ABC):
         """
         pass
     
-    @abstractmethod
-    def update_model_statistics(self, X: pd.DataFrame, y: pd.Series):
-        """
-        Update the model statistics based on the data.
-
-        Parameters:
-        X (DataFrame): The data.
-        y (Series): The target column.
-        """
-        self.model_used_features = set(map(lambda component: component.feature, filter(TreeNodeComponent.is_internal, self)))
-    
     def __init__(self,
                  model: ClassifierMixin,
                  X: pd.DataFrame,
@@ -74,6 +63,16 @@ class ATreeBasedMappedModel(ABC):
         self.map_model()
         
         self.update_model_statistics(X, y)
+
+    def update_model_statistics(self, X: pd.DataFrame, y: pd.Series):
+        """
+        Update the model statistics based on the data.
+
+        Parameters:
+        X (DataFrame): The data.
+        y (Series): The target column.
+        """
+        self.model_used_features = set(map(lambda component: component.feature, filter(TreeNodeComponent.is_internal, self)))
 
     def get_indices(self) -> Iterable[int]:
         """

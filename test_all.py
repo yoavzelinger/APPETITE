@@ -25,6 +25,7 @@ parser.add_argument("-w", "--repair_window", type=float, nargs="+", help="Repair
 parser.add_argument("-d", "--drift_size", type=int, help=f"size of the drift, default is between {tester_constants.MIN_DRIFT_SIZE} and {tester_constants.MAX_DRIFT_SIZE}", default=-1)
 parser.add_argument("-c", "--count", type=int, help="Number of tests to run, default is running all", default=-1)
 parser.add_argument("-t", "--test", type=str, help="Test dataset to run if you want to run a specific test")
+parser.add_argument("-v", "--version", type=int, help=f"Version of the drift synthesizing to use (1=steric or 2=edge values), default is {tester_constants.DRIFT_SYNTHESIZING_VERSION}", default=0)
 
 args = parser.parse_args()
 
@@ -34,6 +35,10 @@ if args.test:
     print(f"Running single test for {args.test}")
     single_test.sanity_run(file_name=args.test + ".csv", diagnosers_data=tester_constants.diagnosers_data, fixers_data=tester_constants.fixers_data)
     sys.exit(0)
+
+if args.version:
+    assert args.version in (1, 2), f"Unsupported drift synthesizing version: {args.version}. Supported versions are 1 and 2."
+    tester_constants.DRIFT_SYNTHESIZING_VERSION = args.version
 
 specific_datasets_string = ""
 specific_datasets, specific_prefixes = args.names, args.prefixes
@@ -113,6 +118,7 @@ if specific_datasets_string:
     temp_files_suffix += f"_{specific_datasets_string}"
 
 output_files_suffix, output_path = args.output, tester_constants.OUTPUT_DIRECTORY_FULL_PATH
+output_files_suffix += f"_v{tester_constants.DRIFT_SYNTHESIZING_VERSION}"
 if temp_files_suffix:
     output_path = tester_constants.TEMP_OUTPUT_DIRECTORY_FULL_PATH
     if not output_files_suffix.startswith(tester_constants.DEFAULT_RESULTS_FILENAME_PREFIX):

@@ -49,6 +49,7 @@ class TreeNodeComponent:
         """
         self.component_index: int = int(component_index)
         self.parent = parent
+        self.update_children(None, None)
         self.depth = 0 if parent is None else parent.depth + 1
 
     def get_index(self) -> int:

@@ -41,9 +41,10 @@ class Oracle(ADiagnoser):
         """
         if self.diagnoses is None:    
             actual_faulty_nodes = []
-            for node_index, node in self.mapped_model.components_map.items():
+            node: TreeNodeComponent
+            for node in self.mapped_model:
                 if node.feature in self.actual_faulty_features:
-                    actual_faulty_nodes.append(node_index)
+                    actual_faulty_nodes.append(node.get_index())
             self.diagnoses = [(actual_faulty_nodes, 1)]
 
         self.sort_diagnoses()

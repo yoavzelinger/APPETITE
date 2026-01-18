@@ -59,9 +59,10 @@ def get_drifted_nodes(mapped_model: ATreeBasedMappedModel,
                       drifted_features: set[str]
  ) -> dict[str, list[int]]:
     faulty_features_nodes = {true_faulty_feature : [] for true_faulty_feature in drifted_features}
-    for node_index, node in mapped_model.components_map.items():
+    node: TreeNodeComponent
+    for node in mapped_model:
         if node.feature in drifted_features:
-            faulty_features_nodes[node.feature].append(node_index)
+            faulty_features_nodes[node.feature].append(node.get_index())
     return faulty_features_nodes
 
 def is_drift_contains_numeric_features(drifted_features_types):

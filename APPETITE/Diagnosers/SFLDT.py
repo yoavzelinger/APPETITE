@@ -218,12 +218,12 @@ class SFLDT(ADiagnoser):
         terminals_counts: np.ndarray = np.zeros(self.tests_count)
         node_indicator = self.mapped_model.get_node_indicator(X)
         for test_index in range(self.tests_count):
-            participated_nodes = node_indicator.indices[
+            participated_component_indices = node_indicator.indices[
                 node_indicator.indptr[test_index] : node_indicator.indptr[test_index + 1]
             ]
-            path_length = len(participated_nodes)
-            assert path_length >= 2, f"Test test_index: ({participated_nodes}, total {path_length}) has no participated nodes in the tree, but should have at least 2 (root and terminal node)."
-            for node in map(self.mapped_model.__getitem__, participated_nodes):
+            path_length = len(participated_component_indices)
+            assert path_length >= 2, f"Test test_index: ({participated_component_indices}, total {path_length}) has no participated nodes in the tree, but should have at least 2 (root and terminal node)."
+            for node in map(self.mapped_model.__getitem__, participated_component_indices):
                 self.spectra[self.inverse_spectra_map[node], test_index] = (node.depth + 1) / path_length if self.combine_components_depth else 1
                 if node.is_terminal():
                     if self.combine_prior_confidence:

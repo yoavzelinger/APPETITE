@@ -4,6 +4,7 @@ from typing import Iterable
 
 import pandas as pd
 import numpy as np
+from scipy.sparse import csr_matrix
 
 from sklearn.base import ClassifierMixin
 
@@ -26,6 +27,19 @@ class ATreeBasedMappedModel(ABC):
     def map_model(self):
         """
         Map the underlying model to its components; Updates the components_map attribute.
+        """
+        pass
+
+    @abstractmethod
+    def get_node_indicator(self, X: pd.DataFrame) -> csr_matrix:
+        """
+        Get the node indicator matrix for the data.
+
+        Parameters:
+        X (DataFrame): The data.
+
+        Returns:
+        csr_matrix: The node indicator matrix.
         """
         pass
             

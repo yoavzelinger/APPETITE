@@ -214,8 +214,7 @@ class SFLDT(ADiagnoser):
         X (DataFrame): The data.
         y (Series): The target column.
         """
-        # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
-        node_indicator = self.mapped_model.model.tree_.decision_path(X.to_numpy(dtype="float32"))
+        node_indicator = self.mapped_model.get_node_indicator(X)
         for test_index in range(self.tests_count):
             participated_nodes = node_indicator.indices[
                 node_indicator.indptr[test_index] : node_indicator.indptr[test_index + 1]

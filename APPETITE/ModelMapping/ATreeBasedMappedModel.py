@@ -1,14 +1,10 @@
 from abc import ABC, abstractmethod
-from enum import Enum, auto
 from typing import Iterable
 
 import pandas as pd
-import numpy as np
 from scipy.sparse import csr_matrix
 
 from sklearn.base import ClassifierMixin
-
-from APPETITE import Constants as constants
 
 from .TreeNodeComponent import TreeNodeComponent
 

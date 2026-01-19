@@ -7,8 +7,6 @@ from APPETITE import constants
 from APPETITE.Diagnosers import Oracle
 from APPETITE.Fixers import *
 
-FeatureType = constants.FeatureType
-RANDOM_STATE = constants.RANDOM_STATE
 
 # Dataset partitions sizes
 BEFORE_PROPORTION = 0.7

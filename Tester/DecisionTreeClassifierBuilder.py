@@ -25,13 +25,13 @@ def build_tree(
     Returns:
         DecisionTreeClassifier: The decision tree classifier.
     """
-    np.random.seed(tester_constants.RANDOM_STATE)
+    np.random.seed(tester_constants.constants.RANDOM_STATE)
     
     if model is not None:
         model.fit(X_train, y_train)
         return model
     
-    X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=tester_constants.VALIDATION_SIZE, random_state=tester_constants.RANDOM_STATE)
+    X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=tester_constants.VALIDATION_SIZE, random_state=tester_constants.constants.RANDOM_STATE)
 
     # Grid search modification
     modified_X_train, modified_y_train = X_train, y_train
@@ -45,14 +45,14 @@ def build_tree(
             modified_y_train = pd.concat([modified_y_train, pd.Series([class_name])], ignore_index=True)
     cross_validation_split_count = min(tester_constants.CROSS_VALIDATION_SPLIT_COUNT , modified_y_train.value_counts().min())
 
-    decision_tree_classifier = DecisionTreeClassifier(random_state=tester_constants.RANDOM_STATE)
+    decision_tree_classifier = DecisionTreeClassifier(random_state=tester_constants.constants.RANDOM_STATE)
     # Find best parameters using grid search cross validation (on training data)
     grid_search_classifier = GridSearchCV(estimator=decision_tree_classifier, 
                                      param_grid=tester_constants.PARAM_GRID, 
                                      cv=cross_validation_split_count)
     grid_search_classifier.fit(modified_X_train, modified_y_train)
     decision_tree_classifier = DecisionTreeClassifier(**grid_search_classifier.best_params_,
-                                                      random_state=tester_constants.RANDOM_STATE
+                                                      random_state=tester_constants.constants.RANDOM_STATE
                                                       )
     pruning_path = decision_tree_classifier.cost_complexity_pruning_path(X_train, y_train)
     ccp_alphas = set(pruning_path.ccp_alphas)
@@ -62,7 +62,7 @@ def build_tree(
             continue
         current_decision_tree = DecisionTreeClassifier(**grid_search_classifier.best_params_,
                                                        ccp_alpha=ccp_alpha,
-                                                       random_state=tester_constants.RANDOM_STATE
+                                                       random_state=tester_constants.constants.RANDOM_STATE
                                                        )
         current_decision_tree.fit(X_train, y_train)
         current_predictions = current_decision_tree.predict(X_validation)

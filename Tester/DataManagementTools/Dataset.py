@@ -38,7 +38,7 @@ class Dataset:
             column_type = self.data[column_name].dtype
             if column_type not in [object, bool]:   # Numeric
                 self.data[column_name] = self.data[column_name].fillna(self.data[column_name].mean())    # Fill NaN values
-                self.feature_types[column_name] = tester_constants.FeatureType.Numeric
+                self.feature_types[column_name] = tester_constants.constants.FeatureType.Numeric
                 continue
             # Categorical or Binary
             self.data[column_name] = self.data[column_name].fillna(self.data[column_name].mode().iloc[0])    # Fill NaN values
@@ -47,10 +47,10 @@ class Dataset:
             if column_type == bool or not tester_constants.ONE_HOT_ENCODING_CATEGORICAL:
                 self.data[column_name] = pd.Categorical(self.data[column_name])
                 self.data[column_name] = self.data[column_name].cat.codes
-                self.feature_types[column_name] = tester_constants.FeatureType.Binary if column_type == bool else tester_constants.FeatureType.Categorical
+                self.feature_types[column_name] = tester_constants.constants.FeatureType.Binary if column_type == bool else tester_constants.constants.FeatureType.Categorical
                 continue
             # One hot encoding with multiple values
-            one_hot_encoded_dict.update({f"{column_name}_{value}": tester_constants.FeatureType.Binary for value in self.data[column_name].unique()})
+            one_hot_encoded_dict.update({f"{column_name}_{value}": tester_constants.constants.FeatureType.Binary for value in self.data[column_name].unique()})
             self.data = pd.get_dummies(self.data, columns=[column_name])
         self.feature_types.update(one_hot_encoded_dict)
 
@@ -58,7 +58,7 @@ class Dataset:
         self.data[self.target_name] = self.data[self.target_name].cat.codes
 
         if tester_constants.DRIFT_SYNTHESIZING_VERSION == 1:  # shuffle data - same shuffle always
-            self.data = self.data.sample(frac=1, random_state=tester_constants.RANDOM_STATE).reset_index(drop=True)
+            self.data = self.data.sample(frac=1, random_state=tester_constants.constants.RANDOM_STATE).reset_index(drop=True)
 
         self.data.attrs["name"] = self.name
 
@@ -191,7 +191,7 @@ class Dataset:
         
         feature = next(iter(features))
         
-        assert self.feature_types[feature] == tester_constants.FeatureType.Numeric, "Sorting by non-numeric feature is not supported"
+        assert self.feature_types[feature] == tester_constants.constants.FeatureType.Numeric, "Sorting by non-numeric feature is not supported"
         
         # sort by the feature
         return self.data.sort_values(by=feature, ascending=True).reset_index(drop=True)
@@ -227,8 +227,8 @@ class Dataset:
             before_concept_data, after_concept_data = drift_function(sorted_data)
             assert len(before_concept_data) == self.before_concept_size and len(after_concept_data) == self.after_concept_size, "Drifted data size is not correct"
             
-            before_concept_data = before_concept_data.sample(frac=1, random_state=tester_constants.RANDOM_STATE).reset_index(drop=True)
-            after_concept_data = after_concept_data.sample(frac=1, random_state=tester_constants.RANDOM_STATE).reset_index(drop=True)
+            before_concept_data = before_concept_data.sample(frac=1, random_state=tester_constants.constants.RANDOM_STATE).reset_index(drop=True)
+            after_concept_data = after_concept_data.sample(frac=1, random_state=tester_constants.constants.RANDOM_STATE).reset_index(drop=True)
 
             X_before, y_before = self.split_features_targets(before_concept_data)
             X_repair, y_repair = self.split_features_targets(after_concept_data.iloc[ :self.repair_window_size])

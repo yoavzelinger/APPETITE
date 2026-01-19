@@ -131,7 +131,7 @@ def _categorical_drift_generator(
             remaining_indices = column != fixed_value
             remaining_count = remaining_indices.values.sum()
             remaining_indices = column[remaining_indices].index.values
-            random.seed(tester_constants.RANDOM_STATE)
+            random.seed(tester_constants.constants.RANDOM_STATE)
             fixed_indices = random.choices(remaining_indices, k=int(remaining_count * p))
             drifted_column[fixed_indices] = fixed_value
 
@@ -164,8 +164,8 @@ def _get_feature_generator_function(
         Callable[[Series], Generator[tuple[Series, str], None, None]]: The relevant drift generator function for the feature.
     """
     if not feature_type:
-        feature_type = tester_constants.FeatureType.Numeric if is_numeric_dtype(column) else tester_constants.FeatureType.Categorical
-    return _numeric_drift_generator if feature_type == tester_constants.FeatureType.Numeric else _categorical_drift_generator
+        feature_type = tester_constants.constants.FeatureType.Numeric if is_numeric_dtype(column) else tester_constants.constants.FeatureType.Categorical
+    return _numeric_drift_generator if feature_type == tester_constants.constants.FeatureType.Numeric else _categorical_drift_generator
 
 # The magic starts here
 def multiple_features_concept_drift_generator(
@@ -240,8 +240,8 @@ def example_preparation(
     FILE_PATH = "white-clover.csv"
     DRIFTING_FEATURES = {
         # For single drift only the first feature matters
-        "WhiteClover-91": tester_constants.FeatureType.Numeric,
-        "strata": tester_constants.FeatureType.Categorical,
+        "WhiteClover-91": tester_constants.constants.FeatureType.Numeric,
+        "strata": tester_constants.constants.FeatureType.Categorical,
         "Weeds-94": None
     }
 

@@ -66,20 +66,20 @@ def get_drifted_nodes(mapped_model: ATreeBasedMappedModel,
     return faulty_features_nodes
 
 def is_drift_contains_numeric_features(drifted_features_types):
-    return any(map(lambda feature_type: feature_type == tester_constants.FeatureType.Numeric, drifted_features_types))
+    return any(map(lambda feature_type: feature_type == tester_constants.constants.FeatureType.Numeric, drifted_features_types))
 
 def is_drift_contains_binary_features(drifted_features_types):
-    return any(map(lambda feature_type: feature_type == tester_constants.FeatureType.Binary, drifted_features_types))
+    return any(map(lambda feature_type: feature_type == tester_constants.constants.FeatureType.Binary, drifted_features_types))
 
-def get_total_drift_types(drifted_features_types: list[tester_constants.FeatureType]) -> tester_constants.FeatureType:
+def get_total_drift_types(drifted_features_types: list[tester_constants.constants.FeatureType]) -> tester_constants.constants.FeatureType:
     drift_contains_numeric_features, drift_contains_binary_features = is_drift_contains_numeric_features(drifted_features_types), is_drift_contains_binary_features(drifted_features_types)
     if drift_contains_numeric_features and drift_contains_binary_features:
-        return tester_constants.FeatureType.Mixed.name
+        return tester_constants.constants.FeatureType.Mixed.name
     if drift_contains_numeric_features:
-        return tester_constants.FeatureType.Numeric.name
-    return tester_constants.FeatureType.Binary.name
+        return tester_constants.constants.FeatureType.Numeric.name
+    return tester_constants.constants.FeatureType.Binary.name
 
-def get_drifted_features_types_string(drifted_features_types: list[tester_constants.FeatureType]) -> str:
+def get_drifted_features_types_string(drifted_features_types: list[tester_constants.constants.FeatureType]) -> str:
     return ", ".join(map(lambda feature_type: feature_type.name, drifted_features_types))
 
 def run_single_test(directory, file_name, file_extension: str = ".csv", repair_window_test_sizes=tester_constants.REPAIR_WINDOW_TEST_SIZES, min_drift_size=tester_constants.MIN_DRIFT_SIZE, max_drift_size=tester_constants.MAX_DRIFT_SIZE, diagnosers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_DIAGNOSER, fixers_data: list[dict[str, object]] = tester_constants.DEFAULT_TESTING_FIXER):

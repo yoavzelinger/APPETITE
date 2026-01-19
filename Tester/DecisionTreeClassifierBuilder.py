@@ -53,7 +53,7 @@ def build_tree(
     grid_search_classifier.fit(modified_X_train, modified_y_train)
     grid_search_best_params = grid_search_classifier.best_params_ # Hyperparameters
     decision_tree_classifier = DecisionTreeClassifier(criterion=grid_search_best_params["criterion"], 
-                                                      max_leaf_nodes=grid_search_best_params["max_leaf_nodes"],
+    decision_tree_classifier = DecisionTreeClassifier(**grid_search_classifier.best_params_,
                                                       random_state=tester_constants.RANDOM_STATE
                                                       )
     pruning_path = decision_tree_classifier.cost_complexity_pruning_path(X_train, y_train)
@@ -62,11 +62,10 @@ def build_tree(
     for ccp_alpha in ccp_alphas:
         if ccp_alpha < 0:
             continue
-        current_decision_tree = DecisionTreeClassifier(criterion=grid_search_best_params["criterion"], 
-                                                      max_leaf_nodes=grid_search_best_params["max_leaf_nodes"], 
-                                                      ccp_alpha=ccp_alpha,
-                                                      random_state=tester_constants.RANDOM_STATE
-                                                      )
+        current_decision_tree = DecisionTreeClassifier(**grid_search_classifier.best_params_,
+                                                       ccp_alpha=ccp_alpha,
+                                                       random_state=tester_constants.RANDOM_STATE
+                                                       )
         current_decision_tree.fit(X_train, y_train)
         current_predictions = current_decision_tree.predict(X_validation)
         current_accuracy = accuracy_score(y_validation, current_predictions)

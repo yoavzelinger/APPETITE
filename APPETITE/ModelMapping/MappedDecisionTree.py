@@ -89,6 +89,8 @@ class MappedDecisionTree(ATreeBasedMappedModel):
         
         if self.prune:
             self.prune_tree()
+        
+        super().map_model()
     
     def prune_sibling_leaves(self,
                              leaf1: TreeNodeComponent,

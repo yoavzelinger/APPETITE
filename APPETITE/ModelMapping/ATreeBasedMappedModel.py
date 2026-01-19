@@ -24,7 +24,8 @@ class ATreeBasedMappedModel(ABC):
         """
         Map the underlying model to its components; Updates the components_map attribute.
         """
-        pass
+        # sort the components by their indices
+        self.components_map = dict(sorted(self.components_map.items()))
 
     @abstractmethod
     def get_node_indicator(self, X: pd.DataFrame) -> csr_matrix:

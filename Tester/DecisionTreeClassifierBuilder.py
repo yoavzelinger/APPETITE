@@ -51,8 +51,6 @@ def build_tree(
                                      param_grid=tester_constants.PARAM_GRID, 
                                      cv=cross_validation_split_count)
     grid_search_classifier.fit(modified_X_train, modified_y_train)
-    grid_search_best_params = grid_search_classifier.best_params_ # Hyperparameters
-    decision_tree_classifier = DecisionTreeClassifier(criterion=grid_search_best_params["criterion"], 
     decision_tree_classifier = DecisionTreeClassifier(**grid_search_classifier.best_params_,
                                                       random_state=tester_constants.RANDOM_STATE
                                                       )

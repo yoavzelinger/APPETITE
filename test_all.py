@@ -135,7 +135,10 @@ errors_file_path = os.path.join(output_path, errors_file_name)
 ##### Save Results and Errors #####
 os.makedirs(output_path, exist_ok=True)
 
-raw_results.to_csv(results_file_path, index=False)
+if not raw_results.empty or tester_constants.STORE_EMPTY_RESULTS:
+    raw_results.to_csv(results_file_path, index=False)
+elif os.path.exists(results_file_path):
+    os.remove(results_file_path)
 
 if not errors.empty:
     errors.to_csv(errors_file_path, index=False)

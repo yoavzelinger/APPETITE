@@ -142,7 +142,6 @@ class MappedDecisionTree(ATreeBasedMappedModel):
     
     def prune_tree(self) -> None:
         leaf_nodes = [node for node in self.components_map.values() if node.is_terminal()]
-        tree_changed = False
         while len(leaf_nodes):
             current_leaf = leaf_nodes.pop(0)
             if current_leaf.get_index() not in self.components_map: # Already pruned
@@ -155,10 +154,8 @@ class MappedDecisionTree(ATreeBasedMappedModel):
                 if sibling in leaf_nodes:
                     leaf_nodes.remove(sibling)
                 leaf_nodes += [self.prune_sibling_leaves(current_leaf, sibling)]
-                tree_changed = True
             elif hasattr(current_leaf, "reached_samples_count") and not current_leaf.reached_samples_count: # Redundant leaf
                 new_leaf = self.prune_leaf(current_leaf)
-                tree_changed = True
                 if new_leaf:
                     leaf_nodes += [new_leaf]            
 

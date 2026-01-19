@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy.sparse import csr_matrix
 
 from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.tree._tree import TREE_LEAF
@@ -8,6 +9,8 @@ from .ATreeBasedMappedModel import ATreeBasedMappedModel
 from .TreeNodeComponent import TreeNodeComponent
 
 class MappedDecisionTree(ATreeBasedMappedModel):
+    model: DecisionTreeClassifier
+
     root: TreeNodeComponent # The root node of the tree
     
     prune: bool # Whether to prune the tree upon mapping
@@ -159,5 +162,10 @@ class MappedDecisionTree(ATreeBasedMappedModel):
                 if new_leaf:
                     leaf_nodes += [new_leaf]            
 
+    def get_node_indicator(self, X: pd.DataFrame) -> csr_matrix:
+        # Source: https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html#decision-path
+        node_indicator = self.model.tree_.decision_path(X.to_numpy(dtype="float32"))
+        return node_indicator
+    
     def get_model_representation(self) -> str:
         return export_text(self.model, feature_names=list(self.data_feature_types.keys()))

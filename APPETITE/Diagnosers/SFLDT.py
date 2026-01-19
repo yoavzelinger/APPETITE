@@ -6,8 +6,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from scipy.stats import pearsonr as pearson_correlation
 from shap import TreeExplainer
 
-from APPETITE import Constants as constants
-from APPETITE.ModelMapping.TreeNodeComponent import TreeNodeComponent
+from DOSPINER import Constants as constants
+from DOSPINER.ModelMapping.TreeNodeComponent import TreeNodeComponent
 
 from .ADiagnoser import *
 from .STAT import STAT
@@ -214,9 +214,11 @@ class SFLDT(ADiagnoser):
         X (DataFrame): The data.
         y (Series): The target column.
         """
-        self.error_vector = (self.mapped_model.model.predict(X) != y.values).astype(int)
-        terminals_counts: np.ndarray = np.zeros(self.tests_count)
+        # Counting how many terminals are there in each test.
+        # This should be equal for all tests, thus will be using test 0 for example
+        terminals_count = 0
         node_indicator = self.mapped_model.get_node_indicator(X)
+        discrete_error_vector = (self.mapped_model.model.predict(X) != y.values).astype(int)
         for test_index in range(self.tests_count):
             participated_component_indices = node_indicator.indices[
                 node_indicator.indptr[test_index] : node_indicator.indptr[test_index + 1]
@@ -226,13 +228,16 @@ class SFLDT(ADiagnoser):
             for node in map(self.mapped_model.__getitem__, participated_component_indices):
                 self.spectra[self.inverse_spectra_map[node], test_index] = (node.depth + 1) / path_length if self.combine_components_depth else 1
                 if node.is_terminal():
+                    terminals_count += not test_index
                     if self.combine_prior_confidence:
-                        current_confidence = node.confidence if self.error_vector[test_index] else (1 - node.confidence)
-                        sample_confidence_sum = current_confidence + self.error_vector[test_index] * terminals_counts[test_index]
-                        terminals_counts[test_index] += 1
-                        self.error_vector[test_index] = sample_confidence_sum / terminals_counts[test_index]
+                        self.error_vector[test_index] += node.confidence if discrete_error_vector[test_index] else (1 - node.confidence)
             test_participation_vector = self.spectra[:, test_index]
             self.path_tests_indices[tuple(test_participation_vector)].append(test_index)
+
+        if self.combine_prior_confidence:
+            self.error_vector /= terminals_count
+        else:
+            self.error_vector = discrete_error_vector
         
         assert np.any(self.error_vector > 0), "No errors found in the error vector, cannot perform diagnosis."
         if self.group_feature_nodes:

@@ -214,6 +214,8 @@ class SFLDT(ADiagnoser):
         X (DataFrame): The data.
         y (Series): The target column.
         """
+        self.error_vector = (self.mapped_model.model.predict(X) != y.values).astype(int)
+        terminals_counts: np.ndarray = np.zeros(self.tests_count)
         node_indicator = self.mapped_model.get_node_indicator(X)
         for test_index in range(self.tests_count):
             participated_nodes = node_indicator.indices[
@@ -224,9 +226,11 @@ class SFLDT(ADiagnoser):
             for node in map(self.mapped_model.__getitem__, participated_nodes):
                 self.spectra[self.inverse_spectra_map[node], test_index] = (node.depth + 1) / path_length if self.combine_components_depth else 1
                 if node.is_terminal():
-                    self.error_vector[test_index] = int(node.class_name != y[test_index])
                     if self.combine_prior_confidence:
-                        self.error_vector[test_index] = node.confidence if self.error_vector[test_index] else (1 - node.confidence)
+                        current_confidence = node.confidence if self.error_vector[test_index] else (1 - node.confidence)
+                        sample_confidence_sum = current_confidence + self.error_vector[test_index] * terminals_counts[test_index]
+                        terminals_counts[test_index] += 1
+                        self.error_vector[test_index] = sample_confidence_sum / terminals_counts[test_index]
             test_participation_vector = self.spectra[:, test_index]
             self.path_tests_indices[tuple(test_participation_vector)].append(test_index)
         

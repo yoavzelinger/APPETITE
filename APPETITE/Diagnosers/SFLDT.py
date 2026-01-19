@@ -13,6 +13,10 @@ from .ADiagnoser import *
 from .STAT import STAT
 
 class SFLDT(ADiagnoser):
+    class UnaffectedModelError(Exception):
+        """Exception raised when the model is unaffected by the drift."""
+        pass
+
     def __init__(self, 
                  mapped_model: ATreeBasedMappedModel,
                  X: pd.DataFrame,
@@ -239,7 +243,9 @@ class SFLDT(ADiagnoser):
         else:
             self.error_vector = discrete_error_vector
         
-        assert np.any(self.error_vector > 0), "No errors found in the error vector, cannot perform diagnosis."
+        if not np.any(self.error_vector > 0):
+            raise SFLDT.UnaffectedModelError("No errors found in the error vector, cannot perform diagnosis.")
+        
         if self.group_feature_nodes:
             self.update_spectra_to_feature_components()
         if self.is_participation_fuzzy:

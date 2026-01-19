@@ -27,7 +27,8 @@ def get_barinel_diagnoses(spectra: np.ndarray,
     Returns:
     list[tuple[list[int], float]]: The diagnoses with their corresponding ranks.
     """
-    assert (error_vector >= error_threshold).sum() > 0, f"No path with error above the threshold {error_threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}"
+    if (error_vector >= error_threshold).sum() == 0:
+        raise SFLDT.UnaffectedModelError(f"No path with error above the threshold {error_threshold} (average: {error_vector.mean()}). The largest error is {max(error_vector)}")
     assert candidates_spectra is None or spectra.shape == candidates_spectra.shape, f"The candidates spectra must have the same shape as the spectra: {spectra.shape} != {candidates_spectra.shape}"
     
     spectra = np.concatenate((spectra.T, error_vector[:, None]), axis=1)

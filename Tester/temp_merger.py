@@ -13,6 +13,9 @@ parser.add_argument("-o", "--output", type=str, help=f"Output file name prefix, 
 parser.add_argument("-r", "--raw", action="store_true", help="Whether to create a file with the raw results. Note that the raw results file can be very big and infeasible to store.")
 args = parser.parse_args()
 
+if args.output == tester_constants.DEFAULT_RESULTS_FILENAME_EXTENDED_PREFIX and args.input:
+    args.output = args.input
+
 aggregating_functions_dict = {tester_constants.AGGREGATED_TESTS_COUNT_COLUMN: "count"}
 aggregating_functions_dict |= {metric_column_name: "sum" for metric_column_name in tester_constants.AGGREGATED_METRICS_COLUMNS}
 

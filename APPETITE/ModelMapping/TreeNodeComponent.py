@@ -188,6 +188,11 @@ class TreeNodeComponent:
             return [self]
         return self.left_child.get_all_leaves() + self.right_child.get_all_leaves()
     
+    def current_condition(self, X: pd.DataFrame) -> pd.Series:
+        column: pd.Series = X[self.parent.feature]
+        threshold: float = self.parent.threshold
+        return column <= threshold if self.is_left_child() else column > threshold
+    
     def update_condition(self,
                          recursive: bool = True
     ) -> None:
@@ -202,9 +207,7 @@ class TreeNodeComponent:
         if self.parent is None:
             self.conditions_path = []
         else:
-            current_operator = lambda column, threshold: column <= threshold if self.is_left_child() else column > threshold
-            current_condition: Callable[[pd.DataFrame], pd.Series] = lambda X: current_operator(X[self.parent.feature], self.parent.threshold)
-            self.conditions_path = self.parent.conditions_path + [current_condition]
+            self.conditions_path = self.parent.conditions_path + [self.current_condition]
         if self.is_terminal():
             return
         if recursive:

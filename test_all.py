@@ -1,7 +1,5 @@
 if __name__ == "__main__":
     print("Initializing")
-    import matplotlib
-    matplotlib.use('Agg')  # Set non-interactive backend before any other imports
 
     import sys
     from argparse import ArgumentParser

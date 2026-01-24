@@ -45,7 +45,7 @@ def drift_tree(mapped_model: ATreeBasedMappedModel,
     if max_drift_size > 0:
         current_max_drift_size = min(current_max_drift_size, max_drift_size)
     for repair_window_test_size in repair_window_test_sizes:
-        print(f"\tRepair window size: {repair_window_test_size}%")
+        print(f"\tRepair window size: {repair_window_test_size * tester_constants.REPAIR_PROPORTION * 100}%")
         dataset.update_repair_window_size(repair_window_test_size)
         for drift_size in range(current_min_drift_size, current_max_drift_size + 1):
             print(f"\t\tDrift size: {drift_size} / {current_max_drift_size} features")
@@ -111,8 +111,6 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
 
             faulty_features_nodes = get_drifted_nodes(mapped_model, drifted_features)
 
-            print(f"\t\t\t\tDiagnosing")
-
             X_before_repair, y_before_repair = pd.concat([X_before, X_repair]).reset_index(drop=True), pd.concat([y_before, y_repair]).reset_index(drop=True)
 
             # Comparable Baselines
@@ -150,6 +148,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
             for diagnoser_data in diagnosers_data:
                 diagnoser_class_name = diagnoser_data["class_name"]
                 diagnoser_output_name = diagnoser_data.get("output_name", diagnoser_class_name)
+                print(f"\t\t\t\t{diagnoser_output_name} Diagnosing")
                 diagnoser_parameters = diagnoser_data.get("parameters")
                 diagnoser_class = get_diagnoser(diagnoser_class_name)
                 if diagnoser_class is Oracle:
@@ -176,8 +175,8 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                     fixer_parameters = fixer_data.get("parameters")
                     fixer_class = get_fixer(fixer_class_name)
                     fixer: AFixer = fixer_class(mapped_model, X_repair, y_repair, faulty_nodes_indices=faulty_nodes_indices, X_prior=X_repair, y_prior=y_repair, **fixer_parameters)
-                    fixed_tree = fixer.fix_tree()
-                    fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
+                    fixed_model = fixer.fix_model()
+                    fixed_test_accuracy = get_accuracy(fixed_model, X_test, y_test)
                     test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
                     current_results_dict.update({
                         f"{diagnoser_output_name}-{fixer_output_name} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,
@@ -207,7 +206,7 @@ def drift_tree_v2(dataset: Dataset,
     if max_drift_size > 0:
         current_max_drift_size = min(current_max_drift_size, max_drift_size)
     for repair_window_test_size in repair_window_test_sizes:
-        print(f"\tRepair window size: {repair_window_test_size}%")
+        print(f"\tRepair window size: {repair_window_test_size * tester_constants.REPAIR_PROPORTION * 100}%")
         dataset.update_repair_window_size(repair_window_test_size)
         for drift_size in range(current_min_drift_size, current_max_drift_size + 1):
             print(f"\t\tDrift size: {drift_size} / {current_max_drift_size} features")
@@ -248,8 +247,6 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
 
             faulty_features_nodes = get_drifted_nodes(mapped_model, drifted_features)
 
-            print(f"\t\t\t\tDiagnosing")
-
             X_before_repair, y_before_repair = pd.concat([X_before, X_repair]).reset_index(drop=True), pd.concat([y_before, y_repair]).reset_index(drop=True)
             
             # Comparable Baselines
@@ -287,6 +284,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             for diagnoser_data in diagnosers_data:
                 diagnoser_class_name = diagnoser_data["class_name"]
                 diagnoser_output_name = diagnoser_data.get("output_name", diagnoser_class_name)
+                print(f"\t\t\t\t{diagnoser_output_name} Diagnosing")
                 diagnoser_parameters = diagnoser_data.get("parameters")
                 diagnoser_class = get_diagnoser(diagnoser_class_name)
                 if diagnoser_class is Oracle:
@@ -313,8 +311,8 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                     fixer_parameters = fixer_data.get("parameters")
                     fixer_class = get_fixer(fixer_class_name)
                     fixer: AFixer = fixer_class(mapped_model, X_repair, y_repair, faulty_nodes_indices=faulty_nodes_indices, X_prior=X_repair, y_prior=y_repair, **fixer_parameters)
-                    fixed_tree = fixer.fix_tree()
-                    fixed_test_accuracy = get_accuracy(fixed_tree, X_test, y_test)
+                    fixed_model = fixer.fix_model()
+                    fixed_test_accuracy = get_accuracy(fixed_model, X_test, y_test)
                     test_accuracy_bump = fixed_test_accuracy - post_drift_test_accuracy
                     current_results_dict.update({
                         f"{diagnoser_output_name}-{fixer_output_name} {tester_constants.FIX_ACCURACY_NAME_SUFFIX}": fixed_test_accuracy * 100,

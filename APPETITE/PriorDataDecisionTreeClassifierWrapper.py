@@ -12,14 +12,13 @@ class PriorDataDecisionTreeClassifierWrapper(DecisionTreeClassifier):
                  X_prior: pd.DataFrame,
                  y_prior: pd.Series):
         
-        self.model: DecisionTreeClassifier = model
+        self.__dict__.update(model.__dict__)
 
         self.X_prior = X_prior
         self.y_prior = y_prior
 
-    def fit(self, X: pd.DataFrame, y: pd.Series):
-        return self.model.fit(pd.concat([self.X_prior, X], ignore_index=True),
-                              pd.concat([self.y_prior, y], ignore_index=True))
-    
-    def predict(self, X: pd.DataFrame):
-        return self.model.predict(X)
+        self.model = model # Stored for sklearn compatibility
+
+    def fit(self, X: pd.DataFrame | np.ndarray, y: pd.Series):
+        return super().fit(pd.concat([self.X_prior, X], ignore_index=True),
+                           pd.concat([self.y_prior, y], ignore_index=True))

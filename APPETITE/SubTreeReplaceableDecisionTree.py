@@ -5,8 +5,9 @@ import pandas as pd
 import numpy as np
 
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.utils.validation import check_is_fitted
 
-import APPETITE.Constants as constants
+import DOSPINER.Constants as constants
 
 from .ModelMapping.ATreeBasedMappedModel import ATreeBasedMappedModel
 from .ModelMapping.TreeNodeComponent import TreeNodeComponent
@@ -27,7 +28,23 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
                  X_prior: pd.DataFrame = None,
                  y_prior: pd.Series = None
                  ):
-        self.base_sklearn_tree_model = deepcopy(original_tree)
+        # Initialize parent with same parameters as original tree
+        super().__init__(
+            criterion=original_tree.criterion,
+            splitter=original_tree.splitter,
+            max_depth=original_tree.max_depth,
+            min_samples_split=original_tree.min_samples_split,
+            min_samples_leaf=original_tree.min_samples_leaf,
+            min_weight_fraction_leaf=original_tree.min_weight_fraction_leaf,
+            max_features=original_tree.max_features,
+            random_state=original_tree.random_state,
+            max_leaf_nodes=original_tree.max_leaf_nodes,
+            min_impurity_decrease=original_tree.min_impurity_decrease,
+            class_weight=getattr(original_tree, 'class_weight', None),
+            ccp_alpha=getattr(original_tree, 'ccp_alpha', 0.0),
+            monotonic_cst=getattr(original_tree, 'monotonic_cst', None)
+        )
+        self.base_sklearn_tree_model: DecisionTreeClassifier = deepcopy(original_tree)
         
         self.replacement_candidates: list[TreeNodeComponent] = nodes_to_replace
         self.replaced_subtrees: dict[TreeNodeComponent, DecisionTreeClassifier] = {}
@@ -139,15 +156,18 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
 
         return RiverDecisionTree(X_prior=X_prior, y_prior=y_prior, subtree_type=self.subtree_type, **tree_kwargs)
     
-    def fit(self, 
+    def fit(self,
             X: pd.DataFrame,
-            y: pd.Series) -> None:
+            y: pd.Series) -> 'SubTreeReplaceableDecisionTree':
         """
         Fit the decision tree to the data.
 
         Parameters:
             X (pd.DataFrame): The input features.
             y (pd.Series): The target labels.
+            
+        Returns:
+            SubTreeReplaceableDecisionTree: Returns self for method chaining.
         """
         self.resolve_candidates_conflicts()
         
@@ -155,16 +175,51 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             self.replaced_subtrees[node_to_replace] = self.create_replaceable_subtree(node_to_replace, self.X_prior, self.y_prior)
             self.replaced_subtrees[node_to_replace].fit(*node_to_replace.get_data_reached_node(X, y, allow_empty=False))
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        self.feature_names_in_ = np.array(X.columns, dtype=object)
+        self.classes_ = np.unique(y)
+        self.n_features_in_ = X.shape[1]
+        self.n_classes_ = len(self.classes_)
+        self.n_outputs_ = 1
+        
+        self.tree_ = self.base_sklearn_tree_model.tree_
+        self.max_features_ = getattr(self.base_sklearn_tree_model, 'max_features_', None)
+        
+        return self
+
+    def predict(self, X: pd.DataFrame | np.ndarray, check_input=False) -> np.ndarray:
         """
         Predict the class labels for the given input data.
 
         Parameters:
-            X (pd.DataFrame): The input features.
+            X (pd.DataFrame | np.ndarray): The input features.
+            check_input (bool): Whether to check the input features. MATCHING THE BASE BUT NOT USING IT.
 
         Returns:
             np.ndarray: The predicted class labels.
         """
+        # Use predict_proba and take argmax to get class predictions
+        # This eliminates code duplication and follows sklearn's pattern
+        proba = self.predict_proba(X)
+        return self.classes_[np.argmax(proba, axis=1)]
+    
+    def predict_proba(self, X: pd.DataFrame | np.ndarray, check_input=False) -> np.ndarray:
+        """
+        Predict class probabilities for the given input data.
+
+        Parameters:
+            X (pd.DataFrame | np.ndarray): The input features.
+            check_input (bool): Whether to check the input features. MATCHING THE BASE BUT NOT USING IT.
+
+        Returns:
+            np.ndarray: The predicted class probabilities.
+        """
+        check_is_fitted(self)
+
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X, columns=list(self.feature_names_in_))
+        
+        assert np.array_equal(self.feature_names_in_, X.columns), "Feature names don't match training data"
+        
         decision_paths = self.base_sklearn_tree_model.decision_path(X)
         
         def get_prediction_tree(test_index: int) -> DecisionTreeClassifier:
@@ -173,8 +228,28 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
                     return self.replaced_subtrees[replaced_node]
             return self.base_sklearn_tree_model
         
-        predictions = []
+        probabilities = []
         for i in range(len(X)):
             prediction_tree = get_prediction_tree(i)
-            predictions.append(prediction_tree.predict(X.iloc[[i]]))
-        return np.array(predictions)
+            
+            proba = prediction_tree.predict_proba(X.iloc[[i]])
+            # Flatten the probability if it's a 2D array with one row
+            if isinstance(proba, np.ndarray) and proba.shape[0] == 1:
+                proba = proba[0]
+            probabilities.append(proba)
+        
+        return np.array(probabilities)
+    
+    def predict_log_proba(self, X: pd.DataFrame | np.ndarray, check_input=False) -> np.ndarray:
+        """
+        Predict class log-probabilities for the given input data.
+
+        Parameters:
+            X (pd.DataFrame | np.ndarray): The input features.
+            check_input (bool): Whether to check the input features. MATCHING THE BASE BUT NOT USING IT.
+
+        Returns:
+            np.ndarray: The predicted class log-probabilities.
+        """
+        return np.log(self.predict_proba(X))
+        

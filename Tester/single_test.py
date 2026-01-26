@@ -152,7 +152,9 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 diagnoser_parameters = diagnoser_data.get("parameters")
                 diagnoser_class = get_diagnoser(diagnoser_class_name)
                 if diagnoser_class is Oracle:
-                    diagnoser_parameters = {"actual_faulty_features": drifted_features}
+                    diagnoser_parameters.update({
+                                                "actual_faulty_features": drifted_features
+                                                })
                 else:
                     assert diagnoser_parameters is not None, "Diagnoser must have parameters property"
                 diagnoser: ADiagnoser = diagnoser_class(mapped_model, X_repair, y_repair, **diagnoser_parameters)
@@ -288,7 +290,9 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 diagnoser_parameters = diagnoser_data.get("parameters")
                 diagnoser_class = get_diagnoser(diagnoser_class_name)
                 if diagnoser_class is Oracle:
-                    diagnoser_parameters = {"actual_faulty_features": drifted_features}
+                    diagnoser_parameters.update({
+                                                "actual_faulty_features": drifted_features
+                                                })
                 else:
                     assert diagnoser_parameters is not None, "Diagnoser must have parameters property"
                 diagnoser: ADiagnoser = diagnoser_class(mapped_model, X_repair, y_repair, **diagnoser_parameters)

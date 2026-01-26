@@ -1,5 +1,4 @@
 from copy import deepcopy
-from math import log2
 
 import pandas as pd
 import numpy as np

@@ -32,6 +32,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print(f"Running tests with {len(tester_constants.diagnosers_output_names)} diagnosers: {tester_constants.diagnosers_output_names}")
+    print(f"Running tests with {len(tester_constants.fixers_output_names)} fixers: {tester_constants.fixers_output_names}")
 
     if args.test:
         print(f"Running single test for {args.test}")

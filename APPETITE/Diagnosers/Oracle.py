@@ -46,6 +46,4 @@ class Oracle(ADiagnoser):
                 if node.feature in self.actual_faulty_features:
                     actual_faulty_nodes.append(node.get_index())
             self.diagnoses = [(actual_faulty_nodes, 1)]
-
-        self.sort_diagnoses()
-        return self.diagnoses if retrieve_ranks else self.get_diagnoses_without_ranks(self.diagnoses)
+        return super().get_diagnoses(retrieve_ranks)

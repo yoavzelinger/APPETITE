@@ -50,4 +50,4 @@ class SubTreeRetrainingFixer(AFixer):
         
         self.fixed_model.fit(self.X, self.y)
         
-        return super().fix_tree()        return super().fix_model()
+        return super().fix_model()

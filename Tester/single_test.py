@@ -151,12 +151,11 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 print(f"\t\t\t\t{diagnoser_output_name} Diagnosing")
                 diagnoser_parameters = diagnoser_data.get("parameters")
                 diagnoser_class = get_diagnoser(diagnoser_class_name)
-                if diagnoser_class is Oracle:
+                if diagnoser_class_name == Oracle.__name__:
                     diagnoser_parameters.update({
                                                 "actual_faulty_features": drifted_features
                                                 })
-                else:
-                    assert diagnoser_parameters is not None, "Diagnoser must have parameters property"
+                assert diagnoser_parameters is not None, "Diagnoser must have parameters property"
                 diagnoser: ADiagnoser = diagnoser_class(mapped_model, X_repair, y_repair, **diagnoser_parameters)
                 diagnoses: list[list[int]] = diagnoser.get_diagnoses()
                 faulty_nodes_indices: list[int] = diagnoses[0]
@@ -289,12 +288,11 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
                 print(f"\t\t\t\t{diagnoser_output_name} Diagnosing")
                 diagnoser_parameters = diagnoser_data.get("parameters")
                 diagnoser_class = get_diagnoser(diagnoser_class_name)
-                if diagnoser_class is Oracle:
+                if diagnoser_class_name == Oracle.__name__:
                     diagnoser_parameters.update({
                                                 "actual_faulty_features": drifted_features
                                                 })
-                else:
-                    assert diagnoser_parameters is not None, "Diagnoser must have parameters property"
+                assert diagnoser_parameters is not None, "Diagnoser must have parameters property"
                 diagnoser: ADiagnoser = diagnoser_class(mapped_model, X_repair, y_repair, **diagnoser_parameters)
                 diagnoses: list[list[int]] = diagnoser.get_diagnoses()
                 faulty_nodes_indices: list[int] = diagnoses[0]

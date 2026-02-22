@@ -114,7 +114,7 @@ class AIndependentFixer(ATreeFixer):
         """
         if self.fixed_model is None:
             self.fixed_model: DecisionTreeClassifier = deepcopy(self.sklearn_model)
-        faulty_node = self.original_mapped_model[faulty_node_index]
+        faulty_node = self.mapped_model[faulty_node_index]
         
         # Extract weights for the samples that reached this node
         sample_weight = None

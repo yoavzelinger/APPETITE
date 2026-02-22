@@ -183,7 +183,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
             post_drift_test_accuracy = get_accuracy(mapped_model.model, X_test, y_test)
             post_drift_test_accuracy_drop = pre_drift_accuracy - post_drift_test_accuracy
             
-            if pre_drift_repair_accuracy - get_accuracy(sklearn_model, X_repair_total, y_repair_total) < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
+            if pre_drift_repair_accuracy - get_accuracy(sklearn_model, X_repair, y_repair) < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:   # insignificant drift
                 continue
 
             X_before_repair, y_before_repair = pd.concat([X_before, X_repair]).reset_index(drop=True), pd.concat([y_before, y_repair]).reset_index(drop=True)
@@ -296,7 +296,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             post_drift_test_accuracy = get_accuracy(mapped_model.model, X_test, y_test)
             post_drift_test_accuracy_drop = pre_drift_accuracy - post_drift_test_accuracy
             
-            if pre_drift_accuracy - get_accuracy(mapped_model.model, X_repair_total, y_repair_total) < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:    # insignificant drift
+            if pre_drift_accuracy - get_accuracy(mapped_model.model, X_repair, y_repair) < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP or post_drift_test_accuracy_drop < tester_constants.MINIMUM_DRIFT_ACCURACY_DROP:    # insignificant drift
                 continue
 
             X_before_repair, y_before_repair = pd.concat([X_before, X_repair]).reset_index(drop=True), pd.concat([y_before, y_repair]).reset_index(drop=True)

@@ -7,6 +7,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from APPETITE.ModelMapping.ATreeBasedMappedModel import ATreeBasedMappedModel
 from APPETITE.ModelMapping.TreeNodeComponent import TreeNodeComponent
+from APPETITE.ModelMapping.MappedDecisionTree import MappedDecisionTree
 
 from APPETITE.Diagnosers import *
 
@@ -74,3 +75,19 @@ class AFixer(ABC):
         assert self.fixed_model, "The model wasn't fixed yet"
 
         return self.fixed_model
+    
+class ATreeFixer(AFixer):
+    """
+    Abstract class for tree-based fixers.
+    """
+    def __init__(self, 
+                 mapped_model: MappedDecisionTree,
+                 X: pd.DataFrame,
+                 y: pd.Series,
+                 faulty_nodes_indices: list[int],
+                 X_prior: pd.DataFrame = None,
+                 y_prior: pd.Series = None,
+                 sklearn_model: DecisionTreeClassifier = None,
+                 sample_weight: pd.Series = None
+    ):
+        super().__init__(mapped_model, X, y, faulty_nodes_indices, X_prior, y_prior, sklearn_model, sample_weight=sample_weight)

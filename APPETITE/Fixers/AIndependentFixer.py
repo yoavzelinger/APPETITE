@@ -6,9 +6,9 @@ from sklearn.tree import DecisionTreeClassifier
 
 from APPETITE import Constants as constants
 
-from .AFixer import AFixer
+from .AFixer import *
 
-class AIndependentFixer(AFixer):
+class AIndependentFixer(ATreeFixer):
     def _fix_terminal_faulty_node(self,
                                  faulty_node_index: int,
                                  X_reached_faulty_node: pd.DataFrame,

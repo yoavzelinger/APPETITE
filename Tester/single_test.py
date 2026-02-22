@@ -45,7 +45,7 @@ def drift_tree(mapped_model: ATreeBasedMappedModel,
     if max_drift_size > 0:
         current_max_drift_size = min(current_max_drift_size, max_drift_size)
     for repair_window_test_size in repair_window_test_sizes:
-        print(f"\tRepair window size: {repair_window_test_size * tester_constants.REPAIR_PROPORTION * 100}%")
+        print(f"\tRepair window size: {(repair_window_test_size * tester_constants.REPAIR_PROPORTION * 100):.1f}%")
         dataset.update_repair_window_size(repair_window_test_size)
         for drift_size in range(current_min_drift_size, current_max_drift_size + 1):
             print(f"\t\tDrift size: {drift_size} / {current_max_drift_size} features")
@@ -128,7 +128,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
                 tester_constants.DATASET_SIZE_COLUMN_NAME: len(dataset),
                 tester_constants.TREE_SIZE_COLUMN_NAME: len(mapped_model),
                 tester_constants.TREE_FEATURES_COUNT_COLUMN_NAME: len(mapped_model.model_used_features),
-                tester_constants.REPAIR_WINDOW_PERCENTAGE_COLUMN_NAME: dataset.repair_proportion * dataset.repair_window_proportion * 100,
+                tester_constants.REPAIR_WINDOW_PERCENTAGE_COLUMN_NAME: round(dataset.repair_proportion * dataset.repair_window_proportion * 100, 2),
                 tester_constants.REPAIR_WINDOW_SIZE_COLUMN_NAME: dataset.repair_window_size,
                 tester_constants.DRIFT_SIZE_COLUMN_NAME: drift_size,
                 tester_constants.TOTAL_DRIFT_TYPE_COLUMN_NAME: get_total_drift_types(drifted_features_types),

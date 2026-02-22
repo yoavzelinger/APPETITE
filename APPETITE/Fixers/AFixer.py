@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 from copy import deepcopy
 
+from sklearn.base import ClassifierMixin
 from sklearn.tree import DecisionTreeClassifier
 
 from APPETITE.ModelMapping.ATreeBasedMappedModel import ATreeBasedMappedModel

@@ -7,7 +7,7 @@ from .AIndependentFixer import AIndependentFixer
 class AllNodesFixer(AIndependentFixer):
     alias = "all_nodes_tweak"
 
-    def fix_tree(self) -> tuple[DecisionTreeClassifier, list[int]]:
+    def fix_model(self) -> tuple[DecisionTreeClassifier, list[int]]:
         """
         Fix the decision tree.
 
@@ -19,4 +19,4 @@ class AllNodesFixer(AIndependentFixer):
         for faulty_node_index in self.faulty_nodes_indices:
             X_reached_faulty_node, y_reached_faulty_node = self._filter_data_reached_fault(faulty_node_index)
             self.fix_faulty_node(faulty_node_index, X_reached_faulty_node, y_reached_faulty_node)
-        return super().fix_tree()
+        return super().fix_model()

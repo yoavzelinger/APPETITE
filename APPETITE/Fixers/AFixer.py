@@ -18,26 +18,26 @@ class AFixer(ABC):
                  faulty_nodes_indices: list[int],
                  X_prior: pd.DataFrame = None,
                  y_prior: pd.Series = None,
-                 sklearn_model: DecisionTreeClassifier = None
+                 sklearn_model: ClassifierMixin = None
     ):
         """
         Initialize the Fixer.
         
         Parameters:
-        mapped_model (ATreeBasedMappedModel): The mapped decision tree.
+        mapped_model (ATreeBasedMappedModel): The mapped model.
         X (DataFrame): The data.
         y (Series): The target column.
         faulty_nodes_indices (list[int]): The indices of the faulty nodes.
-        sklearn_model (DecisionTreeClassifier, optional): The sklearn decision tree model. Defaults to None (Taken from mapped_model).
+        sklearn_model (ClassifierMixin, optional): The sklearn model. Defaults to None (Taken from mapped_model).
         """
         assert self.alias is not None, "Alias must be set to a fixer class"
 
-        self.original_mapped_model = deepcopy(mapped_model)
+        self.mapped_model = deepcopy(mapped_model)
         self.feature_types = mapped_model.data_feature_types
         self.X = X
         self.y = y
         self.faulty_nodes_indices = faulty_nodes_indices
-        self.fixed_tree: DecisionTreeClassifier = None
+        self.fixed_model: ClassifierMixin = None
 
         self.X_prior = X_prior
         self.y_prior = y_prior
@@ -56,17 +56,17 @@ class AFixer(ABC):
         Returns:
             DataFrame: The data that reached the faulty nodes.
         """
-        faulty_node = self.original_mapped_model[faulty_node_index]
+        faulty_node = self.mapped_model[faulty_node_index]
         return faulty_node.get_data_reached_node(self.X, self.y, allow_empty=False)
     
     @abstractmethod
-    def fix_tree(self) -> DecisionTreeClassifier:
+    def fix_model(self) -> ClassifierMixin:
         """
-        Fix the decision tree.
+        Fix the model.
 
         Returns:
-            DecisionTreeClassifier: The fixed decision tree.
+            ClassifierMixin: The fixed model.
         """
-        assert self.fixed_tree, "The tree wasn't fixed yet"
+        assert self.fixed_model, "The model wasn't fixed yet"
 
-        return self.fixed_tree
+        return self.fixed_model

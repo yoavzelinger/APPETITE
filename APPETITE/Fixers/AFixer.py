@@ -91,3 +91,4 @@ class ATreeFixer(AFixer):
                  sample_weight: pd.Series = None
     ):
         super().__init__(mapped_model, X, y, faulty_nodes_indices, X_prior, y_prior, sklearn_model, sample_weight=sample_weight)
+        self.faulty_nodes_indices.sort(key=lambda idx: mapped_model[idx].depth)

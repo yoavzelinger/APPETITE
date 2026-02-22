@@ -186,8 +186,7 @@ def run_single_test(directory, file_name, file_extension: str = ".csv", repair_w
             yield current_results_dict
         except Exception as e:
             exception_class = e.__class__.__name__
-            diagnoser_info = f"(diagnoser: {diagnoser_class_name} - {diagnoser_output_name})" if 'diagnoser_output_name' in locals() else ""
-            scenario_description = f"{drift_description}, repair window size: {dataset.repair_window_proportion} {diagnoser_info}"
+            scenario_description = f"{drift_description}, repair window size: {dataset.repair_window_proportion}"
             yield Exception(f"{exception_class} in {scenario_description}:\n "
                             f"{e}:\n "
                             f"{''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
@@ -323,8 +322,7 @@ def run_single_test_v2(directory, file_name, file_extension: str = ".csv", repai
             yield current_results_dict
         except Exception as e:
             exception_class = e.__class__.__name__
-            diagnoser_info = f"(diagnoser: {diagnoser_class_name} - {diagnoser_output_name})" if 'diagnoser_output_name' in locals() else ""
-            scenario_description = f"{drift_description}, repair window size: {dataset.repair_window_proportion} {diagnoser_info}"
+            scenario_description = f"{drift_description}, repair window size: {dataset.repair_window_proportion}"
             yield Exception(f"{exception_class} in {scenario_description}:\n "
                             f"{e}:\n "
                             f"{''.join(traceback.format_exception(type(e), e, e.__traceback__))}"

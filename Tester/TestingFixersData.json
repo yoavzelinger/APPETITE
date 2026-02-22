@@ -36,7 +36,7 @@
             "use_prior_knowledge": "Synthesize",
             "subtree_type": "HoeffdingAdaptiveTreeClassifier"
         },
-        "disabled": false
+        "disabled": true
     },
     {
         "output_name": "EFDT_Subtree_Real_Prior",
@@ -45,7 +45,7 @@
             "use_prior_knowledge": "Use",
             "subtree_type": "ExtremelyFastDecisionTreeClassifier"
         },
-        "disabled": false
+        "disabled": true
     },
     {
         "output_name": "EFDT_Subtree_Synthesize_Prior",
@@ -54,6 +54,6 @@
             "use_prior_knowledge": "Synthesize",
             "subtree_type": "ExtremelyFastDecisionTreeClassifier"
         },
-        "disabled": false
+        "disabled": true
     }
 ]

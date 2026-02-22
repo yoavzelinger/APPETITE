@@ -65,3 +65,4 @@ class SubTreeType(Enum):
 
 DEFAULT_SUBTREE_TYPE = SubTreeType.Original
 
+SFLDT_ALLOW_UNAFFECTED_MODELS = True

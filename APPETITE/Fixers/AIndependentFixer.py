@@ -112,7 +112,8 @@ class AIndependentFixer(ATreeFixer):
             faulty_node_index (int): The index of the faulty node.
             X_reached_faulty_node (DataFrame): The data that reached the faulty node.
         """
-        self.fixed_model: DecisionTreeClassifier = deepcopy(self.sklearn_model)
+        if self.fixed_model is None:
+            self.fixed_model: DecisionTreeClassifier = deepcopy(self.sklearn_model)
         faulty_node = self.original_mapped_model[faulty_node_index]
         
         # Extract weights for the samples that reached this node

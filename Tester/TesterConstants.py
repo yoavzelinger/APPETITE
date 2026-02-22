@@ -35,14 +35,16 @@ CATEGORICAL_DRIFT_SEVERITIES = {
 }
 DEFAULT_GENERATED_SEVERITY_LEVELS = (1, 2, 3)
 
-# Grid search parameters
 CROSS_VALIDATION_SPLIT_COUNT = 5
+# Decision Tree Grid search parameters
 _CRITERIONS = ["gini", "entropy"]
-_MAX_LEAF_NODES = [10, 20, 30]
-PARAM_GRID = {
+_TREE_MAX_LEAF_NODES = [10, 20, 30]
+TREE_PARAM_GRID = {
     "criterion": _CRITERIONS,
-    "max_leaf_nodes": _MAX_LEAF_NODES
+    "max_leaf_nodes": _TREE_MAX_LEAF_NODES
 }
+
+PARAM_GRID = TREE_PARAM_GRID
 
 MINIMUM_ORIGINAL_ACCURACY = 0.75
 MINIMUM_DRIFT_ACCURACY_DROP = 0.1

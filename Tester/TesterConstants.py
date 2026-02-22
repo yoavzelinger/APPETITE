@@ -51,7 +51,7 @@ MINIMUM_DRIFT_ACCURACY_DROP = 0.1
 
 SKIP_EXCEPTIONS = False
 
-WASTED_EFFORT_REQUIRE_FULL_FIX = True # Fix all faulty features
+WASTED_EFFORT_REQUIRE_FULL_FIX = False # Fix all faulty features
 
 # How to handle "healthy" components did not appear in any diagnoses.
 WASTED_EFFORT_MISSING_ACTIONS = [
@@ -183,7 +183,9 @@ AFTER_ACCURACY_DECREASE_COLUMN_NAME = "after accuracy decrease"
 FAULTY_FEATURES_NAME_SUFFIX = "faulty features"
 DIAGNOSES_NAME_SUFFIX = "diagnoses"
 WASTED_EFFORT_NAME_SUFFIX = "wasted-effort"
-CORRECTLY_IDENTIFIED_NAME_SUFFIX = "correctly-identified"
+NORMALIZE_WASTED_EFFORT = True
+CORRECTLY_IDENTIFIED_NAME_SUFFIX_TEMPLATE = "top-{k}"
+CORRECTLY_IDENTIFIED_K_LIST = [1, 2, 3]
 FIX_ACCURACY_NAME_SUFFIX = "fix accuracy"
 FIX_ACCURACY_INCREASE_NAME_SUFFIX = "fix accuracy increase"
 
@@ -202,12 +204,13 @@ for baseline_output_name in BASELINES_OUTPUT_NAMES:
     METRICS_COLUMNS[f"{baseline_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
     METRICS_COLUMNS[f"{baseline_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"
 
-for diagnoser_output_name in diagnosers_output_names:
+for diagnoser_output_name in [Oracle.__name__] + diagnosers_output_names:
     if diagnoser_output_name != Oracle.__name__: 
         METRICS_COLUMNS[f"{diagnoser_output_name} {DIAGNOSES_NAME_SUFFIX}"] = "string"
         METRICS_COLUMNS[f"{diagnoser_output_name} {WASTED_EFFORT_NAME_SUFFIX}"] = "float64"
         METRICS_COLUMNS[f"{diagnoser_output_name} {FAULTY_FEATURES_NAME_SUFFIX}"] = "string"
-        METRICS_COLUMNS[f"{diagnoser_output_name} {CORRECTLY_IDENTIFIED_NAME_SUFFIX}"] = "float64"
+        for k in CORRECTLY_IDENTIFIED_K_LIST:
+            METRICS_COLUMNS[f"{diagnoser_output_name} {CORRECTLY_IDENTIFIED_NAME_SUFFIX_TEMPLATE.format(k=k)}"] = "float64"
     for fixer_output_name in fixers_output_names:
         METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {FIX_ACCURACY_NAME_SUFFIX}"] = "float64"
         METRICS_COLUMNS[f"{diagnoser_output_name}-{fixer_output_name} {FIX_ACCURACY_INCREASE_NAME_SUFFIX}"] = "float64"

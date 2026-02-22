@@ -69,7 +69,8 @@ if __name__ == "__main__":
     if args.repair_window != tester_constants.REPAIR_WINDOW_TEST_SIZES:
         repair_window_test_sizes = args.repair_window
         repair_windows_string = "-".join(map(str, repair_window_test_sizes))
-    print(f"Running tests with repair window sizes: {repair_windows_string}")
+    repair_window_test_sizes = [round(size, 1) for size in repair_window_test_sizes]
+    print(f"Running tests with repair window sizes: {repair_windows_string or 'all'}")
 
     min_drift_size, max_drift_size, drift_size_string = tester_constants.MIN_DRIFT_SIZE, tester_constants.MAX_DRIFT_SIZE, ""
     if args.drift_size > 0:
@@ -155,7 +156,7 @@ if __name__ == "__main__":
     for diagnoser_output_name in tester_constants.diagnosers_output_names:
         diagnoser_diagnosis_results = f"{diagnoser_output_name}: xxxx; xxxx;"
         if diagnoser_output_name != Oracle.__name__:
-            diagnoser_diagnosis_results = f"{diagnoser_output_name}: {raw_results[f'{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean():.2f}; {raw_results[f'{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX}'].mean():.2f}%;"
+            diagnoser_diagnosis_results = f"{diagnoser_output_name}: {raw_results[f'{diagnoser_output_name} {tester_constants.WASTED_EFFORT_NAME_SUFFIX}'].mean():.2f}; {raw_results[f'{diagnoser_output_name} {tester_constants.CORRECTLY_IDENTIFIED_NAME_SUFFIX_TEMPLATE.format(k=1)}'].mean():.2f}%;"
         for fixer_output_name in tester_constants.fixers_output_names:
             print(f"{diagnoser_diagnosis_results} {fixer_output_name} {raw_results[f'{diagnoser_output_name}-{fixer_output_name} {tester_constants.FIX_ACCURACY_INCREASE_NAME_SUFFIX}'].mean():.2f}%")
 

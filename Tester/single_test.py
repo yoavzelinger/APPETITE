@@ -14,7 +14,7 @@ from APPETITE import *
 
 import Tester.TesterConstants as tester_constants
 from Tester.DataManagementTools import *
-from Tester.DecisionTreeClassifierBuilder import build_tree
+from Tester.Builders import build_tree
 from Tester.metrics import get_accuracy, get_wasted_effort, get_top_k
 
 def get_dataset(directory: str,

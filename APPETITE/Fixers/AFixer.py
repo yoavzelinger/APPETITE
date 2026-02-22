@@ -18,7 +18,8 @@ class AFixer(ABC):
                  faulty_nodes_indices: list[int],
                  X_prior: pd.DataFrame = None,
                  y_prior: pd.Series = None,
-                 sklearn_model: ClassifierMixin = None
+                 sklearn_model: ClassifierMixin = None,
+                 sample_weight: pd.Series = None
     ):
         """
         Initialize the Fixer.
@@ -29,6 +30,7 @@ class AFixer(ABC):
         y (Series): The target column.
         faulty_nodes_indices (list[int]): The indices of the faulty nodes.
         sklearn_model (ClassifierMixin, optional): The sklearn model. Defaults to None (Taken from mapped_model).
+        sample_weight (Series, optional): Per-sample weights aligned with X. Defaults to None (uniform weights).
         """
         assert self.alias is not None, "Alias must be set to a fixer class"
 
@@ -41,6 +43,7 @@ class AFixer(ABC):
 
         self.X_prior = X_prior
         self.y_prior = y_prior
+        self.sample_weight = sample_weight
         
         self.sklearn_model = sklearn_model if sklearn_model else mapped_model.model
         

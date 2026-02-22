@@ -63,4 +63,5 @@ class SubTreeType(Enum):
     ExtremelyFastDecisionTreeClassifier = auto()
     HoeffdingAdaptiveTreeClassifier = auto()
 
-DEFAULT_SUBTREE_TYPE = SubTreeType.HoeffdingAdaptiveTreeClassifier
+DEFAULT_SUBTREE_TYPE = SubTreeType.Original
+

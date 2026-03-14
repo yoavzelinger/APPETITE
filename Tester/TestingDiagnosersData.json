@@ -3,15 +3,32 @@
         "output_name": "SFLDT",
         "class_name": "SFLDT",
         "parameters": {
+            "use_shap_contribution": true
         },
         "disabled": false
+    },
+    {
+        "output_name": "SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+            "use_shap_contribution": true,
+            "aggregate_tests": true
+        },
+        "disabled": false
+    },
+    {
+        "output_name": "SFLDT",
+        "class_name": "SFLDT",
+        "parameters": {
+        },
+        "disabled": true
     },
     {
         "output_name": "BARINEL",
         "class_name": "BARINEL",
         "parameters": {
         },
-        "disabled": false
+        "disabled": true
     },
     {
         "output_name": "Aggregated_Tests-BARINEL",

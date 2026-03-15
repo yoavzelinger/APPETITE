@@ -66,3 +66,12 @@ class SubTreeType(Enum):
 DEFAULT_SUBTREE_TYPE = SubTreeType.Original
 
 SFLDT_ALLOW_UNAFFECTED_MODELS = False
+
+class NodeSHAPFunctionType(Enum):
+    Prediction = auto()
+    Confidence = auto()
+    Gini = auto()
+    Entropy = auto()
+    Criterion = auto()
+
+DEFAULT_NODE_SHAP_FUNCTION_TYPE = NodeSHAPFunctionType.Confidence

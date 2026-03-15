@@ -11,6 +11,7 @@ from APPETITE.ModelMapping.TreeNodeComponent import TreeNodeComponent
 
 from .ADiagnoser import *
 from .STAT import STAT
+from .NodeSHAP import compute_node_shap_values
 
 class SFLDT(ADiagnoser):
     class UnaffectedModelException(Exception):
@@ -173,7 +174,7 @@ class SFLDT(ADiagnoser):
             features_spectra[feature_index] = np.divide(participations_sums, participations_counts, out=np.zeros_like(participations_sums, dtype=float), where=participations_counts != 0)
         self.spectra = np.nan_to_num(features_spectra)
 
-    def combine_shap_contributions(self) -> None:
+    def combine_feature_shap_contributions(self) -> None:
         """
         Update the participation matrix to use the shap contributions. For now only relevant for feature components.
         The participations are calculated as the weighted average of the SHAP values of the features. The weights are based on the predicted probabilities of the samples.
@@ -201,15 +202,39 @@ class SFLDT(ADiagnoser):
 
         # Including the shap contributions only for the paths participations
         self.spectra = fuzzy_spectra * self.spectra
-    
+
+    def combine_node_shap_contributions(self) -> None:
+        """
+        Update the participation matrix to use Node-SHAP contributions for node components.
+        Computes the contribution of each node to each sample's classification using the
+        Node-SHAP algorithm (Shapley values over node subsets).
+        Only affects the spectrum; the error vector remains unchanged.
+        """
+        node_shap_values = compute_node_shap_values(self.mapped_model, self.X_after, self.inverse_spectra_map)
+
+        fuzzy_spectra = np.maximum(node_shap_values, 0)
+
+        participations_sum = fuzzy_spectra.sum()
+        if participations_sum in (0, fuzzy_spectra.size):
+            self.is_participation_fuzzy = False
+            return
+
+        fuzzy_spectra /= participations_sum
+        fuzzy_spectra[fuzzy_spectra == 0] = constants.EPSILON
+
+        # Including the node shap contributions only for the paths participations
+        self.spectra = fuzzy_spectra * self.spectra
+
     def update_spectra_to_fuzzy(self
     ) -> None:
         """
         Update all needed attributes to support the fuzzy participation spectra
         """
         if self.use_shap_contribution:
-            assert self.group_feature_nodes, "Cannot use SHAP contributions without feature components"
-            self.combine_shap_contributions()
+            if self.group_feature_nodes:
+                self.combine_feature_shap_contributions()
+            else:
+                self.combine_node_shap_contributions()
 
     def fill_spectra_and_error_vector(self, 
                                       X: pd.DataFrame, 

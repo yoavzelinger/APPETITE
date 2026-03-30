@@ -56,125 +56,70 @@ class NodeSHAPFunctions:
         assert node_shap_function_type in NodeSHAPFunctions.functions_map, f"Unsupported Node SHAP function type: {node_shap_function_type}"
         return NodeSHAPFunctions.functions_map[node_shap_function_type]
 
-def _get_node_shap_function(criterion: str):
+def _compute_node_before_distribution(node: TreeNodeComponent, classes: np.ndarray) -> np.ndarray:
+    return np.array([node.get_node_class_count().get(current_class, 0) for current_class in classes], dtype=float)
+
+def _compute_after_distributions(mapped_model: ATreeBasedMappedModel, X: pd.DataFrame, y: pd.Series, classes: np.ndarray) -> dict:
     """
-    Get the Node-SHAP function based on the criterion of the decision tree.
-
-    Parameters:
-        criterion (str): The criterion used in the decision tree (e.g., "gini", "entropy").
-    
-    Returns:
-        function: The corresponding Node-SHAP function.
-    """
-    current_function_type = constants.DEFAULT_NODE_SHAP_FUNCTION_TYPE
-    if current_function_type == constants.NodeSHAPFunctionType.Criterion:
-        current_function_type = criterion
-    return NodeSHAPFunctions[current_function_type]
-
-def _get_class_distribution(mapped_model: ATreeBasedMappedModel, node: TreeNodeComponent, num_classes: int) -> np.ndarray:
-    """Get the class distribution for a node from the sklearn tree's value array."""
-    return mapped_model.model.tree_.value[node.component_index].flatten()[:num_classes]
-
-def _sorted_nodes(nodes) -> list[TreeNodeComponent]:
-    """Sort nodes by component_index for deterministic iteration."""
-    return sorted(nodes, key=lambda n: n.component_index)
-
-def compute_tree_analysis(mapped_model: ATreeBasedMappedModel) -> dict:
-    """
-    Build the Tree Analysis table using bottom-up dynamic programming.
-
-    For each node, computes class distributions for all combinations of
-    (active_node_subset, left-right_allocation).
-
-    A subset is represented as a frozenset of TreeNodeComponent objects (internal nodes).
-    A left-right allocation is represented as a frozenset of TreeNodeComponent objects
-    that the sample goes RIGHT on within the subset.
+    Compute per-node class distributions from the after-data samples.
 
     Parameters:
         mapped_model: The mapped tree based model.
+        X: After-data features.
+        y: After-data labels.
+        classes: Array of class labels.
 
     Returns:
-        dict: TA[root] mapping (subset, right_set) → class_distribution (numpy array).
+        dict: Mapping from node component_index to class distribution (numpy array of shape (num_classes,)).
     """
-    num_classes = mapped_model.model.tree_.n_classes[0]
+    node_indicator = mapped_model.get_node_indicator(X)
+    y_indices = np.searchsorted(classes, y.values)
 
-    # TA per node: dict mapping (frozenset_subset, frozenset_right_set) → np.array
-    tree_analysis: dict[TreeNodeComponent, dict] = {}
+    after_distributions = {}
+    for node in mapped_model:
+        sample_mask = np.asarray(node_indicator[:, node.component_index].todense()).flatten().astype(bool)
+        after_distributions[node] = np.bincount(y_indices[sample_mask], minlength=len(classes)).astype(float)
 
-    def build_node_analysis(node: TreeNodeComponent):
-        class_distribution = _get_class_distribution(mapped_model, node, num_classes)
-        node_analysis = {}
-        empty = frozenset()
+    return after_distributions
 
-        # Base: empty subset → full class distribution of this subtree root
-        node_analysis[(empty, empty)] = class_distribution.copy()
 
-        if node.is_terminal():
-            tree_analysis[node] = node_analysis
-            return
+def _get_subset_class_distribution(
+    node: TreeNodeComponent,
+    subset: frozenset,
+    right_set: frozenset,
+    class_distributions: dict,
+) -> np.ndarray:
+    """
+    Recursively compute the class distribution for a node given an active subset
+    and left-right allocation, by walking the tree top-down.
 
-        # Recursively build children first
-        build_node_analysis(node.left_child)
-        build_node_analysis(node.right_child)
+    Parameters:
+        node: The current tree node.
+        subset: The set of active internal nodes.
+        right_set: The set of active internal nodes where the sample goes right.
+        class_distributions: Pre-computed cumulative class distributions per node (TreeNodeComponent → array).
 
-        left_child_analysis = tree_analysis[node.left_child]
-        right_child_analysis = tree_analysis[node.right_child]
-        left_internals = frozenset(node.left_child.get_all_internals())
-        right_internals = frozenset(node.right_child.get_all_internals())
-        node_internals = frozenset(node.get_all_internals())
+    Returns:
+        np.ndarray: The class distribution.
+    """
+    if node.is_terminal():
+        return class_distributions[node.component_index]
 
-        # Iterate over all subsets of internal nodes in this subtree
-        node_internals_list = _sorted_nodes(node_internals)
-        for subset_size in range(1, len(node_internals_list) + 1):
-            for subset_tuple in combinations(node_internals_list, subset_size):
-                subset = frozenset(subset_tuple)
-                # Determine which nodes in subset belong to left/right subtrees
-                left_subset = subset & left_internals
-                right_subset = subset & right_internals
-                node_in_subset = node in subset
-
-                # Generate all left-right allocations for nodes in subset
-                subset_list = _sorted_nodes(subset)
-                for right_mask in range(1 << len(subset_list)):
-                    right_set = frozenset(
-                        subset_list[bit] for bit in range(len(subset_list)) if (right_mask >> bit) & 1
-                    )
-
-                    if node_in_subset:
-                        # Node is active: sample follows constraint direction
-                        if node in right_set:
-                            # Goes right
-                            child_subset = right_subset
-                            child_right_set = right_set & right_internals
-                            result = right_child_analysis.get((child_subset, child_right_set))
-                        else:
-                            # Goes left
-                            child_subset = left_subset
-                            child_right_set = right_set & left_internals
-                            result = left_child_analysis.get((child_subset, child_right_set))
-                    else:
-                        # Node not active: goes both ways
-                        left_right_set = right_set & left_internals
-                        right_right_set = right_set & right_internals
-                        left_result = left_child_analysis.get((left_subset, left_right_set))
-                        right_result = right_child_analysis.get((right_subset, right_right_set))
-                        if left_result is not None and right_result is not None:
-                            result = left_result + right_result
-                        else:
-                            result = None
-
-                    if result is not None:
-                        node_analysis[(subset, right_set)] = result.copy()
-
-        tree_analysis[node] = node_analysis
-
-    build_node_analysis(mapped_model.root)
-    return tree_analysis[mapped_model.root]
+    if node in subset:
+        # Node is active: follow the constrained direction
+        child = node.right_child if node in right_set else node.left_child
+        return _get_subset_class_distribution(child, subset, right_set, class_distributions)
+    else:
+        # Node not active: sum both children
+        left = _get_subset_class_distribution(node.left_child, subset, right_set, class_distributions)
+        right = _get_subset_class_distribution(node.right_child, subset, right_set, class_distributions)
+        return left + right
 
 
 def compute_node_shap_values(
     mapped_model: ATreeBasedMappedModel,
     X: pd.DataFrame,
+    y: pd.Series,
     inverse_spectra_map: dict[TreeNodeComponent, int],
 ) -> np.ndarray:
     """
@@ -183,19 +128,26 @@ def compute_node_shap_values(
     Parameters:
         mapped_model: The mapped tree based model.
         X: The data samples.
+        y: The data labels.
         inverse_spectra_map: Mapping from TreeNodeComponent to spectra index,
             used to place results in the correct row of the output matrix.
 
     Returns:
         np.ndarray: Shape (num_components, num_samples). node_shap_values[spectra_idx, sample_idx].
     """
-    tree_analysis = compute_tree_analysis(mapped_model)
+    classes  = mapped_model.model.classes_
     internal_nodes = set(filter(TreeNodeComponent.is_internal, mapped_model))
     samples_count = len(X)
 
+    after_distributions = _compute_after_distributions(mapped_model, X, y, classes)
+    class_distributions = {
+        node.component_index: _compute_node_before_distribution(node, classes) + after_distributions[node]
+        for node in mapped_model
+    }
+
     current_node_shap_function_type = constants.DEFAULT_NODE_SHAP_FUNCTION_TYPE
     if current_node_shap_function_type == constants.NodeSHAPFunctionType.Criterion:
-        current_node_shap_function_type = mapped_model.model.criterion    
+        current_node_shap_function_type = mapped_model.model.criterion
     current_shap_function = NodeSHAPFunctions[current_node_shap_function_type]
 
     # Pre-compute sample left-right allocations: for each sample, which internal nodes go right
@@ -208,26 +160,23 @@ def compute_node_shap_values(
         sample_right_sets.append(frozenset(right_nodes))
 
     shap_values = np.zeros((len(mapped_model), samples_count))
-
-    get_weight = lambda subset_size: factorial(subset_size) * factorial(len(internal_nodes) - subset_size - 1) / factorial(len(internal_nodes))
+    root = mapped_model.root
+    n = len(internal_nodes)
 
     for node in internal_nodes:
-        for sample_right in sample_right_sets:
-            
-            # Iterate over all subsets of other nodes
-            for subset_size in range(len(internal_nodes)):
-                for subset_tuple in combinations(internal_nodes - {node}, subset_size):
+        other_nodes = internal_nodes - {node}
+        for sample_index, sample_right_est in enumerate(sample_right_sets):
+            for subset_size in range(n):
+                weight = factorial(subset_size) * factorial(n - subset_size - 1) / factorial(n)
+                for subset_tuple in combinations(other_nodes, subset_size):
                     subset = frozenset(subset_tuple)
-                    subset_with_node = subset | {node}
 
-                    # left-right allocation for S (restricted to sample's directions)
-                    right_set_without = sample_right & subset
-                    right_set_with = sample_right & subset_with_node
+                    right_set_without = sample_right_est & subset
+                    right_set_with = sample_right_est & (subset | {node})
 
-                    class_distribution_without = tree_analysis.get((subset, right_set_without))
-                    class_distribution_with = tree_analysis.get((subset_with_node, right_set_with))
+                    dist_without = _get_subset_class_distribution(root, subset, right_set_without, class_distributions)
+                    dist_with = _get_subset_class_distribution(root, subset | {node}, right_set_with, class_distributions)
 
-                    if class_distribution_without is not None and class_distribution_with is not None:
-                        shap_values[inverse_spectra_map[node], sample_index] += get_weight(subset_size) * current_shap_function(class_distribution_with, class_distribution_without)
+                    shap_values[inverse_spectra_map[node], sample_index] += weight * current_shap_function(dist_with, dist_without)
 
     return shap_values

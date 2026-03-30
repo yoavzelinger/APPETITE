@@ -55,7 +55,7 @@ class SFLDT(ADiagnoser):
         self.group_feature_nodes = group_feature_nodes
         self.use_shap_contribution = use_shap_contribution
         self.combine_components_depth = combine_components_depth
-        self.is_participation_fuzzy = self.use_shap_contribution or combine_components_depth
+        self.is_participation_fuzzy = self.use_shap_contribution or self.combine_components_depth
         # Tests
         self.aggregate_tests = aggregate_tests
         self.combine_prior_confidence = combine_prior_confidence
@@ -191,13 +191,12 @@ class SFLDT(ADiagnoser):
         fuzzy_spectra = weighted_shap_values.sum(axis=2).T
         assert fuzzy_spectra.shape == self.spectra.shape, f"The new fuzzy spectra's shape {fuzzy_spectra.shape} does not match the original spectra's shape {self.spectra.shape}"
         
-        participations_sum = fuzzy_spectra.sum()
-        if participations_sum in (0, fuzzy_spectra.size):
+        if len(np.unique(fuzzy_spectra)) == 1:
             # Constant value for all spectra - cannot use fuzzy participation
             self.is_participation_fuzzy = False
             return
   
-        fuzzy_spectra /= participations_sum
+        fuzzy_spectra /= fuzzy_spectra.sum()
         fuzzy_spectra[fuzzy_spectra == 0] = constants.EPSILON
 
         # Including the shap contributions only for the paths participations
@@ -210,16 +209,15 @@ class SFLDT(ADiagnoser):
         Node-SHAP algorithm (Shapley values over node subsets).
         Only affects the spectrum; the error vector remains unchanged.
         """
-        node_shap_values = compute_node_shap_values(self.mapped_model, self.X_after, self.inverse_spectra_map)
+        node_shap_values = compute_node_shap_values(self.mapped_model, self.X_after, self.y_after, self.inverse_spectra_map)
 
         fuzzy_spectra = np.maximum(node_shap_values, 0)
 
-        participations_sum = fuzzy_spectra.sum()
-        if participations_sum in (0, fuzzy_spectra.size):
-            self.is_participation_fuzzy = False
+        if len(np.unique(fuzzy_spectra)) == 1:
+            self.is_participation_fuzzy = self.combine_components_depth
             return
 
-        fuzzy_spectra /= participations_sum
+        fuzzy_spectra /= fuzzy_spectra.sum()
         fuzzy_spectra[fuzzy_spectra == 0] = constants.EPSILON
 
         # Including the node shap contributions only for the paths participations

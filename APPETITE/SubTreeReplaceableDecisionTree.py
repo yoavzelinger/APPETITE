@@ -239,6 +239,16 @@ class SubTreeReplaceableDecisionTree(DecisionTreeClassifier):
             # Flatten the probability if it's a 2D array with one row
             if isinstance(proba, np.ndarray) and proba.shape[0] == 1:
                 proba = proba[0]
+            
+            # Map subtree probabilities to the full class set
+            if len(proba) != self.n_classes_:
+                full_proba = np.zeros(self.n_classes_)
+                for current_class_index, current_class in enumerate(prediction_tree.classes_):
+                    global_index = np.where(self.classes_ == current_class)[0]
+                    if len(global_index) > 0:
+                        full_proba[global_index[0]] = proba[current_class_index]
+                proba = full_proba
+            
             probabilities.append(proba)
         
         return np.array(probabilities)

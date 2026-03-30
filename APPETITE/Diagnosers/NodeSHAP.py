@@ -50,9 +50,7 @@ class NodeSHAPFunctions:
         constants.NodeSHAPFunctionType.Prediction: prediction,
     }
 
-    def __class_getitem__(_, node_shap_function_type: str | constants.NodeSHAPFunctionType):
-        if isinstance(node_shap_function_type, str):
-            node_shap_function_type = constants.NodeSHAPFunctionType[node_shap_function_type]
+    def __class_getitem__(_, node_shap_function_type: constants.NodeSHAPFunctionType):
         assert node_shap_function_type in NodeSHAPFunctions.functions_map, f"Unsupported Node SHAP function type: {node_shap_function_type}"
         return NodeSHAPFunctions.functions_map[node_shap_function_type]
 
@@ -147,7 +145,7 @@ def compute_node_shap_values(
 
     current_node_shap_function_type = constants.DEFAULT_NODE_SHAP_FUNCTION_TYPE
     if current_node_shap_function_type == constants.NodeSHAPFunctionType.Criterion:
-        current_node_shap_function_type = mapped_model.model.criterion
+        current_node_shap_function_type = getattr(constants.NodeSHAPFunctionType, mapped_model.model.criterion)
     current_shap_function = NodeSHAPFunctions[current_node_shap_function_type]
 
     # Pre-compute sample left-right allocations: for each sample, which internal nodes go right

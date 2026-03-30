@@ -121,8 +121,12 @@ class SFLDT(ADiagnoser):
         for path_index, path_test_indices in enumerate(self.path_tests_indices.values()):
             paths_first_test_indices.append(path_test_indices[0])
             paths_error_vector[path_index] = self.error_vector[path_test_indices].mean()
+            if self.combine_prior_confidence:
+                prior_confidence = self.tests_prior_confidence[path_test_indices[0]]
+                posterior_confidence = 1 - paths_error_vector[path_index]
+                paths_error_vector[path_index] = max(prior_confidence - posterior_confidence, 0)
         
-        self.error_vector = paths_error_vector / paths_error_vector.sum()
+        self.error_vector = paths_error_vector
         
         self.spectra = self.shrink_spectra_based_on_paths(self.spectra, paths_first_test_indices)
 
@@ -250,6 +254,8 @@ class SFLDT(ADiagnoser):
         terminals_count = 0
         node_indicator = self.mapped_model.get_node_indicator(X)
         discrete_error_vector = (self.mapped_model.model.predict(X) != y.values).astype(int)
+        if self.combine_prior_confidence:
+            self.tests_prior_confidence = np.zeros(self.tests_count)
         for test_index in range(self.tests_count):
             participated_component_indices = node_indicator.indices[
                 node_indicator.indptr[test_index] : node_indicator.indptr[test_index + 1]
@@ -261,11 +267,13 @@ class SFLDT(ADiagnoser):
                 if node.is_terminal():
                     terminals_count += not test_index
                     if self.combine_prior_confidence:
-                        self.error_vector[test_index] += node.confidence if discrete_error_vector[test_index] else (1 - node.confidence)
+                        self.tests_prior_confidence[test_index] = node.confidence
+                        if not self.aggregate_tests:
+                            self.error_vector[test_index] += node.confidence if discrete_error_vector[test_index] else (1 - node.confidence)
             test_participation_vector = self.spectra[:, test_index]
             self.path_tests_indices[tuple(test_participation_vector)].append(test_index)
 
-        if self.combine_prior_confidence:
+        if self.combine_prior_confidence and not self.aggregate_tests:
             self.error_vector /= terminals_count
         else:
             self.error_vector = discrete_error_vector

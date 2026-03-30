@@ -257,6 +257,7 @@ class TreeNodeComponent:
                 if allow_empty:
                     X, y = next_X, next_y
                 break
+            X, y = next_X, next_y
         return X if y is None else (X, y)
     
     def update_node_data_attributes(self, 

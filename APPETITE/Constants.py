@@ -74,4 +74,4 @@ class NodeSHAPFunctionType(Enum):
     entropy = auto()
     Criterion = auto()
 
-DEFAULT_NODE_SHAP_FUNCTION_TYPE = NodeSHAPFunctionType.Criterion
+DEFAULT_NODE_SHAP_FUNCTION_TYPE = NodeSHAPFunctionType.Confidence

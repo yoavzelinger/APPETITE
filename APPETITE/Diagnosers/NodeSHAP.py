@@ -45,8 +45,8 @@ class NodeSHAPFunctions:
     
     functions_map = {
         constants.NodeSHAPFunctionType.Confidence: confidence,
-        constants.NodeSHAPFunctionType.Gini: gini,
-        constants.NodeSHAPFunctionType.Entropy: entropy,
+        constants.NodeSHAPFunctionType.gini: gini,
+        constants.NodeSHAPFunctionType.entropy: entropy,
         constants.NodeSHAPFunctionType.Prediction: prediction,
     }
 

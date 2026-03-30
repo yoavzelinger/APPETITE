@@ -70,7 +70,7 @@
             "aggregate_tests": true,
             "combine_prior_confidence": true
         },
-        "disabled": true
+        "disabled": false
     },
     {
         "output_name": "Feature_Components-Components_Depth-BARINEL",
@@ -126,7 +126,7 @@
             "combine_components_depth": true,
             "combine_prior_confidence": true
         },
-        "disabled": true
+        "disabled": false
     },
     {
         "output_name": "Prior_Confidence-Feature_Components-Aggregated_Tests-BARINEL",
